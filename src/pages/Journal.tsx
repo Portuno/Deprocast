@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Plus, Search, Calendar, Tag, Smile, Meh, Frown } from 'lucide-react';
 import { JournalEntry } from '../data/mockData';
-import { listJournalEntries, createJournalEntry } from '../integrations/supabase/journal';
+import { listJournalEntries, createJournalEntry, updateJournalEntry, deleteJournalEntry } from '../integrations/supabase/journal';
 
 const Journal: React.FC = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMood, setSelectedMood] = useState<string>('all');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [newEntry, setNewEntry] = useState({
     title: '',
     content: '',
@@ -39,11 +41,10 @@ const Journal: React.FC = () => {
   });
 
   const handleCreateEntry = async () => {
-    const created = await createJournalEntry({
+    const payload: any = {
       title: newEntry.title,
       content: newEntry.content,
       mood: newEntry.mood,
-      tags: newEntry.tags.split(',').map(t => t.trim()).filter(Boolean),
       energy: newEntry.energy,
       focus: newEntry.focus,
       emotions: newEntry.emotions.split(',').map(e => e.trim()).filter(Boolean),
@@ -54,7 +55,15 @@ const Journal: React.FC = () => {
         timeOfDay: newEntry.keyTimeOfDay || undefined,
         trigger: newEntry.keyTrigger || undefined,
       },
-    });
+    };
+
+    // Only include tags if user provided at least one to stay compatible before DB migration is applied
+    const inputTags = newEntry.tags.split(',').map(t => t.trim()).filter(Boolean);
+    if (inputTags.length > 0) {
+      payload.tags = inputTags;
+    }
+
+    const created = await createJournalEntry(payload);
     const normalized: JournalEntry = {
       id: created.id,
       title: created.title,
@@ -71,6 +80,74 @@ const Journal: React.FC = () => {
     setEntries([normalized, ...entries]);
     setNewEntry({ title: '', content: '', mood: 'neutral', tags: '', energy: 5, focus: 5, emotions: '', summary: '', keyType: 'win', keyText: '', keyTimeOfDay: '', keyTrigger: '' });
     setShowCreateForm(false);
+  };
+
+  const handleStartEdit = (entry: JournalEntry) => {
+    setEditingId(entry.id);
+    setNewEntry({
+      title: entry.title,
+      content: entry.content,
+      mood: entry.mood,
+      tags: entry.tags.join(', '),
+      energy: entry.energy ?? 5,
+      focus: entry.focus ?? 5,
+      emotions: (entry.emotions ?? []).join(', '),
+      summary: entry.summary ?? '',
+      keyType: entry.keyEvent?.type ?? 'win',
+      keyText: entry.keyEvent?.text ?? '',
+      keyTimeOfDay: entry.keyEvent?.timeOfDay ?? '',
+      keyTrigger: entry.keyEvent?.trigger ?? '',
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    const payload: any = {
+      title: newEntry.title,
+      content: newEntry.content,
+      mood: newEntry.mood,
+      energy: newEntry.energy,
+      focus: newEntry.focus,
+      emotions: newEntry.emotions.split(',').map(e => e.trim()).filter(Boolean),
+      summary: newEntry.summary,
+      key_event: {
+        type: newEntry.keyType,
+        text: newEntry.keyText,
+        timeOfDay: newEntry.keyTimeOfDay || undefined,
+        trigger: newEntry.keyTrigger || undefined,
+      },
+    };
+    const inputTags = newEntry.tags.split(',').map(t => t.trim()).filter(Boolean);
+    if (inputTags.length > 0) payload.tags = inputTags;
+
+    const updated = await updateJournalEntry(editingId, payload);
+    setEntries(entries.map(e => e.id === editingId ? {
+      id: updated.id,
+      title: updated.title,
+      content: updated.content,
+      mood: updated.mood,
+      date: updated.entry_date,
+      tags: updated.tags ?? [],
+      energy: updated.energy ?? undefined,
+      focus: updated.focus ?? undefined,
+      emotions: updated.emotions ?? undefined,
+      summary: updated.summary ?? undefined,
+      keyEvent: updated.key_event ?? undefined,
+    } : e));
+
+    setEditingId(null);
+    setShowCreateForm(false);
+    setNewEntry({ title: '', content: '', mood: 'neutral', tags: '', energy: 5, focus: 5, emotions: '', summary: '', keyType: 'win', keyText: '', keyTimeOfDay: '', keyTrigger: '' });
+  };
+
+  const handleRequestDelete = (id: string) => setConfirmDeleteId(id);
+  const handleCancelDelete = () => setConfirmDeleteId(null);
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteId) return;
+    await deleteJournalEntry(confirmDeleteId);
+    setEntries(entries.filter(e => e.id !== confirmDeleteId));
+    setConfirmDeleteId(null);
   };
 
   React.useEffect(() => {
@@ -146,7 +223,7 @@ const Journal: React.FC = () => {
         {/* Create Entry Form */}
         {showCreateForm && (
           <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">New Journal Entry</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{editingId ? 'Edit Journal Entry' : 'New Journal Entry'}</h3>
             <div className="space-y-4">
               {/* Quick Check-in */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -270,16 +347,27 @@ const Journal: React.FC = () => {
               </div>
               
               <div className="flex space-x-3">
-                <button
-                  onClick={handleCreateEntry}
-                  disabled={!newEntry.title || !newEntry.content}
-                  className="px-6 py-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-400 hover:to-teal-500 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Save Entry
-                </button>
+                {editingId ? (
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={!newEntry.title || !newEntry.content}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Changes
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCreateEntry}
+                    disabled={!newEntry.title || !newEntry.content}
+                    className="px-6 py-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-400 hover:to-teal-500 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Entry
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowCreateForm(false);
+                    setEditingId(null);
                     setNewEntry({ title: '', content: '', mood: 'neutral', tags: '', energy: 5, focus: 5, emotions: '', summary: '', keyType: 'win', keyText: '', keyTimeOfDay: '', keyTrigger: '' });
                   }}
                   className="px-6 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-lg font-medium transition-all duration-200"
@@ -313,6 +401,22 @@ const Journal: React.FC = () => {
                         <span>{new Date(entry.date).toLocaleDateString()}</span>
                       </div>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStartEdit(entry)}
+                      className="px-3 py-1 text-xs rounded bg-gray-800/60 border border-gray-700/40 text-gray-300 hover:bg-gray-700/60"
+                      aria-label="Edit entry"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleRequestDelete(entry.id)}
+                      className="px-3 py-1 text-xs rounded bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30"
+                      aria-label="Delete entry"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
                 
@@ -370,6 +474,30 @@ const Journal: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation overlay */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-gray-900/90 border border-gray-700/50 rounded-xl p-6 w-[90%] max-w-md">
+            <h4 className="text-white font-semibold mb-2">Delete entry?</h4>
+            <p className="text-gray-300 mb-4">This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 rounded bg-gray-700/60 text-gray-200 hover:bg-gray-600/60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded bg-red-600/80 text-white hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

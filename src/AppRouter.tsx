@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import About from './pages/About';
+import Blog from './pages/Blog';
+import Pricing from './pages/Pricing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -15,6 +17,8 @@ const AppRouter: React.FC = () => {
 			<Routes>
 				<Route path="/" element={<Landing />} />
 				<Route path="/about" element={<About />} />
+				<Route path="/blog" element={<Blog />} />
+				<Route path="/pricing" element={<Pricing />} />
 				<Route path="/login" element={<Login />} />
 				<Route path="/signup" element={<Signup />} />
 				<Route path="/forgot-password" element={<ForgotPassword />} />

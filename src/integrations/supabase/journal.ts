@@ -32,6 +32,8 @@ export type CreateJournalPayload = {
   key_event?: DbJournalEntry['key_event'];
 };
 
+export type UpdateJournalPayload = Partial<CreateJournalPayload>;
+
 export async function listJournalEntries(): Promise<DbJournalEntry[]> {
   const { data, error } = await supabase
     .from('journal_entries')
@@ -46,20 +48,25 @@ export async function createJournalEntry(payload: CreateJournalPayload): Promise
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const insertPayload = {
+  // Build payload while avoiding non-existent columns in older schemas (e.g., tags)
+  const insertPayload: Record<string, unknown> = {
     user_id: user.id,
     project_id: payload.project_id ?? null,
     entry_date: payload.entry_date || new Date().toISOString().slice(0, 10),
     title: payload.title,
     content: payload.content,
     mood: payload.mood,
-    tags: payload.tags ?? [],
     energy: payload.energy ?? null,
     focus: payload.focus ?? null,
     emotions: payload.emotions ?? [],
     summary: payload.summary ?? null,
     key_event: payload.key_event ?? null,
-  } as const;
+  };
+
+  // Only include tags if provided to remain compatible before the DB migration is applied
+  if (typeof payload.tags !== 'undefined') {
+    insertPayload.tags = payload.tags;
+  }
 
   const { data, error } = await supabase
     .from('journal_entries')
@@ -68,6 +75,38 @@ export async function createJournalEntry(payload: CreateJournalPayload): Promise
     .single();
   if (error) throw error;
   return data as DbJournalEntry;
+}
+
+export async function updateJournalEntry(id: string, payload: UpdateJournalPayload): Promise<DbJournalEntry> {
+  const updates: Record<string, unknown> = {};
+  if (typeof payload.project_id !== 'undefined') updates.project_id = payload.project_id;
+  if (typeof payload.entry_date !== 'undefined') updates.entry_date = payload.entry_date;
+  if (typeof payload.title !== 'undefined') updates.title = payload.title;
+  if (typeof payload.content !== 'undefined') updates.content = payload.content;
+  if (typeof payload.mood !== 'undefined') updates.mood = payload.mood;
+  if (typeof payload.tags !== 'undefined') updates.tags = payload.tags;
+  if (typeof payload.energy !== 'undefined') updates.energy = payload.energy;
+  if (typeof payload.focus !== 'undefined') updates.focus = payload.focus;
+  if (typeof payload.emotions !== 'undefined') updates.emotions = payload.emotions;
+  if (typeof payload.summary !== 'undefined') updates.summary = payload.summary;
+  if (typeof payload.key_event !== 'undefined') updates.key_event = payload.key_event;
+
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .update(updates)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbJournalEntry;
+}
+
+export async function deleteJournalEntry(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('journal_entries')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
 }
 
 

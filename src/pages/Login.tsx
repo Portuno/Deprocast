@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LogIn, Mail, Lock, Loader2, ArrowLeft, Github } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
@@ -9,6 +9,20 @@ const Login: React.FC = () => {
 	const [password, setPassword] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		let mounted = true;
+		(async () => {
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!mounted) return;
+			if (session) navigate('/app', { replace: true });
+		})();
+		const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+			if (!mounted) return;
+			if (session) navigate('/app', { replace: true });
+		});
+		return () => { subscription.subscription?.unsubscribe(); mounted = false; };
+	}, [navigate]);
 
 	const handleEmailPasswordLogin = async () => {
 		setError(null);

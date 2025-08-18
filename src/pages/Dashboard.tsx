@@ -134,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="flex-1 flex overflow-hidden">
       {/* Central Panel */}
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">

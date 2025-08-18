@@ -97,7 +97,7 @@ function App() {
       case 'journal':
         return <Journal />;
       case 'calendar':
-        return <Calendar />;
+        return <Calendar tasks={currentProjectTasks} />;
       case 'protocols':
         return <Protocols />;
       case 'profile':

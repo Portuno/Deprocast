@@ -5,11 +5,20 @@ const About: React.FC = () => {
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-[#0B1220] to-[#0A0F1A] text-white">
 			<header className="container mx-auto px-6 py-10">
-				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center">
-						<Brain className="w-6 h-6 text-indigo-300" />
+				<div className="flex items-center justify-between mb-6">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center">
+							<Brain className="w-6 h-6 text-indigo-300" />
+						</div>
+						<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">About</h1>
 					</div>
-					<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">About</h1>
+					<a
+						href="/login"
+						className="hidden md:inline-flex px-4 py-2 rounded-lg bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-teal-500/10"
+						aria-label="Activate my Protocol"
+					>
+						Activate my Protocol
+					</a>
 				</div>
 				<p className="mt-4 max-w-3xl text-gray-300">
 					This space explains the protocol behind Deprocast, why I built it, and where we're headed next.

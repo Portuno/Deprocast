@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Clock, Users, Focus, Coffee } from 'lucide-react';
-import { CalendarEvent, calendarEvents } from '../data/mockData';
+import { CalendarEvent, calendarEvents, Task } from '../data/mockData';
 
-const Calendar: React.FC = () => {
+type Props = { tasks?: Task[] };
+
+const Calendar: React.FC<Props> = ({ tasks }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents);
+  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -38,9 +41,29 @@ const Calendar: React.FC = () => {
     return days;
   };
 
-  const getEventsForDate = (date: string) => {
-    return events.filter(event => event.date === date);
-  };
+  const today = new Date();
+  const todayString = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+
+  // Map tasks to calendar markers (start/in-progress and completion)
+  const taskEvents: CalendarEvent[] = useMemo(() => {
+    if (!tasks || tasks.length === 0) return [];
+    return tasks.flatMap((t) => {
+      const result: CalendarEvent[] = [];
+      if (t.status === 'in-progress') {
+        result.push({ id: `${t.id}-start`, title: t.title, date: todayString, time: '09:00', type: 'task', projectId: t.projectId });
+      }
+      if (t.status === 'completed' && t.completionDate) {
+        const d = new Date(t.completionDate);
+        const ds = formatDate(d.getFullYear(), d.getMonth(), d.getDate());
+        result.push({ id: `${t.id}-done`, title: `${t.title} – done`, date: ds, time: '18:00', type: 'task', projectId: t.projectId });
+      }
+      return result;
+    });
+  }, [tasks]);
+
+  const allEvents = useMemo(() => [...events, ...taskEvents], [events, taskEvents]);
+
+  const getEventsForDate = (date: string) => allEvents.filter(event => event.date === date);
 
   const formatDate = (year: number, month: number, day: number) => {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -65,8 +88,7 @@ const Calendar: React.FC = () => {
   ];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const today = new Date();
-  const todayString = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+  
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -95,7 +117,12 @@ const Calendar: React.FC = () => {
                 <h2 className="text-xl font-semibold text-white">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h2>
-                <div className="flex space-x-2">
+                <div className="flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-1 mr-2">
+                    <button onClick={() => setView('month')} className={`px-2 py-1 text-sm rounded ${view==='month'?'bg-gray-700/60 text-white':'text-gray-300 hover:bg-gray-700/40'}`}>Month</button>
+                    <button onClick={() => setView('week')} className={`px-2 py-1 text-sm rounded ${view==='week'?'bg-gray-700/60 text-white':'text-gray-300 hover:bg-gray-700/40'}`}>Week</button>
+                    <button onClick={() => setView('day')} className={`px-2 py-1 text-sm rounded ${view==='day'?'bg-gray-700/60 text-white':'text-gray-300 hover:bg-gray-700/40'}`}>Day</button>
+                  </div>
                   <button
                     onClick={() => navigateMonth('prev')}
                     className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
@@ -121,55 +148,107 @@ const Calendar: React.FC = () => {
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1">
-                {days.map((day, index) => {
-                  if (day === null) {
-                    return <div key={index} className="p-2 h-24"></div>;
-                  }
+              {view === 'month' && (
+                <div className="grid grid-cols-7 gap-1">
+                  {days.map((day, index) => {
+                    if (day === null) {
+                      return <div key={index} className="p-2 h-24"></div>;
+                    }
 
-                  const dateString = formatDate(currentDate.getFullYear(), currentDate.getMonth(), day);
-                  const dayEvents = getEventsForDate(dateString);
-                  const isToday = dateString === todayString;
-                  const isSelected = dateString === selectedDate;
+                    const dateString = formatDate(currentDate.getFullYear(), currentDate.getMonth(), day);
+                    const dayEvents = getEventsForDate(dateString);
+                    const isToday = dateString === todayString;
+                    const isSelected = dateString === selectedDate;
 
-                  return (
-                    <div
-                      key={day}
-                      onClick={() => setSelectedDate(dateString)}
-                      className={`p-2 h-24 border border-gray-700/30 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-700/30 ${
-                        isToday ? 'bg-blue-900/30 border-blue-400/50' : ''
-                      } ${isSelected ? 'bg-purple-900/30 border-purple-400/50' : ''}`}
-                    >
-                      <div className={`text-sm font-medium mb-1 ${
-                        isToday ? 'text-blue-400' : 'text-white'
-                      }`}>
-                        {day}
-                      </div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map((event, eventIndex) => {
-                          const EventIcon = eventTypeIcons[event.type].icon;
-                          return (
-                            <div
-                              key={eventIndex}
-                              className={`text-xs p-1 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}
-                            >
-                              <div className="flex items-center space-x-1">
-                                <EventIcon className="w-3 h-3" />
-                                <span>{event.time}</span>
+                    return (
+                      <div
+                        key={`${currentDate.getMonth()}-${day}`}
+                        onClick={() => setSelectedDate(dateString)}
+                        className={`p-2 h-24 border border-gray-700/30 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-700/30 ${
+                          isToday ? 'bg-blue-900/30 border-blue-400/50' : ''
+                        } ${isSelected ? 'bg-purple-900/30 border-purple-400/50' : ''}`}
+                      >
+                        <div className={`text-sm font-medium mb-1 ${
+                          isToday ? 'text-blue-400' : 'text-white'
+                        }`}>
+                          {day}
+                        </div>
+                        <div className="space-y-1">
+                          {dayEvents.slice(0, 2).map((event, eventIndex) => {
+                            const EventIcon = eventTypeIcons[event.type].icon;
+                            return (
+                              <div
+                                key={`${event.id}-${eventIndex}`}
+                                className={`text-xs p-1 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}
+                              >
+                                <div className="flex items-center space-x-1">
+                                  <EventIcon className="w-3 h-3" />
+                                  <span>{event.time}</span>
+                                </div>
                               </div>
+                            );
+                          })}
+                          {dayEvents.length > 2 && (
+                            <div className="text-xs text-gray-400">
+                              +{dayEvents.length - 2} more
                             </div>
-                          );
-                        })}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-gray-400">
-                            +{dayEvents.length - 2} more
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {view === 'week' && (
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: 7 }).map((_, i) => {
+                    const start = new Date(currentDate);
+                    const dayDate = new Date(start.setDate(start.getDate() - start.getDay() + i));
+                    const ds = formatDate(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+                    const dayEvents = getEventsForDate(ds);
+                    const isToday = ds === todayString;
+                    return (
+                      <div key={`w-${i}`} className={`p-2 h-32 border border-gray-700/30 rounded-lg ${isToday ? 'bg-blue-900/30 border-blue-400/50' : ''}`}>
+                        <div className="text-sm font-medium mb-1 text-white">{dayDate.getDate()}</div>
+                        <div className="space-y-1">
+                          {dayEvents.slice(0,3).map((event, idx) => {
+                            const EventIcon = eventTypeIcons[event.type].icon;
+                            return (
+                              <div key={`we-${idx}`} className={`text-xs p-1 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}>
+                                <div className="flex items-center space-x-1">
+                                  <EventIcon className="w-3 h-3" />
+                                  <span>{event.time}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {view === 'day' && (
+                <div>
+                  <div className="text-white font-medium mb-2">{todayString}</div>
+                  <div className="space-y-2">
+                    {getEventsForDate(todayString).map((event, idx) => {
+                      const EventIcon = eventTypeIcons[event.type].icon;
+                      return (
+                        <div key={`d-${idx}`} className={`p-2 rounded border border-gray-700/30 ${eventTypeIcons[event.type].bg}`}>
+                          <div className="flex items-center gap-2">
+                            <EventIcon className={`w-4 h-4 ${eventTypeIcons[event.type].color}`} />
+                            <span className="text-white text-sm">{event.time}</span>
+                            <span className="text-gray-300 text-sm">{event.title}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -183,7 +262,7 @@ const Calendar: React.FC = () => {
                   const EventIcon = eventTypeIcons[event.type].icon;
                   return (
                     <div
-                      key={index}
+                      key={`te-${index}`}
                       className={`p-3 rounded-lg ${eventTypeIcons[event.type].bg} border border-gray-600/30`}
                     >
                       <div className="flex items-center space-x-3">
