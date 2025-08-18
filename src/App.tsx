@@ -7,16 +7,40 @@ import Journal from './pages/Journal';
 import Calendar from './pages/Calendar';
 import Protocols from './pages/Protocols';
 import Profile from './pages/Profile';
-import { projects, tasks as initialTasks, navigationItems, Task } from './data/mockData';
+import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
+import { listTasksByProject } from './integrations/supabase/tasks';
+import { listProjects, type DbProject } from './integrations/supabase/projects';
 
 function App() {
-  const [currentProjectId, setCurrentProjectId] = useState(projects[0].id);
+  const [projects, setProjects] = useState<DbProject[]>([]);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState('dashboard');
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
 
-  const currentProject = projects.find(p => p.id === currentProjectId) || projects[0];
-  const currentProjectTasks = tasks.filter(task => task.projectId === currentProjectId);
+  useEffect(() => { (async () => {
+    const data = await listProjects().catch(() => [] as DbProject[]);
+    setProjects(data);
+    if (!currentProjectId && data.length > 0) setCurrentProjectId(data[0].id);
+  })(); }, []);
+
+  const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) || null : null;
+  const currentProjectTasks = tasks.filter(task => task.projectId === (currentProjectId || ''));
+
+  // Fetch tasks from DB whenever currentProjectId changes
+  useEffect(() => { (async () => {
+    if (!currentProjectId) return;
+    try {
+      const dbTasks = await listTasksByProject(currentProjectId);
+      setTasks(prev => {
+        // Merge: remove old tasks for this project, then add fresh ones
+        const others = prev.filter(t => t.projectId !== currentProjectId);
+        return [...others, ...dbTasks];
+      });
+    } catch {
+      // ignore
+    }
+  })(); }, [currentProjectId]);
 
   // AI suggestion logic - prioritize high priority pending tasks
   useEffect(() => {
@@ -63,16 +87,12 @@ function App() {
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            currentProject={currentProject}
           />
         );
       case 'projects':
         return (
-          <Projects
-            projects={projects}
-            tasks={tasks}
-            currentProjectId={currentProjectId}
-            onProjectChange={handleProjectChange}
-          />
+          <Projects />
         );
       case 'journal':
         return <Journal />;
@@ -90,6 +110,7 @@ function App() {
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            currentProject={currentProject}
           />
         );
     }

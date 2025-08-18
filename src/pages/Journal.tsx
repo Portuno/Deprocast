@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Plus, Search, Calendar, Tag, Smile, Meh, Frown } from 'lucide-react';
-import { JournalEntry, journalEntries } from '../data/mockData';
+import { JournalEntry } from '../data/mockData';
+import { listJournalEntries, createJournalEntry } from '../integrations/supabase/journal';
 
 const Journal: React.FC = () => {
-  const [entries, setEntries] = useState<JournalEntry[]>(journalEntries);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMood, setSelectedMood] = useState<string>('all');
@@ -11,7 +12,15 @@ const Journal: React.FC = () => {
     title: '',
     content: '',
     mood: 'neutral' as JournalEntry['mood'],
-    tags: ''
+    tags: '',
+    energy: 5,
+    focus: 5,
+    emotions: '' as string,
+    summary: '',
+    keyType: 'win' as 'win' | 'loss',
+    keyText: '',
+    keyTimeOfDay: '',
+    keyTrigger: ''
   });
 
   const moodIcons = {
@@ -29,20 +38,60 @@ const Journal: React.FC = () => {
     return matchesSearch && matchesMood;
   });
 
-  const handleCreateEntry = () => {
-    const entry: JournalEntry = {
-      id: Date.now().toString(),
+  const handleCreateEntry = async () => {
+    const created = await createJournalEntry({
       title: newEntry.title,
       content: newEntry.content,
       mood: newEntry.mood,
-      date: new Date().toISOString().split('T')[0],
-      tags: newEntry.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      tags: newEntry.tags.split(',').map(t => t.trim()).filter(Boolean),
+      energy: newEntry.energy,
+      focus: newEntry.focus,
+      emotions: newEntry.emotions.split(',').map(e => e.trim()).filter(Boolean),
+      summary: newEntry.summary,
+      key_event: {
+        type: newEntry.keyType,
+        text: newEntry.keyText,
+        timeOfDay: newEntry.keyTimeOfDay || undefined,
+        trigger: newEntry.keyTrigger || undefined,
+      },
+    });
+    const normalized: JournalEntry = {
+      id: created.id,
+      title: created.title,
+      content: created.content,
+      mood: created.mood,
+      date: created.entry_date,
+      tags: created.tags ?? [],
+      energy: created.energy ?? undefined,
+      focus: created.focus ?? undefined,
+      emotions: created.emotions ?? undefined,
+      summary: created.summary ?? undefined,
+      keyEvent: created.key_event ?? undefined,
     };
-    
-    setEntries([entry, ...entries]);
-    setNewEntry({ title: '', content: '', mood: 'neutral', tags: '' });
+    setEntries([normalized, ...entries]);
+    setNewEntry({ title: '', content: '', mood: 'neutral', tags: '', energy: 5, focus: 5, emotions: '', summary: '', keyType: 'win', keyText: '', keyTimeOfDay: '', keyTrigger: '' });
     setShowCreateForm(false);
   };
+
+  React.useEffect(() => {
+    (async () => {
+      const data = await listJournalEntries().catch(() => []);
+      const normalized: JournalEntry[] = data.map(d => ({
+        id: d.id,
+        title: d.title,
+        content: d.content,
+        mood: d.mood,
+        date: d.entry_date,
+        tags: d.tags ?? [],
+        energy: d.energy ?? undefined,
+        focus: d.focus ?? undefined,
+        emotions: d.emotions ?? undefined,
+        summary: d.summary ?? undefined,
+        keyEvent: d.key_event ?? undefined,
+      }));
+      setEntries(normalized);
+    })();
+  }, []);
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -99,6 +148,27 @@ const Journal: React.FC = () => {
           <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6 mb-6">
             <h3 className="text-lg font-semibold text-white mb-4">New Journal Entry</h3>
             <div className="space-y-4">
+              {/* Quick Check-in */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Energy (1-10)</label>
+                  <input type="number" min={1} max={10} value={newEntry.energy}
+                    onChange={(e) => setNewEntry({ ...newEntry, energy: Number(e.target.value) })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Focus (1-10)</label>
+                  <input type="number" min={1} max={10} value={newEntry.focus}
+                    onChange={(e) => setNewEntry({ ...newEntry, focus: Number(e.target.value) })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Emotions (comma separated)</label>
+                  <input type="text" placeholder="Motivated, Calm" value={newEntry.emotions}
+                    onChange={(e) => setNewEntry({ ...newEntry, emotions: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+                </div>
+              </div>
               <input
                 type="text"
                 placeholder="Entry title..."
@@ -114,6 +184,62 @@ const Journal: React.FC = () => {
                 rows={6}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent"
               />
+
+              {/* Day's Summary */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Day's Summary (1-2 sentences)</label>
+                <textarea rows={3} placeholder="Main tasks, a win and a challenge…" value={newEntry.summary}
+                  onChange={(e) => setNewEntry({ ...newEntry, summary: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+              </div>
+
+              {/* Key Event */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Key Event Type</label>
+                  <select value={newEntry.keyType}
+                    onChange={(e) => setNewEntry({ ...newEntry, keyType: e.target.value as 'win' | 'loss' })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent">
+                    <option value="win">Win</option>
+                    <option value="loss">Obstacle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Time of Day (optional)</label>
+                  <select value={newEntry.keyTimeOfDay}
+                    onChange={(e) => setNewEntry({ ...newEntry, keyTimeOfDay: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent">
+                    <option value="">—</option>
+                    <option value="morning">Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Trigger (optional)</label>
+                  <input type="text" placeholder="e.g., Opened Twitter, Uncertain next step" value={newEntry.keyTrigger}
+                    onChange={(e) => setNewEntry({ ...newEntry, keyTrigger: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Key Event Description</label>
+                  <textarea rows={4} placeholder="Describe the moment in detail…" value={newEntry.keyText}
+                    onChange={(e) => setNewEntry({ ...newEntry, keyText: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent" />
+                </div>
+              </div>
+
+              {/* Quick prompts */}
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setNewEntry({ ...newEntry, summary: 'Today I focused on … The biggest win/obstacle was …', keyText: 'I noticed that … Right before it, I … It helped/hurt because …' })}
+                  className="px-3 py-1 text-xs rounded bg-gray-800/60 border border-gray-700/40 text-gray-300 hover:bg-gray-700/60">Insert prompt</button>
+                <button type="button" onClick={() => setNewEntry({ ...newEntry, keyType: 'win', keyText: 'A micro-win: … What conditions made it easy: … (time, music, task size)', keyTimeOfDay: 'morning' })}
+                  className="px-3 py-1 text-xs rounded bg-gray-800/60 border border-gray-700/40 text-gray-300 hover:bg-gray-700/60">Win prompt</button>
+                <button type="button" onClick={() => setNewEntry({ ...newEntry, keyType: 'loss', keyText: 'A stuck moment: … Just before it I … Trigger: … Next time I will …' })}
+                  className="px-3 py-1 text-xs rounded bg-gray-800/60 border border-gray-700/40 text-gray-300 hover:bg-gray-700/60">Obstacle prompt</button>
+              </div>
               
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -154,7 +280,7 @@ const Journal: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowCreateForm(false);
-                    setNewEntry({ title: '', content: '', mood: 'neutral', tags: '' });
+                    setNewEntry({ title: '', content: '', mood: 'neutral', tags: '', energy: 5, focus: 5, emotions: '', summary: '', keyType: 'win', keyText: '', keyTimeOfDay: '', keyTrigger: '' });
                   }}
                   className="px-6 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-lg font-medium transition-all duration-200"
                 >
@@ -190,7 +316,32 @@ const Journal: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* Quick metrics */}
+                {(entry.energy || entry.focus || (entry.emotions && entry.emotions.length)) && (
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-300 mb-3">
+                    {typeof entry.energy === 'number' && (
+                      <span className="px-2 py-1 rounded bg-gray-800/60 border border-gray-700/40">Energy {entry.energy}/10</span>
+                    )}
+                    {typeof entry.focus === 'number' && (
+                      <span className="px-2 py-1 rounded bg-gray-800/60 border border-gray-700/40">Focus {entry.focus}/10</span>
+                    )}
+                    {entry.emotions && entry.emotions.length > 0 && (
+                      <span className="px-2 py-1 rounded bg-gray-800/60 border border-gray-700/40">{entry.emotions.join(', ')}</span>
+                    )}
+                  </div>
+                )}
+
+                {entry.summary && (
+                  <p className="text-gray-300 mb-2 leading-relaxed"><span className="text-gray-400">Summary:</span> {entry.summary}</p>
+                )}
                 <p className="text-gray-300 mb-4 leading-relaxed">{entry.content}</p>
+
+                {entry.keyEvent && (
+                  <div className="mb-4 text-gray-300">
+                    <p className="text-sm text-gray-400 mb-1">Key Event ({entry.keyEvent.type === 'win' ? 'Win' : 'Obstacle'})</p>
+                    <p className="leading-relaxed">{entry.keyEvent.text}</p>
+                  </div>
+                )}
                 
                 {entry.tags.length > 0 && (
                   <div className="flex items-center space-x-2">

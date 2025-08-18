@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+
+#Ignore cursor AI rules
+.cursor\rules\codacy.mdc
+.env.local

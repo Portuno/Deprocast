@@ -1,17 +1,34 @@
 import React, { useState } from 'react';
 import { PenTool, Save } from 'lucide-react';
+import { createJournalEntry } from '../integrations/supabase/journal';
 
-const JournalModule: React.FC = () => {
+type Props = {
+  currentProjectId?: string | null;
+};
+
+const JournalModule: React.FC<Props> = ({ currentProjectId }) => {
   const [note, setNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!note.trim() || isSaving) return;
     setIsSaving(true);
-    setTimeout(() => {
-      // Simulate save operation
-      setIsSaving(false);
+    try {
+      await createJournalEntry({
+        project_id: currentProjectId ?? null,
+        title: 'Quick note',
+        content: note.trim(),
+        mood: 'neutral',
+        energy: null,
+        focus: null,
+      });
       setNote('');
-    }, 1000);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Quick journaling failed', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

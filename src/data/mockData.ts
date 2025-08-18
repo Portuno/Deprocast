@@ -1,9 +1,18 @@
 export interface Task {
   id: string;
   title: string;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'completed' | 'skipped';
   priority: 'high' | 'medium' | 'low';
   projectId: string;
+  // Optional metadata for AI analytics
+  description?: string;
+  estimatedTimeMinutes?: number;
+  actualTimeMinutes?: number;
+  completionDate?: string; // ISO
+  dopamineScore?: number; // 1-10
+  taskType?: 'Deep Work' | 'Admin' | 'Quick Win' | 'Creative' | string;
+  resistanceLevel?: 'low' | 'medium' | 'high' | string;
+  dependencyTaskId?: string | null;
 }
 
 export interface Project {
@@ -94,6 +103,17 @@ export interface JournalEntry {
   mood: 'great' | 'good' | 'neutral' | 'low' | 'stressed';
   date: string;
   tags: string[];
+  // New optional structured fields for check-ins
+  energy?: number; // 1-10
+  focus?: number; // 1-10
+  emotions?: string[];
+  summary?: string;
+  keyEvent?: {
+    type: 'win' | 'loss';
+    text: string;
+    timeOfDay?: string;
+    trigger?: string;
+  };
 }
 
 export interface Protocol {
