@@ -15,6 +15,7 @@ interface DashboardProps {
   onTaskSelect: (taskId: string) => void;
   onStartTask: (taskId: string) => void;
   currentProject?: DbProject | null;
+  onTasksGenerated?: (newTasks: Task[]) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -31,6 +32,34 @@ const Dashboard: React.FC<DashboardProps> = ({
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  const coachingTips = React.useMemo(() => [
+    'Tip: The brain gets a dopamine hit from completing any task, no matter how small.',
+    'Fact: The average person gets distracted every 11 minutes.',
+    "Insight: Your brain sees complex projects as a threat. Our job is to make it feel safe.",
+    "Fact: Working memory holds ~7 items. Micro-tasks prevent overwhelm.",
+    'Tip: Visualize the reward before starting to boost motivation.',
+    "Insight: Procrastination is an emotional response — not laziness.",
+    'Fact: Small wins strengthen neural pathways associated with success.',
+    'Tip: The first 5 minutes are the hardest — start tiny.',
+    "Insight: The Default Mode Network loves to wander — we give it a path.",
+    'Fact: Dopamine from completion is real — we optimize for it.',
+    'Tip: Breaks reset your prefrontal cortex — schedule them.',
+    "Insight: Your energy patterns guide peak performance — mapping now.",
+    'Fact: Stress can reduce cognitive function by up to 40%.',
+    "Tip: Don’t spend willpower choosing — we’ve picked your next step.",
+    'Fact: Your brain loves certainty — clear tasks reduce anxiety.'
+  ], []);
+
+  const [phase, setPhase] = React.useState<'idle' | 'loading' | 'done'>('idle');
+  const [tipIndex, setTipIndex] = React.useState(0);
+  React.useEffect(() => {
+    if (phase !== 'loading') return;
+    const interval = setInterval(() => {
+      setTipIndex((i) => (i + 1) % coachingTips.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [phase, coachingTips.length]);
+
   const handleGenerateMicrotasks = async () => {
     try {
       if (!currentProject) {
@@ -39,6 +68,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         return;
       }
 
+      setPhase('loading');
+      setTipIndex(0);
+
       // Per-project chat continuity
       const chatId = getOrCreateUuidChatId(currentProject.id);
       setChatId(chatId);
@@ -46,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       const projectDescription = currentProject.description;
       const outcomeGoal = currentProject.description;
-      const res = await generateMicrotasksForProject({
+      const generatePromise = generateMicrotasksForProject({
         project_description: projectDescription,
         outcome_goal: outcomeGoal,
         available_time_blocks: [],
@@ -58,6 +90,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         known_obstacles: currentProject.known_obstacles,
         skills_resources_needed: currentProject.skills_resources_needed ?? []
       });
+
+      // Enforce a minimum 15s coaching experience
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 15000));
+      const res = await Promise.race([
+        Promise.all([generatePromise, minDelay]).then((vals) => vals[0]),
+      ]);
 
       if (!res || !res.success || !res.data) {
         // eslint-disable-next-line no-console
@@ -121,13 +159,16 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       // Persist (requires micro_tasks table); ignore DB write errors gracefully
       try {
-        await bulkInsertTasks(currentProject.id, mapped);
+        const inserted = await bulkInsertTasks(currentProject.id, mapped);
+        onTasksGenerated?.(inserted);
       } catch {
         // ignore persistence errors for now
       }
+      setPhase('done');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Generate microtasks failed', err);
+      setPhase('idle');
     }
   };
 
@@ -180,15 +221,34 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {tasks.length === 0 && (
           <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-10 text-center">
-            <div className="text-gray-400 mb-4">No Tasks Available</div>
-            <button onClick={handleGenerateMicrotasks} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200">Generate Microtasks</button>
+            {phase === 'idle' && (
+              <>
+                <div className="text-gray-400 mb-4">No Tasks Available</div>
+                <button onClick={handleGenerateMicrotasks} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200">Generate Microtasks</button>
+              </>
+            )}
+            {phase === 'loading' && (
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-white font-medium">My turn. One moment…</div>
+                <div className="w-10 h-10 border-2 border-white/50 border-t-transparent rounded-full animate-spin"></div>
+                <div className="text-sm text-gray-300 max-w-xl">{coachingTips[tipIndex]}</div>
+              </div>
+            )}
+            {phase === 'done' && (
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-white font-semibold">Your brain is ready. Your micro-tasks are here.</div>
+                <div className="text-gray-400 text-sm">If you don’t see them yet, give it a second.</div>
+              </div>
+            )}
           </div>
         )}
 
-        <TaskModule
-          nextTask={nextTask}
-          onStartTask={onStartTask}
-        />
+        {nextTask && (
+          <TaskModule
+            nextTask={nextTask}
+            onStartTask={onStartTask}
+          />
+        )}
         <JournalModule currentProjectId={currentProject?.id ?? null} />
       </div>
 
