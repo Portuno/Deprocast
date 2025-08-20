@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deprocast — Text Analysis Snapshot</title>
+    <meta name="description" content="A no‑JS overview of Deprocast: features, UX, and navigation for crawlers and text-based review." />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#0b1220; color:#e5e7eb; margin:0; }
+      main { max-width: 860px; margin: 2rem auto; padding: 1.25rem; }
+      h1, h2, h3 { color: #fff; }
+      section { background:#111827; border:1px solid #374151; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+      ul { margin: .5rem 0 .5rem 1.25rem; }
+      a { color:#93c5fd; }
+      code { background:#0f172a; padding:.1rem .3rem; border-radius:.25rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Deprocast — Personal Productivity Command Center</h1>
+      <p>This is a static, no‑JavaScript page intended for crawlers and text‑only tools (e.g., ChatGPT browsing) to understand the product.</p>
+
+      <section>
+        <h2>Value Proposition</h2>
+        <p>Deprocast helps you conquer procrastination with a neuroscience‑informed workflow: AI‑generated micro‑tasks, a guided “Next Task” module, a structured journal, and a project‑centric dashboard.</p>
+      </section>
+
+      <section>
+        <h2>Key Features</h2>
+        <ul>
+          <li>Projects: select and manage projects with metadata (category, difficulty, target date).</li>
+          <li>AI Micro‑tasks: generate micro‑tasks per project via an assistant (Mabot).</li>
+          <li>Dashboard: metrics for completion, in‑progress, and pending tasks.</li>
+          <li>Next Task: prioritized recommendation and quick start CTA.</li>
+          <li>Journal: entries with mood, energy, focus, tags, and key events.</li>
+          <li>Calendar & Protocols: planning and behavioral playbooks.</li>
+          <li>Auth: email/password and Google (Supabase).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Navigation Map</h2>
+        <ul>
+          <li>Landing: value prop + CTA to sign in.</li>
+          <li>App (/app): protected area with TopBar, sidebar/bottom nav, and content panes.</li>
+          <li>Dashboard: stats + generation + next task + journal + task list.</li>
+          <li>Projects / Journal / Calendar / Protocols / Profile pages.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Tech Snapshot</h2>
+        <ul>
+          <li>React + Vite + Tailwind.</li>
+          <li>Supabase: Auth, DB, Edge Functions (Mabot integration).</li>
+          <li>Deployed on Vercel as SPA; route fallback to <code>/index.html</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>How to Review</h2>
+        <p>For a deeper review, log in to the app and inspect:</p>
+        <ul>
+          <li>Dashboard coherence (metrics vs. task states).</li>
+          <li>Micro‑task quality and acceptance criteria.</li>
+          <li>Journal structure and usefulness for retrospectives.</li>
+          <li>Project metadata impact on AI generation.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>This page is automatically served at <code>/analysis.html</code> and updated with product changes.</p>
+      </section>
+    </main>
+  </body>
+  </html>
+
+

@@ -131,7 +131,7 @@ function App() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden pb-14 md:pb-0">
           {/* Left Navigation */}
           <Navigation
             activeItem={activeNavItem}
