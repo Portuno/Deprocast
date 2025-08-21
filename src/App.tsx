@@ -131,13 +131,15 @@ function App() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden pb-14 md:pb-0">
-          {/* Left Navigation */}
-          <Navigation
-            activeItem={activeNavItem}
-            onItemClick={setActiveNavItem}
-            items={navigationItems}
-          />
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-16 md:pb-0">
+          {/* Left Navigation - Hidden on mobile, shown on desktop */}
+          <div className="hidden lg:block">
+            <Navigation
+              activeItem={activeNavItem}
+              onItemClick={setActiveNavItem}
+              items={navigationItems}
+            />
+          </div>
 
           {/* Central Panel */}
           {renderCurrentPage()}

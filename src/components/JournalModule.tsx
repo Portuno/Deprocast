@@ -32,30 +32,30 @@ const JournalModule: React.FC<Props> = ({ currentProjectId }) => {
   };
 
   return (
-    <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-300 flex items-center space-x-2">
-          <PenTool className="w-5 h-5 text-green-400" />
+    <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6">
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-base md:text-lg font-semibold text-gray-300 flex items-center space-x-2">
+          <PenTool className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
           <span>Quick Journaling</span>
         </h3>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="What's on your mind? Jot down your thoughts, ideas, or reflections..."
-          className="w-full h-32 bg-gray-800/50 border border-gray-600/30 rounded-lg p-4 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-200"
+          className="w-full h-28 md:h-32 bg-gray-800/50 border border-gray-600/30 rounded-lg p-3 md:p-4 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-200 text-sm md:text-base"
         />
         
         <div className="flex justify-end">
           <button
             onClick={handleSave}
             disabled={!note.trim() || isSaving}
-            className={`px-6 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 ${
+            className={`px-4 md:px-6 py-2 md:py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 text-sm md:text-base ${
               !note.trim() || isSaving
                 ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-400 hover:to-teal-500 text-white hover:shadow-lg hover:glow-sm transform hover:-translate-y-0.5'
+                : 'bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-400 hover:to-teal-500 text-white hover:shadow-lg hover:glow-sm transform hover:-translate-y-0.5 active:scale-95'
             }`}
           >
             {isSaving ? (

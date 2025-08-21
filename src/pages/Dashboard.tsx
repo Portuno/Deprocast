@@ -2,6 +2,7 @@ import React from 'react';
 import TaskModule from '../components/TaskModule';
 import JournalModule from '../components/JournalModule';
 import TaskList from '../components/TaskList';
+import MobileTaskList from '../components/MobileTaskList';
 import { Task } from '../data/mockData';
 import { generateMicrotasksForProject, getOrCreateUuidChatId, setChatId, ensurePlatformChatId } from '../integrations/mabot/client';
 import type { DbProject } from '../integrations/supabase/projects';
@@ -46,7 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     'Tip: Breaks reset your prefrontal cortex — schedule them.',
     "Insight: Your energy patterns guide peak performance — mapping now.",
     'Fact: Stress can reduce cognitive function by up to 40%.',
-    "Tip: Don’t spend willpower choosing — we’ve picked your next step.",
+    "Tip: Don't spend willpower choosing — we've picked your next step.",
     'Fact: Your brain loves certainty — clear tasks reduce anxiety.'
   ], []);
 
@@ -173,71 +174,76 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
       {/* Central Panel */}
-      <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
+      <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 md:gap-6 overflow-hidden">
+        {/* Stats Overview - Mobile Optimized */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Completion Rate</p>
-                <p className="text-2xl font-bold text-green-400">{completionRate}%</p>
+                <p className="text-xs md:text-sm text-gray-400">Completion</p>
+                <p className="text-lg md:text-2xl font-bold text-green-400">{completionRate}%</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-400" />
+              <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
             </div>
           </div>
           
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
+          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">In Progress</p>
-                <p className="text-2xl font-bold text-blue-400">{inProgressTasks}</p>
+                <p className="text-xs md:text-sm text-gray-400">In Progress</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-400">{inProgressTasks}</p>
               </div>
-              <Clock className="w-8 h-8 text-blue-400" />
+              <Clock className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
             </div>
           </div>
           
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
+          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Completed</p>
-                <p className="text-2xl font-bold text-green-400">{completedTasks}</p>
+                <p className="text-xs md:text-sm text-gray-400">Completed</p>
+                <p className="text-lg md:text-2xl font-bold text-green-400">{completedTasks}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-green-400" />
+              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
             </div>
           </div>
           
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
+          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Pending</p>
-                <p className="text-2xl font-bold text-yellow-400">{pendingTasks}</p>
+                <p className="text-xs md:text-sm text-gray-400">Pending</p>
+                <p className="text-lg md:text-2xl font-bold text-yellow-400">{pendingTasks}</p>
               </div>
-              <Target className="w-8 h-8 text-yellow-400" />
+              <Target className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
             </div>
           </div>
         </div>
 
         {tasks.length === 0 && (
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-10 text-center">
+          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6 md:p-10 text-center">
             {phase === 'idle' && (
               <>
-                <div className="text-gray-400 mb-4">No Tasks Available</div>
-                <button onClick={handleGenerateMicrotasks} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200">Generate Microtasks</button>
+                <div className="text-gray-400 mb-4 text-sm md:text-base">No Tasks Available</div>
+                <button 
+                  onClick={handleGenerateMicrotasks} 
+                  className="px-4 md:px-6 py-3 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200 text-sm md:text-base"
+                >
+                  Generate Microtasks
+                </button>
               </>
             )}
             {phase === 'loading' && (
               <div className="flex flex-col items-center gap-4">
-                <div className="text-white font-medium">My turn. One moment…</div>
-                <div className="w-10 h-10 border-2 border-white/50 border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-sm text-gray-300 max-w-xl">{coachingTips[tipIndex]}</div>
+                <div className="text-white font-medium text-sm md:text-base">My turn. One moment…</div>
+                <div className="w-8 h-8 md:w-10 md:h-10 border-2 border-white/50 border-t-transparent rounded-full animate-spin"></div>
+                <div className="text-xs md:text-sm text-gray-300 max-w-xl px-4">{coachingTips[tipIndex]}</div>
               </div>
             )}
             {phase === 'done' && (
               <div className="flex flex-col items-center gap-4">
-                <div className="text-white font-semibold">Your brain is ready. Your micro-tasks are here.</div>
-                <div className="text-gray-400 text-sm">If you don’t see them yet, give it a second.</div>
+                <div className="text-white font-semibold text-sm md:text-base">Your brain is ready. Your micro-tasks are here.</div>
+                <div className="text-gray-400 text-xs md:text-sm">If you don't see them yet, give it a second.</div>
               </div>
             )}
           </div>
@@ -252,12 +258,23 @@ const Dashboard: React.FC<DashboardProps> = ({
         <JournalModule currentProjectId={currentProject?.id ?? null} />
       </div>
 
-      {/* Right Panel */}
-      <TaskList
-        tasks={tasks}
-        nextTaskId={nextTaskId}
-        onTaskSelect={onTaskSelect}
-      />
+      {/* Right Panel - Hidden on mobile, shown on desktop */}
+      <div className="hidden lg:block">
+        <TaskList
+          tasks={tasks}
+          nextTaskId={nextTaskId}
+          onTaskSelect={onTaskSelect}
+        />
+      </div>
+
+      {/* Mobile Task List - Shown only on mobile */}
+      <div className="lg:hidden">
+        <MobileTaskList
+          tasks={tasks}
+          nextTaskId={nextTaskId}
+          onTaskSelect={onTaskSelect}
+        />
+      </div>
     </div>
   );
 };

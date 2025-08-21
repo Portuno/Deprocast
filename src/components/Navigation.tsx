@@ -58,9 +58,9 @@ const Navigation: React.FC<NavigationProps> = ({ activeItem, onItemClick, items 
         </div>
       </div>
 
-      {/* Mobile bottom nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-xl border-t border-gray-700/40">
-        <nav className="grid grid-cols-5">
+      {/* Mobile bottom nav - Completely redesigned */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/50 shadow-2xl">
+        <nav className="grid grid-cols-5 px-2 py-3">
           {items.slice(0,5).map((item) => {
             const IconComponent = iconMap[item.icon as keyof typeof iconMap];
             const isActive = activeItem === item.id;
@@ -68,11 +68,24 @@ const Navigation: React.FC<NavigationProps> = ({ activeItem, onItemClick, items 
               <button
                 key={item.id}
                 onClick={() => onItemClick(item.id)}
-                className={`flex flex-col items-center justify-center py-3 text-xs ${isActive ? 'text-blue-400' : 'text-gray-400'}`}
+                className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 ${
+                  isActive 
+                    ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20 shadow-lg' 
+                    : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/40'
+                }`}
                 aria-label={item.label}
               >
-                <IconComponent className="w-5 h-5" />
-                <span className="mt-1">{item.label.split(' ')[0]}</span>
+                <IconComponent className={`w-6 h-6 mb-1 transition-transform duration-200 ${
+                  isActive ? 'scale-110' : 'scale-100'
+                }`} />
+                <span className={`text-xs font-medium transition-all duration-200 ${
+                  isActive ? 'text-blue-300' : 'text-gray-400'
+                }`}>
+                  {item.label.split(' ')[0]}
+                </span>
+                {isActive && (
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                )}
               </button>
             );
           })}
