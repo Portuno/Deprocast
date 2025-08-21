@@ -40,7 +40,7 @@ function App() {
     } catch {
       // ignore
     }
-  })(); }, [currentProjectId]);
+  }, [currentProjectId]);
 
   // AI suggestion logic - prioritize high priority pending tasks
   useEffect(() => {
@@ -131,7 +131,7 @@ function App() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-16 md:pb-0">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-20 md:pb-0">
           {/* Left Navigation - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:block">
             <Navigation

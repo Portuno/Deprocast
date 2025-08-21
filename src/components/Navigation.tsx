@@ -58,7 +58,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeItem, onItemClick, items 
         </div>
       </div>
 
-      {/* Mobile bottom nav - Completely redesigned */}
+      {/* Mobile bottom nav - Fixed at bottom */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/50 shadow-2xl">
         <nav className="grid grid-cols-5 px-2 py-3">
           {items.slice(0,5).map((item) => {
@@ -68,7 +68,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeItem, onItemClick, items 
               <button
                 key={item.id}
                 onClick={() => onItemClick(item.id)}
-                className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 ${
                   isActive 
                     ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20 shadow-lg' 
                     : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/40'
