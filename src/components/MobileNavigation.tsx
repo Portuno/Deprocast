@@ -4,6 +4,7 @@ import {
   FolderOpen, 
   BookOpen, 
   Calendar, 
+  Settings,
   User
 } from 'lucide-react';
 
@@ -24,6 +25,7 @@ const iconMap = {
   FolderOpen,
   BookOpen,
   Calendar,
+  Settings,
   User,
 };
 
@@ -34,6 +36,13 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ activeItem, onItemC
         {items.slice(0,5).map((item) => {
           const IconComponent = iconMap[item.icon as keyof typeof iconMap];
           const isActive = activeItem === item.id;
+          
+          // Safety check to ensure IconComponent exists
+          if (!IconComponent) {
+            console.warn(`Icon component not found for: ${item.icon}`);
+            return null;
+          }
+          
           return (
             <button
               key={item.id}
