@@ -54,6 +54,20 @@
   * {
     -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
   }
+
+  /* Ensure mobile navigation is always at bottom */
+  .mobile-nav-bottom {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+  }
+
+  /* Prevent content from being hidden behind mobile nav */
+  .mobile-content-padding {
+    padding-bottom: 5rem !important;
+  }
 }
 
 /* Custom glow effects */
@@ -203,4 +217,29 @@
 
 .text-3xl-mobile {
   @apply text-2xl md:text-3xl;
+}
+
+/* Mobile navigation specific styles */
+.mobile-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 50 !important;
+  background: rgba(17, 24, 39, 0.95) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-top: 1px solid rgba(75, 85, 99, 0.5) !important;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure content doesn't get hidden behind mobile nav */
+.mobile-content {
+  padding-bottom: 5rem !important;
+}
+
+@media (min-width: 768px) {
+  .mobile-content {
+    padding-bottom: 0 !important;
+  }
 }

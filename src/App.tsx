@@ -131,7 +131,7 @@ function App() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-20 md:pb-0">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden mobile-content">
           {/* Left Navigation - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:block">
             <Navigation
