@@ -58,8 +58,8 @@ const Navigation: React.FC<NavigationProps> = ({ activeItem, onItemClick, items 
         </div>
       </div>
 
-      {/* Mobile bottom nav - Fixed at bottom with enhanced styling */}
-      <div className="md:hidden mobile-nav">
+      {/* Mobile bottom nav - Simplified and reliable */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/50 shadow-2xl">
         <nav className="grid grid-cols-5 px-2 py-3">
           {items.slice(0,5).map((item) => {
             const IconComponent = iconMap[item.icon as keyof typeof iconMap];

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from './components/TopBar';
 import Navigation from './components/Navigation';
+import MobileNavigation from './components/MobileNavigation';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Journal from './pages/Journal';
@@ -135,7 +136,7 @@ function App() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden mobile-content">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-20 md:pb-0">
           {/* Left Navigation - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:block">
             <Navigation
@@ -148,6 +149,13 @@ function App() {
           {/* Central Panel */}
           {renderCurrentPage()}
         </div>
+
+        {/* Mobile Navigation - Always visible on mobile */}
+        <MobileNavigation
+          activeItem={activeNavItem}
+          onItemClick={setActiveNavItem}
+          items={navigationItems}
+        />
       </div>
     </div>
   );
