@@ -18,28 +18,32 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
 
-  useEffect(() => { (async () => {
-    const data = await listProjects().catch(() => [] as DbProject[]);
-    setProjects(data);
-    if (!currentProjectId && data.length > 0) setCurrentProjectId(data[0].id);
-  })(); }, []);
+  useEffect(() => {
+    (async () => {
+      const data = await listProjects().catch(() => [] as DbProject[]);
+      setProjects(data);
+      if (!currentProjectId && data.length > 0) setCurrentProjectId(data[0].id);
+    })();
+  }, []);
 
   const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) || null : null;
   const currentProjectTasks = tasks.filter(task => task.projectId === (currentProjectId || ''));
 
   // Fetch tasks from DB whenever currentProjectId changes
-  useEffect(() => { (async () => {
-    if (!currentProjectId) return;
-    try {
-      const dbTasks = await listTasksByProject(currentProjectId);
-      setTasks(prev => {
-        // Merge: remove old tasks for this project, then add fresh ones
-        const others = prev.filter(t => t.projectId !== currentProjectId);
-        return [...others, ...dbTasks];
-      });
-    } catch {
-      // ignore
-    }
+  useEffect(() => {
+    (async () => {
+      if (!currentProjectId) return;
+      try {
+        const dbTasks = await listTasksByProject(currentProjectId);
+        setTasks(prev => {
+          // Merge: remove old tasks for this project, then add fresh ones
+          const others = prev.filter(t => t.projectId !== currentProjectId);
+          return [...others, ...dbTasks];
+        });
+      } catch {
+        // ignore
+      }
+    })();
   }, [currentProjectId]);
 
   // AI suggestion logic - prioritize high priority pending tasks
