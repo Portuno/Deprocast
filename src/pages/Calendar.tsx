@@ -4,12 +4,17 @@ import { CalendarEvent, calendarEvents, Task } from '../data/mockData';
 
 type Props = { tasks?: Task[] };
 
-const Calendar: React.FC<Props> = ({ tasks }) => {
+const Calendar: React.FC<Props> = ({ tasks = [] }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents);
+  const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents || []);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Helper function - must be declared before use
+  const formatDate = (year: number, month: number, day: number) => {
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  };
 
   const eventTypeIcons = {
     task: { icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/20' },
@@ -59,14 +64,13 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
       }
       return result;
     });
-  }, [tasks]);
+  }, [tasks, todayString]);
 
   const allEvents = useMemo(() => [...events, ...taskEvents], [events, taskEvents]);
 
-  const getEventsForDate = (date: string) => allEvents.filter(event => event.date === date);
-
-  const formatDate = (year: number, month: number, day: number) => {
-    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const getEventsForDate = (date: string) => {
+    if (!allEvents || allEvents.length === 0) return [];
+    return allEvents.filter(event => event && event.date === date);
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -88,7 +92,19 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
   ];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  
+  // Safety check for events
+  if (!events) {
+    return (
+      <div className="flex-1 p-6 overflow-y-auto">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">Calendar</h1>
+            <p className="text-gray-400">Loading calendar data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -175,6 +191,7 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
                         </div>
                         <div className="space-y-1">
                           {dayEvents.slice(0, 2).map((event, eventIndex) => {
+                            if (!event || !eventTypeIcons[event.type]) return null;
                             const EventIcon = eventTypeIcons[event.type].icon;
                             return (
                               <div
@@ -213,6 +230,7 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
                         <div className="text-sm font-medium mb-1 text-white">{dayDate.getDate()}</div>
                         <div className="space-y-1">
                           {dayEvents.slice(0,3).map((event, idx) => {
+                            if (!event || !eventTypeIcons[event.type]) return null;
                             const EventIcon = eventTypeIcons[event.type].icon;
                             return (
                               <div key={`we-${idx}`} className={`text-xs p-1 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}>
@@ -235,6 +253,7 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
                   <div className="text-white font-medium mb-2">{todayString}</div>
                   <div className="space-y-2">
                     {getEventsForDate(todayString).map((event, idx) => {
+                      if (!event || !eventTypeIcons[event.type]) return null;
                       const EventIcon = eventTypeIcons[event.type].icon;
                       return (
                         <div key={`d-${idx}`} className={`p-2 rounded border border-gray-700/30 ${eventTypeIcons[event.type].bg}`}>
@@ -259,6 +278,7 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
               <h3 className="text-lg font-semibold text-white mb-4">Today's Events</h3>
               <div className="space-y-3">
                 {getEventsForDate(todayString).map((event, index) => {
+                  if (!event || !eventTypeIcons[event.type]) return null;
                   const EventIcon = eventTypeIcons[event.type].icon;
                   return (
                     <div
@@ -292,13 +312,13 @@ const Calendar: React.FC<Props> = ({ tasks }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Meetings</span>
                   <span className="text-purple-400 font-medium">
-                    {events.filter(e => e.type === 'meeting').length}
+                    {events.filter(e => e && e.type === 'meeting').length}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Focus Sessions</span>
                   <span className="text-green-400 font-medium">
-                    {events.filter(e => e.type === 'focus').length}
+                    {events.filter(e => e && e.type === 'focus').length}
                   </span>
                 </div>
               </div>
