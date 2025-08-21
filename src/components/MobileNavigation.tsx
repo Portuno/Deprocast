@@ -30,17 +30,30 @@ const iconMap = {
 };
 
 const MobileNavigation: React.FC<MobileNavigationProps> = ({ activeItem, onItemClick, items }) => {
+  // Safety check for items
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  // Only show first 5 items for mobile
+  const mobileItems = items.slice(0, 5);
+
   return (
     <div className="lg:hidden mobile-navigation bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/50 shadow-2xl">
       <nav className="grid grid-cols-5 px-2 py-3">
-        {items.slice(0,5).map((item) => {
+        {mobileItems.map((item) => {
           const IconComponent = iconMap[item.icon as keyof typeof iconMap];
           const isActive = activeItem === item.id;
           
           // Safety check to ensure IconComponent exists
           if (!IconComponent) {
             console.warn(`Icon component not found for: ${item.icon}`);
-            return null;
+            return (
+              <div key={item.id} className="flex flex-col items-center justify-center py-2 px-1">
+                <div className="w-6 h-6 mb-1 bg-gray-600 rounded"></div>
+                <span className="text-xs text-gray-500">{item.label.split(' ')[0]}</span>
+              </div>
+            );
           }
           
           return (

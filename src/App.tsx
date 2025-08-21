@@ -121,6 +121,19 @@ function App() {
     }
   };
 
+  // Safety check to ensure navigationItems is available
+  if (!navigationItems || navigationItems.length === 0) {
+    console.warn('Navigation items not available');
+    return (
+      <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+          <p className="text-gray-400">Initializing navigation...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white overflow-hidden">
       {/* Background Effects */}
