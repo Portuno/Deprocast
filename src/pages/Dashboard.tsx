@@ -36,8 +36,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   onTaskSelect,
   onStartTask,
   onDirectComplete,
+  onRefresh,
   currentProject
 }) => {
+  // Debug log to check if onRefresh is being passed
+  console.log('Dashboard props:', { onRefresh, hasOnRefresh: typeof onRefresh === 'function' });
   const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
 
   // Calculate real-time statistics
@@ -126,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <p className="text-gray-400 text-lg">
             {currentProject ? `Working on: ${currentProject.name}` : 'Ready to tackle your goals'}
           </p>
-          {onRefresh && (
+          {typeof onRefresh === 'function' && (
             <div className="mt-4">
               <button
                 onClick={onRefresh}
