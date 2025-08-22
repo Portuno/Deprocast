@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -21,46 +20,34 @@ interface NavigationProps {
     inProgress: number;
     completed: number;
   };
+  activeItem: string;
+  onItemClick: (itemId: string) => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats }) => {
-  const location = useLocation();
-
+const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, activeItem, onItemClick }) => {
   const navigationItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/projects', icon: FolderOpen, label: 'Projects' },
-    { path: '/journal', icon: BookOpen, label: 'Journal' },
-    { path: '/calendar', icon: Calendar, label: 'Calendar' },
-    { path: '/protocols', icon: Settings, label: 'Protocols' },
-    { path: '/profile', icon: User, label: 'My Profile' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'projects', icon: FolderOpen, label: 'Projects' },
+    { id: 'journal', icon: BookOpen, label: 'Journal' },
+    { id: 'calendar', icon: Calendar, label: 'Calendar' },
+    { id: 'protocols', icon: Settings, label: 'Protocols' },
+    { id: 'profile', icon: User, label: 'My Profile' },
   ];
 
   return (
     <nav className="w-64 bg-gray-900 text-white h-screen flex flex-col">
-      {/* Logo and App Name */}
-      <div className="p-6 border-b border-gray-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold">Deprocast</span>
-        </div>
-      </div>
-
       {/* Navigation Items */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 pt-6">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const IconComponent = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = activeItem === item.id;
             
             return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              <li key={item.id}>
+                <button
+                  onClick={() => onItemClick(item.id)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
                       : 'text-gray-300 hover:text-white hover:bg-gray-800'
@@ -68,7 +55,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats }) =>
                 >
                   <IconComponent className="w-5 h-5" />
                   <span>{item.label}</span>
-                </Link>
+                </button>
               </li>
             );
           })}
