@@ -92,44 +92,74 @@ function App() {
     setNextTaskId(taskId);
   };
 
-  const handleStartTask = (taskId: string) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, status: 'in-progress' as const }
-          : task
-      )
-    );
-    setActivePomodoroTaskId(taskId);
+  const handleStartTask = async (taskId: string) => {
+    try {
+      // Update database first
+      await updateTaskStatusInProgress(taskId);
+      
+      // Then update local state
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, status: 'in-progress' as const }
+            : task
+        )
+      );
+      setActivePomodoroTaskId(taskId);
+    } catch (error) {
+      console.error('Error starting task:', error);
+      // Optionally show error to user
+    }
   };
 
-  const handleDirectComplete = (taskId: string) => {
-    // Update task status to completed
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
-          : task
-      )
-    );
-    
-    setActivePomodoroTaskId(null);
-    
-    // Update next task if this was the current next task
-    if (nextTaskId === taskId) {
-      const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
-      if (pendingTasks.length > 0) {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        const sortedTasks = pendingTasks.sort((a, b) => 
-          priorityOrder[b.priority] - priorityOrder[a.priority]
-        );
-        setNextTaskId(sortedTasks[0].id);
-      } else {
-        setNextTaskId(null);
+  const handleDirectComplete = async (taskId: string) => {
+    try {
+      // Update database first
+      await updateTaskStatusCompleted(taskId);
+      
+      // Then update local state
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
+            : task
+        )
+      );
+      
+      setActivePomodoroTaskId(null);
+      
+      // Update next task if this was the current next task
+      if (nextTaskId === taskId) {
+        const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
+        if (pendingTasks.length > 0) {
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const sortedTasks = pendingTasks.sort((a, b) => 
+            priorityOrder[b.priority] - priorityOrder[a.priority]
+          );
+          setNextTaskId(sortedTasks[0].id);
+        } else {
+          setNextTaskId(null);
+        }
       }
-    }
 
-    console.log('Task completed directly:', taskId);
+      console.log('Task completed directly:', taskId);
+      
+      // Refresh tasks from database to ensure sync
+      if (currentProjectId) {
+        try {
+          const refreshedTasks = await refreshProjectTasks(currentProjectId);
+          setTasks(prev => {
+            const others = prev.filter(t => t.projectId !== currentProjectId);
+            return [...others, ...refreshedTasks];
+          });
+        } catch (refreshError) {
+          console.error('Error refreshing tasks:', refreshError);
+        }
+      }
+    } catch (error) {
+      console.error('Error completing task:', error);
+      // Optionally show error to user
+    }
   };
 
   const handleTaskComplete = (completionData: TaskCompletionData) => {
@@ -176,6 +206,21 @@ function App() {
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
             onDirectComplete={handleDirectComplete}
+            onRefresh={() => {
+              if (currentProjectId) {
+                (async () => {
+                  try {
+                    const refreshedTasks = await refreshProjectTasks(currentProjectId);
+                    setTasks(prev => {
+                      const others = prev.filter(t => t.projectId !== currentProjectId);
+                      return [...others, ...refreshedTasks];
+                    });
+                  } catch (error) {
+                    console.error('Error refreshing tasks:', error);
+                  }
+                })();
+              }
+            }}
             currentProject={currentProject}
           />
         );
@@ -200,6 +245,21 @@ function App() {
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
             onDirectComplete={handleDirectComplete}
+            onRefresh={() => {
+              if (currentProjectId) {
+                (async () => {
+                  try {
+                    const refreshedTasks = await refreshProjectTasks(currentProjectId);
+                    setTasks(prev => {
+                      const others = prev.filter(t => t.projectId !== currentProjectId);
+                      return [...others, ...refreshedTasks];
+                    });
+                  } catch (error) {
+                    console.error('Error refreshing tasks:', error);
+                  }
+                })();
+              }
+            }}
             currentProject={currentProject}
           />
         );
