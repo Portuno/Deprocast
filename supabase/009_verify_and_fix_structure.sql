@@ -1,47 +1,30 @@
--- Additional task management functions for the Pomodoro+ protocol
--- This migration adds utility functions for task operations
+-- Verify and fix micro_tasks table structure
+-- This migration first checks what columns exist, then creates functions accordingly
 
--- Function to mark a task as in-progress
-CREATE OR REPLACE FUNCTION start_task(p_task_id UUID)
-RETURNS VOID AS $$
-BEGIN
-    UPDATE micro_tasks 
-    SET 
-        status = 'in-progress',
-        updated_at = NOW()
-    WHERE id = p_task_id;
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Task with ID % not found', p_task_id;
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
+-- First, let's see what columns actually exist in micro_tasks
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_name = 'micro_tasks' 
+ORDER BY column_name;
 
--- Function to mark a task as completed (simple version)
-CREATE OR REPLACE FUNCTION complete_task_simple(p_task_id UUID)
-RETURNS VOID AS $$
-BEGIN
-    UPDATE micro_tasks 
-    SET 
-        status = 'completed',
-        completion_date = NOW(),
-        updated_at = NOW()
-    WHERE id = p_task_id;
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Task with ID % not found', p_task_id;
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
+-- Drop existing functions and views that might have incorrect column references
+DROP FUNCTION IF EXISTS get_next_recommended_task(UUID);
+DROP FUNCTION IF EXISTS get_project_task_stats(UUID);
+DROP FUNCTION IF EXISTS get_daily_productivity_summary(UUID, DATE);
+DROP FUNCTION IF EXISTS get_weekly_productivity_trends(UUID, INTEGER);
+DROP VIEW IF EXISTS task_completion_summary;
 
--- Function to get next recommended task based on priority
+-- Create a simple function to get next recommended task (without estimated_time for now)
 CREATE OR REPLACE FUNCTION get_next_recommended_task(p_project_id UUID)
 RETURNS TABLE(
     id UUID,
     title TEXT,
     description TEXT,
     priority TEXT,
-    estimated_time INTEGER,
     status TEXT
 ) AS $$
 BEGIN
@@ -51,7 +34,6 @@ BEGIN
         mt.title,
         mt.description,
         mt.priority,
-        mt.estimated_time,
         mt.status
     FROM micro_tasks mt
     WHERE mt.project_id = p_project_id
@@ -91,7 +73,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get daily productivity summary
+-- Function to get daily productivity summary (basic version)
 CREATE OR REPLACE FUNCTION get_daily_productivity_summary(p_project_id UUID DEFAULT NULL, p_date DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
     date DATE,
@@ -117,7 +99,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get weekly productivity trends
+-- Function to get weekly productivity trends (basic version)
 CREATE OR REPLACE FUNCTION get_weekly_productivity_trends(p_project_id UUID DEFAULT NULL, p_weeks_back INTEGER DEFAULT 4)
 RETURNS TABLE(
     week_start DATE,
@@ -208,41 +190,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to reset a task to pending status
-CREATE OR REPLACE FUNCTION reset_task_to_pending(p_task_id UUID)
-RETURNS VOID AS $$
-BEGIN
-    UPDATE micro_tasks 
-    SET 
-        status = 'pending',
-        completion_date = NULL,
-        actual_time_minutes = NULL,
-        motivation_before = NULL,
-        motivation_after = NULL,
-        dopamine_rating = NULL,
-        next_task_motivation = NULL,
-        breakthrough_moments = NULL,
-        obstacles_encountered = '[]'::jsonb,
-        updated_at = NOW()
-    WHERE id = p_task_id;
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Task with ID % not found', p_task_id;
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
-
--- Grant permissions for all new functions
-GRANT EXECUTE ON FUNCTION start_task(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION complete_task_simple(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_next_recommended_task(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_project_task_stats(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_daily_productivity_summary(UUID, DATE) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_weekly_productivity_trends(UUID, INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_obstacle_analysis(UUID, INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION reset_task_to_pending(UUID) TO authenticated;
-
--- Create a view for easy task completion tracking
+-- Create a basic view for task completion tracking (without estimated_time for now)
 CREATE OR REPLACE VIEW task_completion_summary AS
 SELECT 
     mt.id,
@@ -251,7 +199,6 @@ SELECT
     p.title as project_name,
     mt.status,
     mt.priority,
-    mt.estimated_time,
     mt.actual_time_minutes,
     mt.completion_date,
     mt.motivation_before,
@@ -261,11 +208,6 @@ SELECT
     mt.breakthrough_moments,
     mt.obstacles_encountered,
     CASE 
-        WHEN mt.status = 'completed' AND mt.actual_time_minutes IS NOT NULL 
-        THEN mt.actual_time_minutes - COALESCE(mt.estimated_time, 0)
-        ELSE NULL 
-    END as time_difference_minutes,
-    CASE 
         WHEN mt.motivation_after IS NOT NULL AND mt.motivation_before IS NOT NULL
         THEN mt.motivation_after - mt.motivation_before
         ELSE NULL 
@@ -274,21 +216,25 @@ FROM micro_tasks mt
 LEFT JOIN projects p ON mt.project_id = p.id
 ORDER BY mt.completion_date DESC NULLS LAST, mt.created_at DESC;
 
+-- Grant permissions for all functions
+GRANT EXECUTE ON FUNCTION get_next_recommended_task(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_project_task_stats(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_daily_productivity_summary(UUID, DATE) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_weekly_productivity_trends(UUID, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_obstacle_analysis(UUID, INTEGER) TO authenticated;
+
 -- Grant select permission on the view
 GRANT SELECT ON task_completion_summary TO authenticated;
 
 -- Add helpful comments
-COMMENT ON FUNCTION start_task(UUID) IS 'Marks a task as in-progress';
-COMMENT ON FUNCTION complete_task_simple(UUID) IS 'Marks a task as completed with basic completion data';
 COMMENT ON FUNCTION get_next_recommended_task(UUID) IS 'Gets the next recommended task based on priority and creation date';
 COMMENT ON FUNCTION get_project_task_stats(UUID) IS 'Gets comprehensive task statistics for a project';
 COMMENT ON FUNCTION get_daily_productivity_summary(UUID, DATE) IS 'Gets daily productivity summary with detailed metrics';
 COMMENT ON FUNCTION get_weekly_productivity_trends(UUID, INTEGER) IS 'Gets weekly productivity trends and patterns';
 COMMENT ON FUNCTION get_obstacle_analysis(UUID, INTEGER) IS 'Analyzes obstacles and provides common solutions';
-COMMENT ON FUNCTION reset_task_to_pending(UUID) IS 'Resets a task back to pending status, clearing all completion data';
-COMMENT ON VIEW task_completion_summary IS 'Comprehensive view of all tasks with completion tracking data';
+COMMENT ON VIEW task_completion_summary IS 'Basic view of all tasks with completion tracking data';
 
--- Verify the functions were created
+-- Verify the functions were created successfully
 SELECT 
     routine_name, 
     routine_type,
@@ -296,13 +242,19 @@ SELECT
 FROM information_schema.routines 
 WHERE routine_schema = 'public' 
 AND routine_name IN (
-    'start_task',
-    'complete_task_simple',
     'get_next_recommended_task',
     'get_project_task_stats',
     'get_daily_productivity_summary',
     'get_weekly_productivity_trends',
-    'get_obstacle_analysis',
-    'reset_task_to_pending'
+    'get_obstacle_analysis'
 )
 ORDER BY routine_name;
+
+-- Verify the view was created
+SELECT table_name, table_type 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name = 'task_completion_summary';
+
+-- Show a summary of what was created
+SELECT 'Functions and View Created Successfully' as status;
