@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TaskModule from '../components/TaskModule';
 import JournalModule from '../components/JournalModule';
 import TaskList from '../components/TaskList';
@@ -14,6 +14,19 @@ interface DashboardProps {
   currentProject: any;
 }
 
+interface TaskCompletionData {
+  taskTitle: string;
+  estimatedTimeMinutes?: number;
+  actualTimeMinutes: number;
+  motivationBefore: number;
+  motivationAfter: number;
+  dopamineRating: number;
+  nextTaskMotivation: number;
+  breakthroughMoments: string;
+  obstaclesEncountered: any[];
+  completionDate: string;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({
   tasks,
   nextTaskId,
@@ -22,6 +35,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onStartTask,
   currentProject
 }) => {
+  const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
+
   // Calculate real-time statistics
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
@@ -63,6 +78,33 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (totalTasks === 0) return 0;
     return Math.round((completedTasks.length / totalTasks) * 100);
   };
+
+  const handleTaskComplete = (completionData: TaskCompletionData) => {
+    setCompletionHistory(prev => [...prev, completionData]);
+    
+    // Here you would typically send this data to your backend/AI coaching system
+    console.log('Task completion data collected:', completionData);
+  };
+
+  // Calculate productivity insights from completion history
+  const getProductivityInsights = () => {
+    if (completionHistory.length === 0) return null;
+
+    const avgMotivationBefore = completionHistory.reduce((sum, item) => sum + item.motivationBefore, 0) / completionHistory.length;
+    const avgMotivationAfter = completionHistory.reduce((sum, item) => sum + item.motivationAfter, 0) / completionHistory.length;
+    const avgDopamineRating = completionHistory.reduce((sum, item) => sum + item.dopamineRating, 0) / completionHistory.length;
+    const avgNextTaskMotivation = completionHistory.reduce((sum, item) => sum + item.nextTaskMotivation, 0) / completionHistory.length;
+
+    return {
+      avgMotivationBefore: Math.round(avgMotivationBefore * 10) / 10,
+      avgMotivationAfter: Math.round(avgMotivationAfter * 10) / 10,
+      avgDopamineRating: Math.round(avgDopamineRating * 10) / 10,
+      avgNextTaskMotivation: Math.round(avgNextTaskMotivation * 10) / 10,
+      totalSessions: completionHistory.length
+    };
+  };
+
+  const insights = getProductivityInsights();
 
   return (
     <div className="flex-1 p-4 md:p-6 overflow-y-auto">
@@ -115,6 +157,39 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
+        {/* Productivity Insights */}
+        {insights && (
+          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-6">
+            <h3 className="text-xl font-bold text-white mb-4">📊 Productivity Insights</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400 mb-1">{insights.totalSessions}</div>
+                <div className="text-sm text-gray-400">Total Sessions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400 mb-1">{insights.avgMotivationBefore}</div>
+                <div className="text-sm text-gray-400">Avg Motivation Before</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400 mb-1">{insights.avgMotivationAfter}</div>
+                <div className="text-sm text-gray-400">Avg Motivation After</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-400 mb-1">{insights.avgDopamineRating}</div>
+                <div className="text-sm text-gray-400">Avg Dopamine Rating</div>
+              </div>
+            </div>
+            <div className="mt-4 text-center">
+              <div className="text-sm text-gray-300">
+                💡 Your motivation increased by <span className="text-green-400 font-semibold">
+                  {insights.avgMotivationAfter - insights.avgMotivationBefore > 0 ? '+' : ''}
+                  {(insights.avgMotivationAfter - insights.avgMotivationBefore).toFixed(1)}
+                </span> points on average!
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Task Module */}
@@ -122,6 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <TaskModule
               nextTask={nextTask}
               onStartTask={onStartTask}
+              onTaskComplete={handleTaskComplete}
             />
           </div>
 
@@ -149,12 +225,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           />
         </div>
 
-        {/* Motivation Section */}
+        {/* Neuroscience Tip */}
         <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
-          <h3 className="text-xl font-bold text-white mb-3">🧠 Neuroscience Tip</h3>
+          <h3 className="text-xl font-bold text-white mb-3">🧠 Pomodoro+ Neuroscience</h3>
           <p className="text-gray-300 mb-4">
-            Your brain releases dopamine when you complete tasks, creating a positive feedback loop. 
-            By breaking large tasks into 25-minute focused sessions, you're training your brain to 
+            The Pomodoro+ protocol creates artificial completion opportunities every 25 minutes, 
+            triggering dopamine release regardless of task size. This "rewires" your brain to 
             associate work with reward rather than stress.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -163,12 +239,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="text-purple-300">Visualize success before starting</div>
             </div>
             <div className="bg-blue-500/20 rounded-lg p-3">
-              <div className="text-blue-400 font-semibold mb-1">Focused Sessions</div>
-              <div className="text-blue-300">25 minutes of undistracted work</div>
+              <div className="text-blue-400 font-semibold mb-1">Celebration Breaks</div>
+              <div className="text-blue-300">5-minute physical celebration sessions</div>
             </div>
             <div className="bg-green-500/20 rounded-lg p-3">
-              <div className="text-green-400 font-semibold mb-1">Micro-Wins</div>
-              <div className="text-green-300">Celebrate every small victory</div>
+              <div className="text-green-400 font-semibold mb-1">Data Collection</div>
+              <div className="text-green-300">Track progress for AI coaching insights</div>
             </div>
           </div>
         </div>

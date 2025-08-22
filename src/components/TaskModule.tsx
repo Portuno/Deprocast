@@ -6,9 +6,14 @@ import PomodoroTimer from './PomodoroTimer';
 interface TaskModuleProps {
   nextTask: Task | null;
   onStartTask: (taskId: string) => void;
+  onTaskComplete?: (completionData: any) => void;
 }
 
-const TaskModule: React.FC<TaskModuleProps> = ({ nextTask, onStartTask }) => {
+const TaskModule: React.FC<TaskModuleProps> = ({ 
+  nextTask, 
+  onStartTask,
+  onTaskComplete 
+}) => {
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [isTaskInProgress, setIsTaskInProgress] = useState(false);
 
@@ -20,10 +25,14 @@ const TaskModule: React.FC<TaskModuleProps> = ({ nextTask, onStartTask }) => {
     }
   };
 
-  const handlePomodoroComplete = () => {
+  const handlePomodoroComplete = (completionData: any) => {
     setShowPomodoro(false);
     setIsTaskInProgress(false);
-    // Here you could add additional completion logic
+    
+    // Pass completion data to parent component
+    if (onTaskComplete) {
+      onTaskComplete(completionData);
+    }
   };
 
   const handlePomodoroCancel = () => {
@@ -88,24 +97,24 @@ const TaskModule: React.FC<TaskModuleProps> = ({ nextTask, onStartTask }) => {
         <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg">
           <div className="flex items-center space-x-3 mb-3">
             <Brain className="w-5 h-5 text-purple-400" />
-            <h4 className="font-semibold text-white">🧠 Anti-Procrastination Protocol</h4>
+            <h4 className="font-semibold text-white">🧠 Pomodoro+ Protocol</h4>
           </div>
           <div className="space-y-2 text-sm text-gray-300">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>25-minute focused work sessions (Pomodoro technique)</span>
+              <span>25-minute focused work sessions with dopamine priming</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span>Dopamine priming through visualization</span>
+              <span>5-minute celebration breaks to reinforce neural pathways</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Real-time obstacle resolution with AI support</span>
+              <span>Real-time obstacle resolution with AI-powered solutions</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              <span>Micro-win celebrations to reinforce positive feedback loops</span>
+              <span>Comprehensive data collection for personalized coaching</span>
             </div>
           </div>
         </div>
@@ -139,6 +148,7 @@ const TaskModule: React.FC<TaskModuleProps> = ({ nextTask, onStartTask }) => {
             <li>• Put your phone in another room</li>
             <li>• Have water and snacks ready</li>
             <li>• Remember: 25 minutes of focus beats 2 hours of distracted work</li>
+            <li>• Celebrate every micro-win to train your brain</li>
           </ul>
         </div>
       </div>
@@ -150,6 +160,7 @@ const TaskModule: React.FC<TaskModuleProps> = ({ nextTask, onStartTask }) => {
           onComplete={handlePomodoroComplete}
           onCancel={handlePomodoroCancel}
           taskTitle={nextTask.title}
+          estimatedTimeMinutes={nextTask.estimatedTimeMinutes}
         />
       )}
     </>

@@ -12,6 +12,19 @@ import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
 import { listTasksByProject } from './integrations/supabase/tasks';
 import { listProjects, type DbProject } from './integrations/supabase/projects';
 
+interface TaskCompletionData {
+  taskTitle: string;
+  estimatedTimeMinutes?: number;
+  actualTimeMinutes: number;
+  motivationBefore: number;
+  motivationAfter: number;
+  dopamineRating: number;
+  nextTaskMotivation: number;
+  breakthroughMoments: string;
+  obstaclesEncountered: any[];
+  completionDate: string;
+}
+
 function App() {
   const [projects, setProjects] = useState<DbProject[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -19,6 +32,7 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
   const [activePomodoroTaskId, setActivePomodoroTaskId] = useState<string | null>(null);
+  const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -84,18 +98,23 @@ function App() {
     setActivePomodoroTaskId(taskId);
   };
 
-  const handleTaskComplete = (taskId: string) => {
+  const handleTaskComplete = (completionData: TaskCompletionData) => {
+    // Add to completion history
+    setCompletionHistory(prev => [...prev, completionData]);
+    
+    // Update task status to completed
     setTasks(prevTasks => 
       prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
+        task.title === completionData.taskTitle
+          ? { ...task, status: 'completed' as const, completionDate: completionData.completionDate }
           : task
       )
     );
+    
     setActivePomodoroTaskId(null);
     
     // Update next task if this was the current next task
-    if (nextTaskId === taskId) {
+    if (nextTaskId && nextTask && nextTask.title === completionData.taskTitle) {
       const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
       if (pendingTasks.length > 0) {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -107,6 +126,9 @@ function App() {
         setNextTaskId(null);
       }
     }
+
+    // Here you would typically send completionData to your backend/AI coaching system
+    console.log('Task completed with data:', completionData);
   };
 
   const renderCurrentPage = () => {
