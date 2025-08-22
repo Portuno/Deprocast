@@ -14,6 +14,7 @@ interface DashboardProps {
   onStartTask: (taskId: string) => void;
   onDirectComplete?: (taskId: string) => void;
   onRefresh?: () => void;
+  onTaskComplete?: (completionData: TaskCompletionData) => void;
   currentProject: any;
 }
 
@@ -39,6 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onStartTask,
   onDirectComplete,
   onRefresh,
+  onTaskComplete,
   currentProject
 }) => {
   // Debug log to check if onRefresh is being passed
@@ -89,8 +91,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const handleTaskComplete = (completionData: TaskCompletionData) => {
     setCompletionHistory(prev => [...prev, completionData]);
-    
-    // Here you would typically send this data to your backend/AI coaching system
+    // forward to parent for DB persist
+    if (onTaskComplete) {
+      onTaskComplete(completionData);
+    }
     console.log('Task completion data collected:', completionData);
   };
 
@@ -280,38 +284,37 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </div>
 
-        {/* Mobile Task List */}
-        {tasks.length > 0 && (
-          <div className="lg:hidden">
-            <MobileTaskList
-              tasks={tasks}
-              nextTaskId={nextTaskId}
-              onTaskSelect={onTaskSelect}
-            />
-          </div>
-        )}
+      {/* Mobile Task List */}
+      {tasks.length > 0 && (
+        <div className="lg:hidden">
+          <MobileTaskList
+            tasks={tasks}
+            nextTaskId={nextTaskId}
+            onTaskSelect={onTaskSelect}
+          />
+        </div>
+      )}
 
-        {/* Neuroscience Tip */}
-        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
-          <h3 className="text-xl font-bold text-white mb-3">🧠 Pomodoro+ Neuroscience</h3>
-          <p className="text-gray-300 mb-4">
-            The Pomodoro+ protocol creates artificial completion opportunities every 25 minutes, 
-            triggering dopamine release regardless of task size. This "rewires" your brain to 
-            associate work with reward rather than stress.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="bg-purple-500/20 rounded-lg p-3">
-              <div className="text-purple-400 font-semibold mb-1">Dopamine Priming</div>
-              <div className="text-purple-300">Visualize success before starting</div>
-            </div>
-            <div className="bg-blue-500/20 rounded-lg p-3">
-              <div className="text-blue-400 font-semibold mb-1">Celebration Breaks</div>
-              <div className="text-blue-300">5-minute physical celebration sessions</div>
-            </div>
-            <div className="bg-green-500/20 rounded-lg p-3">
-              <div className="text-green-400 font-semibold mb-1">Data Collection</div>
-              <div className="text-green-300">Track progress for AI coaching insights</div>
-            </div>
+      {/* Neuroscience Tip */}
+      <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
+        <h3 className="text-xl font-bold text-white mb-3">🧠 Pomodoro+ Neuroscience</h3>
+        <p className="text-gray-300 mb-4">
+          The Pomodoro+ protocol creates artificial completion opportunities every 25 minutes, 
+          triggering dopamine release regardless of task size. This "rewires" your brain to 
+          associate work with reward rather than stress.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-purple-500/20 rounded-lg p-3">
+            <div className="text-purple-400 font-semibold mb-1">Dopamine Priming</div>
+            <div className="text-purple-300">Visualize success before starting</div>
+          </div>
+          <div className="bg-blue-500/20 rounded-lg p-3">
+            <div className="text-blue-400 font-semibold mb-1">Celebration Breaks</div>
+            <div className="text-blue-300">5-minute physical celebration sessions</div>
+          </div>
+          <div className="bg-green-500/20 rounded-lg p-3">
+            <div className="text-green-400 font-semibold mb-1">Data Collection</div>
+            <div className="text-green-300">Track progress for AI coaching insights</div>
           </div>
         </div>
       </div>
