@@ -18,6 +18,7 @@ function App() {
   const [activeNavItem, setActiveNavItem] = useState('dashboard');
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
+  const [activePomodoroTaskId, setActivePomodoroTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -80,6 +81,32 @@ function App() {
           : task
       )
     );
+    setActivePomodoroTaskId(taskId);
+  };
+
+  const handleTaskComplete = (taskId: string) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
+          : task
+      )
+    );
+    setActivePomodoroTaskId(null);
+    
+    // Update next task if this was the current next task
+    if (nextTaskId === taskId) {
+      const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
+      if (pendingTasks.length > 0) {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const sortedTasks = pendingTasks.sort((a, b) => 
+          priorityOrder[b.priority] - priorityOrder[a.priority]
+        );
+        setNextTaskId(sortedTasks[0].id);
+      } else {
+        setNextTaskId(null);
+      }
+    }
   };
 
   const renderCurrentPage = () => {

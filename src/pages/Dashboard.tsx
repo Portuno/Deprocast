@@ -4,10 +4,6 @@ import JournalModule from '../components/JournalModule';
 import TaskList from '../components/TaskList';
 import MobileTaskList from '../components/MobileTaskList';
 import { Task } from '../data/mockData';
-import { generateMicrotasksForProject, getOrCreateUuidChatId, setChatId, ensurePlatformChatId } from '../integrations/mabot/client';
-import type { DbProject } from '../integrations/supabase/projects';
-import { bulkInsertTasks } from '../integrations/supabase/tasks';
-import { TrendingUp, Clock, CheckCircle2, Target } from 'lucide-react';
 
 interface DashboardProps {
   tasks: Task[];
@@ -15,8 +11,7 @@ interface DashboardProps {
   nextTask: Task | null;
   onTaskSelect: (taskId: string) => void;
   onStartTask: (taskId: string) => void;
-  currentProject?: DbProject | null;
-  onTasksGenerated?: (newTasks: Task[]) => void;
+  currentProject: any;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -27,253 +22,156 @@ const Dashboard: React.FC<DashboardProps> = ({
   onStartTask,
   currentProject
 }) => {
-  const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  const inProgressTasks = tasks.filter(task => task.status === 'in-progress').length;
-  const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+  // Calculate real-time statistics
+  const pendingTasks = tasks.filter(task => task.status === 'pending');
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
+  const completedTasks = tasks.filter(task => task.status === 'completed');
   const totalTasks = tasks.length;
-  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  const coachingTips = React.useMemo(() => [
-    'Tip: The brain gets a dopamine hit from completing any task, no matter how small.',
-    'Fact: The average person gets distracted every 11 minutes.',
-    "Insight: Your brain sees complex projects as a threat. Our job is to make it feel safe.",
-    "Fact: Working memory holds ~7 items. Micro-tasks prevent overwhelm.",
-    'Tip: Visualize the reward before starting to boost motivation.',
-    "Insight: Procrastination is an emotional response — not laziness.",
-    'Fact: Small wins strengthen neural pathways associated with success.',
-    'Tip: The first 5 minutes are the hardest — start tiny.',
-    "Insight: The Default Mode Network loves to wander — we give it a path.",
-    'Fact: Dopamine from completion is real — we optimize for it.',
-    'Tip: Breaks reset your prefrontal cortex — schedule them.',
-    "Insight: Your energy patterns guide peak performance — mapping now.",
-    'Fact: Stress can reduce cognitive function by up to 40%.',
-    "Tip: Don't spend willpower choosing — we've picked your next step.",
-    'Fact: Your brain loves certainty — clear tasks reduce anxiety.'
-  ], []);
-
-  const [phase, setPhase] = React.useState<'idle' | 'loading' | 'done'>('idle');
-  const [tipIndex, setTipIndex] = React.useState(0);
-  React.useEffect(() => {
-    if (phase !== 'loading') return;
-    const interval = setInterval(() => {
-      setTipIndex((i) => (i + 1) % coachingTips.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [phase, coachingTips.length]);
-
-  const handleGenerateMicrotasks = async () => {
-    try {
-      if (!currentProject) {
-        // eslint-disable-next-line no-console
-        console.error('No current project selected');
-        return;
-      }
-
-      setPhase('loading');
-      setTipIndex(0);
-
-      // Per-project chat continuity
-      const chatId = getOrCreateUuidChatId(currentProject.id);
-      setChatId(chatId);
-      ensurePlatformChatId('deproPB');
-
-      const projectDescription = currentProject.description;
-      const outcomeGoal = currentProject.description;
-      const generatePromise = generateMicrotasksForProject({
-        project_description: projectDescription,
-        outcome_goal: outcomeGoal,
-        available_time_blocks: [],
-        target_completion_date: currentProject.target_completion_date,
-        title: currentProject.title,
-        category: currentProject.category,
-        motivation: currentProject.motivation,
-        perceived_difficulty: currentProject.perceived_difficulty,
-        known_obstacles: currentProject.known_obstacles,
-        skills_resources_needed: currentProject.skills_resources_needed ?? []
-      });
-
-      // Enforce a minimum 15s coaching experience
-      const minDelay = new Promise((resolve) => setTimeout(resolve, 15000));
-      const res = await Promise.race([
-        Promise.all([generatePromise, minDelay]).then((vals) => vals[0]),
-      ]);
-
-      if (!res || !res.success || !res.data) {
-        // eslint-disable-next-line no-console
-        console.error('Mabot response error', res);
-        return;
-      }
-
-      const raw: any = (res as any).data;
-      let tasksAny: any[] | null = Array.isArray(raw?.tasks) ? (raw.tasks as any[]) : null;
-
-      // Fallback: try to parse assistant text JSON
-      if (!tasksAny) {
-        try {
-          const messages = (raw?.messages as Array<any>) || [];
-          const assistant = messages.find((m) => m?.role === 'assistant');
-          const contents = (assistant?.contents as Array<any>) || [];
-          const text = (contents.find((c) => c?.type === 'text')?.value as string) || '';
-          if (text) {
-            const parsed = JSON.parse(text);
-            if (Array.isArray(parsed?.tasks)) tasksAny = parsed.tasks as any[];
-          }
-        } catch {
-          // ignore parse errors
-        }
-      }
-
-      if (!Array.isArray(tasksAny)) {
-        // eslint-disable-next-line no-console
-        console.error('Mabot did not return tasks in the expected format');
-        return;
-      }
-
-      const toPriority = (risk: string | undefined): Task['priority'] => {
-        if (risk === 'high') return 'high';
-        if (risk === 'medium') return 'medium';
-        return 'low';
-      };
-
-      const mapped: Task[] = tasksAny.map((t: any) => {
-        const title: string = t?.micro_task || t?.title || 'Microtask';
-        const desc: string = t?.description || t?.why || '';
-        const ac: string[] = Array.isArray(t?.acceptance_criteria) ? t.acceptance_criteria : [];
-        const description = ac.length > 0 ? `${desc}\nAcceptance: ${ac.join('; ')}` : desc;
-        const est: number | undefined = t?.estimate_minutes ?? t?.estimatedTimeMinutes;
-        const risk: string | undefined = t?.risk ?? t?.resistanceLevel;
-        const tags: string[] = Array.isArray(t?.tags) ? t.tags : [];
-        return {
-          id: String(t?.id || Math.random().toString(36).slice(2)),
-          title,
-          description,
-          status: 'pending',
-          priority: toPriority(risk),
-          projectId: currentProject.id,
-          estimatedTimeMinutes: typeof est === 'number' ? est : undefined,
-          dopamineScore: t?.dopamineScore,
-          taskType: tags[0] || t?.taskType,
-          resistanceLevel: (risk as any) || undefined,
-          dependencyTaskId: t?.dependencyTaskExternalId ?? undefined,
-        } as Task;
-      });
-
-      // Persist (requires micro_tasks table); ignore DB write errors gracefully
-      try {
-        const inserted = await bulkInsertTasks(currentProject.id, mapped);
-        onTasksGenerated?.(inserted);
-      } catch {
-        // ignore persistence errors for now
-      }
-      setPhase('done');
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Generate microtasks failed', err);
-      setPhase('idle');
+  const stats = [
+    {
+      label: 'Total Tasks',
+      value: totalTasks,
+      icon: '📋',
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/10'
+    },
+    {
+      label: 'Pending',
+      value: pendingTasks.length,
+      icon: '⏳',
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-500/10'
+    },
+    {
+      label: 'In Progress',
+      value: inProgressTasks.length,
+      icon: '🚀',
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/10'
+    },
+    {
+      label: 'Completed',
+      value: completedTasks.length,
+      icon: '✅',
+      color: 'text-green-400',
+      bgColor: 'bg-green-500/10'
     }
+  ];
+
+  const getProgressPercentage = () => {
+    if (totalTasks === 0) return 0;
+    return Math.round((completedTasks.length / totalTasks) * 100);
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-      {/* Central Panel */}
-      <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 md:gap-6 overflow-hidden">
-        {/* Stats Overview - Mobile Optimized */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-400">Completion</p>
-                <p className="text-lg md:text-2xl font-bold text-green-400">{completionRate}%</p>
+    <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Welcome back! 🚀
+          </h1>
+          <p className="text-gray-400 text-lg">
+            {currentProject ? `Working on: ${currentProject.name}` : 'Ready to tackle your goals'}
+          </p>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {stats.map((stat, index) => (
+            <div
+              key={index}
+              className={`${stat.bgColor} border border-gray-700/30 rounded-xl p-3 md:p-4 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+            >
+              <div className={`text-2xl md:text-3xl mb-2 ${stat.color}`}>
+                {stat.icon}
               </div>
-              <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
+              <div className={`text-lg md:text-2xl font-bold ${stat.color} mb-1`}>
+                {stat.value}
+              </div>
+              <div className="text-xs md:text-sm text-gray-400 font-medium">
+                {stat.label}
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-white">Overall Progress</h3>
+            <span className="text-2xl font-bold text-blue-400">{getProgressPercentage()}%</span>
           </div>
-          
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-400">In Progress</p>
-                <p className="text-lg md:text-2xl font-bold text-blue-400">{inProgressTasks}</p>
-              </div>
-              <Clock className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
-            </div>
+          <div className="w-full bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
+              style={{ width: `${getProgressPercentage()}%` }}
+            ></div>
           </div>
-          
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-400">Completed</p>
-                <p className="text-lg md:text-2xl font-bold text-green-400">{completedTasks}</p>
-              </div>
-              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
-            </div>
-          </div>
-          
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-3 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-400">Pending</p>
-                <p className="text-lg md:text-2xl font-bold text-yellow-400">{pendingTasks}</p>
-              </div>
-              <Target className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
-            </div>
+          <div className="flex justify-between text-sm text-gray-400 mt-2">
+            <span>{completedTasks.length} completed</span>
+            <span>{totalTasks - completedTasks.length} remaining</span>
           </div>
         </div>
 
-        {tasks.length === 0 && (
-          <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6 md:p-10 text-center">
-            {phase === 'idle' && (
-              <>
-                <div className="text-gray-400 mb-4 text-sm md:text-base">No Tasks Available</div>
-                <button 
-                  onClick={handleGenerateMicrotasks} 
-                  className="px-4 md:px-6 py-3 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200 text-sm md:text-base"
-                >
-                  Generate Microtasks
-                </button>
-              </>
-            )}
-            {phase === 'loading' && (
-              <div className="flex flex-col items-center gap-4">
-                <div className="text-white font-medium text-sm md:text-base">My turn. One moment…</div>
-                <div className="w-8 h-8 md:w-10 md:h-10 border-2 border-white/50 border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-xs md:text-sm text-gray-300 max-w-xl px-4">{coachingTips[tipIndex]}</div>
-              </div>
-            )}
-            {phase === 'done' && (
-              <div className="flex flex-col items-center gap-4">
-                <div className="text-white font-semibold text-sm md:text-base">Your brain is ready. Your micro-tasks are here.</div>
-                <div className="text-gray-400 text-xs md:text-sm">If you don't see them yet, give it a second.</div>
-              </div>
-            )}
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Task Module */}
+          <div className="lg:col-span-1">
+            <TaskModule
+              nextTask={nextTask}
+              onStartTask={onStartTask}
+            />
           </div>
-        )}
 
-        {nextTask && (
-          <TaskModule
-            nextTask={nextTask}
-            onStartTask={onStartTask}
+          {/* Center Column - Journal Module */}
+          <div className="lg:col-span-1">
+            <JournalModule />
+          </div>
+
+          {/* Right Column - Task List (Desktop) */}
+          <div className="hidden lg:block">
+            <TaskList
+              tasks={tasks}
+              nextTaskId={nextTaskId}
+              onTaskSelect={onTaskSelect}
+            />
+          </div>
+        </div>
+
+        {/* Mobile Task List */}
+        <div className="lg:hidden">
+          <MobileTaskList
+            tasks={tasks}
+            nextTaskId={nextTaskId}
+            onTaskSelect={onTaskSelect}
           />
-        )}
-        <JournalModule currentProjectId={currentProject?.id ?? null} />
-      </div>
+        </div>
 
-      {/* Right Panel - Hidden on mobile, shown on desktop */}
-      <div className="hidden lg:block">
-        <TaskList
-          tasks={tasks}
-          nextTaskId={nextTaskId}
-          onTaskSelect={onTaskSelect}
-        />
-      </div>
-
-      {/* Mobile Task List - Shown only on mobile */}
-      <div className="lg:hidden">
-        <MobileTaskList
-          tasks={tasks}
-          nextTaskId={nextTaskId}
-          onTaskSelect={onTaskSelect}
-        />
+        {/* Motivation Section */}
+        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
+          <h3 className="text-xl font-bold text-white mb-3">🧠 Neuroscience Tip</h3>
+          <p className="text-gray-300 mb-4">
+            Your brain releases dopamine when you complete tasks, creating a positive feedback loop. 
+            By breaking large tasks into 25-minute focused sessions, you're training your brain to 
+            associate work with reward rather than stress.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-purple-500/20 rounded-lg p-3">
+              <div className="text-purple-400 font-semibold mb-1">Dopamine Priming</div>
+              <div className="text-purple-300">Visualize success before starting</div>
+            </div>
+            <div className="bg-blue-500/20 rounded-lg p-3">
+              <div className="text-blue-400 font-semibold mb-1">Focused Sessions</div>
+              <div className="text-blue-300">25 minutes of undistracted work</div>
+            </div>
+            <div className="bg-green-500/20 rounded-lg p-3">
+              <div className="text-green-400 font-semibold mb-1">Micro-Wins</div>
+              <div className="text-green-300">Celebrate every small victory</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
