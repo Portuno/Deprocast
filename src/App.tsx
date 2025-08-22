@@ -98,6 +98,35 @@ function App() {
     setActivePomodoroTaskId(taskId);
   };
 
+  const handleDirectComplete = (taskId: string) => {
+    // Update task status to completed
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
+          : task
+      )
+    );
+    
+    setActivePomodoroTaskId(null);
+    
+    // Update next task if this was the current next task
+    if (nextTaskId === taskId) {
+      const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
+      if (pendingTasks.length > 0) {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const sortedTasks = pendingTasks.sort((a, b) => 
+          priorityOrder[b.priority] - priorityOrder[a.priority]
+        );
+        setNextTaskId(sortedTasks[0].id);
+      } else {
+        setNextTaskId(null);
+      }
+    }
+
+    console.log('Task completed directly:', taskId);
+  };
+
   const handleTaskComplete = (completionData: TaskCompletionData) => {
     // Add to completion history
     setCompletionHistory(prev => [...prev, completionData]);
@@ -141,6 +170,7 @@ function App() {
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            onDirectComplete={handleDirectComplete}
             currentProject={currentProject}
           />
         );
@@ -164,6 +194,7 @@ function App() {
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            onDirectComplete={handleDirectComplete}
             currentProject={currentProject}
           />
         );

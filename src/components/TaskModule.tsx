@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Clock, Target, Brain, Zap } from 'lucide-react';
+import { Play, Clock, Target, Brain, Zap, CheckCircle2 } from 'lucide-react';
 import { Task } from '../data/mockData';
 import PomodoroTimer from './PomodoroTimer';
 
@@ -7,12 +7,14 @@ interface TaskModuleProps {
   nextTask: Task | null;
   onStartTask: (taskId: string) => void;
   onTaskComplete?: (completionData: any) => void;
+  onDirectComplete?: (taskId: string) => void;
 }
 
 const TaskModule: React.FC<TaskModuleProps> = ({ 
   nextTask, 
   onStartTask,
-  onTaskComplete 
+  onTaskComplete,
+  onDirectComplete
 }) => {
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [isTaskInProgress, setIsTaskInProgress] = useState(false);
@@ -38,6 +40,13 @@ const TaskModule: React.FC<TaskModuleProps> = ({
   const handlePomodoroCancel = () => {
     setShowPomodoro(false);
     setIsTaskInProgress(false);
+  };
+
+  const handleDirectComplete = () => {
+    if (nextTask && onDirectComplete) {
+      onDirectComplete(nextTask.id);
+      setIsTaskInProgress(false);
+    }
   };
 
   if (!nextTask) {
@@ -119,12 +128,12 @@ const TaskModule: React.FC<TaskModuleProps> = ({
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="text-center">
+        {/* Action Buttons */}
+        <div className="space-y-3">
           {!isTaskInProgress ? (
             <button
               onClick={handleInitiateTask}
-              className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 active:scale-95"
+              className="w-full group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 active:scale-95"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
               <div className="relative flex items-center space-x-3">
@@ -133,10 +142,21 @@ const TaskModule: React.FC<TaskModuleProps> = ({
               </div>
             </button>
           ) : (
-            <div className="inline-flex items-center space-x-3 px-6 py-3 bg-green-600/20 border border-green-500/30 rounded-lg">
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-green-400 font-medium">Task in Progress</span>
-            </div>
+            <>
+              <div className="inline-flex items-center space-x-3 px-6 py-3 bg-green-600/20 border border-green-500/30 rounded-lg w-full justify-center">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 font-medium">Task in Progress</span>
+              </div>
+              
+              {/* Direct Complete Button */}
+              <button
+                onClick={handleDirectComplete}
+                className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                Complete Task
+              </button>
+            </>
           )}
         </div>
 
@@ -149,6 +169,7 @@ const TaskModule: React.FC<TaskModuleProps> = ({
             <li>• Have water and snacks ready</li>
             <li>• Remember: 25 minutes of focus beats 2 hours of distracted work</li>
             <li>• Celebrate every micro-win to train your brain</li>
+            <li>• Use "Complete Task" if you finished without the timer</li>
           </ul>
         </div>
       </div>

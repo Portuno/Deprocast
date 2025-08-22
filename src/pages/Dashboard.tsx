@@ -11,6 +11,7 @@ interface DashboardProps {
   nextTask: Task | null;
   onTaskSelect: (taskId: string) => void;
   onStartTask: (taskId: string) => void;
+  onDirectComplete?: (taskId: string) => void;
   currentProject: any;
 }
 
@@ -33,6 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   nextTask,
   onTaskSelect,
   onStartTask,
+  onDirectComplete,
   currentProject
 }) => {
   const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
@@ -84,6 +86,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     // Here you would typically send this data to your backend/AI coaching system
     console.log('Task completion data collected:', completionData);
+  };
+
+  const handleDirectComplete = (taskId: string) => {
+    if (onDirectComplete) {
+      onDirectComplete(taskId);
+    }
   };
 
   // Calculate productivity insights from completion history
@@ -198,6 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               nextTask={nextTask}
               onStartTask={onStartTask}
               onTaskComplete={handleTaskComplete}
+              onDirectComplete={handleDirectComplete}
             />
           </div>
 

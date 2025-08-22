@@ -1,15 +1,29 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Clock, Users, Focus, Coffee } from 'lucide-react';
-import { CalendarEvent, calendarEvents, Task } from '../data/mockData';
+import { Task } from '../data/mockData';
+import { 
+  CalendarEvent, 
+  getCalendarEventsByDateRange, 
+  getCalendarEventStats,
+  getCalendarEventsByDate 
+} from '../integrations/supabase/calendar';
 
 type Props = { tasks?: Task[] };
 
 const Calendar: React.FC<Props> = ({ tasks = [] }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents || []);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [weekStats, setWeekStats] = useState({
+    totalEvents: 0,
+    meetings: 0,
+    focusSessions: 0,
+    tasks: 0,
+    breaks: 0
+  });
 
   // Helper function - must be declared before use
   const formatDate = (year: number, month: number, day: number) => {
@@ -27,7 +41,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const lastDay = new Date(year + 1, month, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
@@ -49,18 +63,71 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
   const today = new Date();
   const todayString = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
 
+  // Get week start and end dates for statistics
+  const getWeekDates = (date: Date) => {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay());
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return {
+      start: formatDate(start.getFullYear(), start.getMonth(), start.getDate()),
+      end: formatDate(end.getFullYear(), end.getMonth(), end.getDate())
+    };
+  };
+
+  // Fetch calendar events and statistics
+  useEffect(() => {
+    const fetchCalendarData = async () => {
+      try {
+        setLoading(true);
+        const weekDates = getWeekDates(currentDate);
+        
+        // Fetch events for the current month
+        const monthStart = formatDate(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const monthEnd = formatDate(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const monthEvents = await getCalendarEventsByDateRange(monthStart, monthEnd);
+        
+        // Fetch week statistics
+        const stats = await getCalendarEventStats(weekDates.start, weekDates.end);
+        
+        setEvents(monthEvents);
+        setWeekStats(stats);
+      } catch (error) {
+        console.error('Error fetching calendar data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCalendarData();
+  }, [currentDate]);
+
   // Map tasks to calendar markers (start/in-progress and completion)
   const taskEvents: CalendarEvent[] = useMemo(() => {
     if (!tasks || tasks.length === 0) return [];
     return tasks.flatMap((t) => {
       const result: CalendarEvent[] = [];
       if (t.status === 'in-progress') {
-        result.push({ id: `${t.id}-start`, title: t.title, date: todayString, time: '09:00', type: 'task', projectId: t.projectId });
+        result.push({ 
+          id: `${t.id}-start`, 
+          title: t.title, 
+          date: todayString, 
+          time: '09:00', 
+          type: 'task', 
+          projectId: t.projectId 
+        });
       }
       if (t.status === 'completed' && t.completionDate) {
         const d = new Date(t.completionDate);
         const ds = formatDate(d.getFullYear(), d.getMonth(), d.getDate());
-        result.push({ id: `${t.id}-done`, title: `${t.title} – done`, date: ds, time: '18:00', type: 'task', projectId: t.projectId });
+        result.push({ 
+          id: `${t.id}-done`, 
+          title: `${t.title} – done`, 
+          date: ds, 
+          time: '18:00', 
+          type: 'task', 
+          projectId: t.projectId 
+        });
       }
       return result;
     });
@@ -92,8 +159,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
   ];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Safety check for events
-  if (!events) {
+  if (loading) {
     return (
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
@@ -110,7 +176,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Calendar</h1>
             <p className="text-gray-400">Schedule and track your tasks and events</p>
@@ -127,9 +193,9 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6">
+            <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
               {/* Calendar Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-white">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h2>
@@ -157,7 +223,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
               {/* Day Names */}
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {dayNames.map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-400">
+                  <div key={day} className="p-1 text-center text-sm font-medium text-gray-400">
                     {day}
                   </div>
                 ))}
@@ -168,7 +234,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
                 <div className="grid grid-cols-7 gap-1">
                   {days.map((day, index) => {
                     if (day === null) {
-                      return <div key={index} className="p-2 h-24"></div>;
+                      return <div key={index} className="p-1 h-16"></div>;
                     }
 
                     const dateString = formatDate(currentDate.getFullYear(), currentDate.getMonth(), day);
@@ -180,7 +246,7 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
                       <div
                         key={`${currentDate.getMonth()}-${day}`}
                         onClick={() => setSelectedDate(dateString)}
-                        className={`p-2 h-24 border border-gray-700/30 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-700/30 ${
+                        className={`p-1 h-16 border border-gray-700/30 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-700/30 ${
                           isToday ? 'bg-blue-900/30 border-blue-400/50' : ''
                         } ${isSelected ? 'bg-purple-900/30 border-purple-400/50' : ''}`}
                       >
@@ -189,18 +255,18 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
                         }`}>
                           {day}
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                           {dayEvents.slice(0, 2).map((event, eventIndex) => {
                             if (!event || !eventTypeIcons[event.type]) return null;
                             const EventIcon = eventTypeIcons[event.type].icon;
                             return (
                               <div
                                 key={`${event.id}-${eventIndex}`}
-                                className={`text-xs p-1 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}
+                                className={`text-xs p-0.5 rounded ${eventTypeIcons[event.type].bg} ${eventTypeIcons[event.type].color} truncate`}
                               >
                                 <div className="flex items-center space-x-1">
-                                  <EventIcon className="w-3 h-3" />
-                                  <span>{event.time}</span>
+                                  <EventIcon className="w-2.5 h-2.5" />
+                                  <span className="text-xs">{event.time}</span>
                                 </div>
                               </div>
                             );
@@ -226,10 +292,10 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
                     const dayEvents = getEventsForDate(ds);
                     const isToday = ds === todayString;
                     return (
-                      <div key={`w-${i}`} className={`p-2 h-32 border border-gray-700/30 rounded-lg ${isToday ? 'bg-blue-900/30 border-blue-400/50' : ''}`}>
+                      <div key={`w-${i}`} className={`p-2 h-24 border border-gray-700/30 rounded-lg ${isToday ? 'bg-blue-900/30 border-blue-400/50' : ''}`}>
                         <div className="text-sm font-medium mb-1 text-white">{dayDate.getDate()}</div>
                         <div className="space-y-1">
-                          {dayEvents.slice(0,3).map((event, idx) => {
+                          {dayEvents.slice(0,2).map((event, idx) => {
                             if (!event || !eventTypeIcons[event.type]) return null;
                             const EventIcon = eventTypeIcons[event.type].icon;
                             return (
@@ -307,18 +373,30 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Total Events</span>
-                  <span className="text-white font-medium">{events.length}</span>
+                  <span className="text-white font-medium">{weekStats.totalEvents}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Meetings</span>
                   <span className="text-purple-400 font-medium">
-                    {events.filter(e => e && e.type === 'meeting').length}
+                    {weekStats.meetings}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Focus Sessions</span>
                   <span className="text-green-400 font-medium">
-                    {events.filter(e => e && e.type === 'focus').length}
+                    {weekStats.focusSessions}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Tasks</span>
+                  <span className="text-blue-400 font-medium">
+                    {weekStats.tasks}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Breaks</span>
+                  <span className="text-yellow-400 font-medium">
+                    {weekStats.breaks}
                   </span>
                 </div>
               </div>
