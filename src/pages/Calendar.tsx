@@ -7,6 +7,7 @@ import {
   getCalendarEventStats,
   getCalendarEventsByDate 
 } from '../integrations/supabase/calendar';
+import EventForm from '../components/EventForm';
 
 type Props = { tasks?: Task[] };
 
@@ -76,31 +77,44 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
   };
 
   // Fetch calendar events and statistics
-  useEffect(() => {
-    const fetchCalendarData = async () => {
-      try {
-        setLoading(true);
-        const weekDates = getWeekDates(currentDate);
-        
-        // Fetch events for the current month
-        const monthStart = formatDate(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const monthEnd = formatDate(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        const monthEvents = await getCalendarEventsByDateRange(monthStart, monthEnd);
-        
-        // Fetch week statistics
-        const stats = await getCalendarEventStats(weekDates.start, weekDates.end);
-        
-        setEvents(monthEvents);
-        setWeekStats(stats);
-      } catch (error) {
-        console.error('Error fetching calendar data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCalendarData = async () => {
+    try {
+      setLoading(true);
+      const weekDates = getWeekDates(currentDate);
+      
+      // Fetch events for the current month
+      const monthStart = formatDate(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const monthEnd = formatDate(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const monthEvents = await getCalendarEventsByDateRange(monthStart, monthEnd);
+      
+      // Fetch week statistics
+      const stats = await getCalendarEventStats(weekDates.start, weekDates.end);
+      
+      setEvents(monthEvents);
+      setWeekStats(stats);
+    } catch (error) {
+      console.error('Error fetching calendar data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCalendarData();
   }, [currentDate]);
+
+  const handleEventCreated = () => {
+    fetchCalendarData();
+  };
+
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
+    setShowCreateForm(true);
+  };
+
+  const handleDateClick = (dateString: string) => {
+    setSelectedDate(dateString);
+  };
 
   // Map tasks to calendar markers (start/in-progress and completion)
   const taskEvents: CalendarEvent[] = useMemo(() => {
@@ -245,7 +259,8 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
                     return (
                       <div
                         key={`${currentDate.getMonth()}-${day}`}
-                        onClick={() => setSelectedDate(dateString)}
+                        onClick={() => handleDateClick(dateString)}
+                        onDoubleClick={() => handleDateSelect(dateString)}
                         className={`p-1 h-16 border border-gray-700/30 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-700/30 ${
                           isToday ? 'bg-blue-900/30 border-blue-400/50' : ''
                         } ${isSelected ? 'bg-purple-900/30 border-purple-400/50' : ''}`}
@@ -404,6 +419,14 @@ const Calendar: React.FC<Props> = ({ tasks = [] }) => {
           </div>
         </div>
       </div>
+
+      {/* Event Form Modal */}
+      <EventForm
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        onEventCreated={handleEventCreated}
+        selectedDate={selectedDate || undefined}
+      />
     </div>
   );
 };

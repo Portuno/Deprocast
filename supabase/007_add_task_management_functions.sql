@@ -41,7 +41,7 @@ RETURNS TABLE(
     title TEXT,
     description TEXT,
     priority TEXT,
-    estimated_time_minutes INTEGER,
+    estimated_time INTEGER,
     status TEXT
 ) AS $$
 BEGIN
@@ -51,7 +51,7 @@ BEGIN
         mt.title,
         mt.description,
         mt.priority,
-        mt.estimated_time_minutes,
+        mt.estimated_time,
         mt.status
     FROM micro_tasks mt
     WHERE mt.project_id = p_project_id
