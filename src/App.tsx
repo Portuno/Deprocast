@@ -9,7 +9,12 @@ import Calendar from './pages/Calendar';
 import Protocols from './pages/Protocols';
 import Profile from './pages/Profile';
 import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
-import { listTasksByProject } from './integrations/supabase/tasks';
+import { 
+  listTasksByProject, 
+  updateTaskStatusInProgress, 
+  updateTaskStatusCompleted, 
+  refreshProjectTasks 
+} from './integrations/supabase/tasks';
 import { listProjects, type DbProject } from './integrations/supabase/projects';
 
 interface TaskCompletionData {

@@ -79,4 +79,93 @@ export async function listTasksByProject(projectId: string): Promise<Task[]> {
   }));
 }
 
+// New functions for real-time task status updates
+
+export async function updateTaskStatusInProgress(taskId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase.rpc('update_task_status_in_progress', {
+    p_task_id: taskId
+  });
+  
+  if (error) throw error;
+}
+
+export async function updateTaskStatusCompleted(taskId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase.rpc('update_task_status_completed', {
+    p_task_id: taskId
+  });
+  
+  if (error) throw error;
+}
+
+export async function updateTaskStatusPending(taskId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase.rpc('update_task_status_pending', {
+    p_task_id: taskId
+  });
+  
+  if (error) throw error;
+}
+
+export async function updateTaskCompletionData(
+  taskId: string,
+  actualTimeMinutes?: number,
+  motivationBefore?: number,
+  motivationAfter?: number,
+  dopamineRating?: number,
+  nextTaskMotivation?: number,
+  breakthroughMoments?: string,
+  obstaclesEncountered?: any[]
+): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase.rpc('update_task_completion_data', {
+    p_task_id: taskId,
+    p_actual_time_minutes: actualTimeMinutes || null,
+    p_motivation_before: motivationBefore || null,
+    p_motivation_after: motivationAfter || null,
+    p_dopamine_rating: dopamineRating || null,
+    p_next_task_motivation: nextTaskMotivation || null,
+    p_breakthrough_moments: breakthroughMoments || null,
+    p_obstacles_encountered: obstaclesEncountered ? JSON.stringify(obstaclesEncountered) : null
+  });
+  
+  if (error) throw error;
+}
+
+export async function refreshProjectTasks(projectId: string): Promise<Task[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase.rpc('refresh_project_tasks', {
+    p_project_id: projectId
+  });
+  
+  if (error) throw error;
+  
+  return (data ?? []).map(row => ({
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status,
+    priority: row.priority,
+    projectId,
+    estimatedTimeMinutes: undefined, // Not available in this function
+    actualTimeMinutes: row.actual_time_minutes ?? undefined,
+    completionDate: row.completion_date ?? undefined,
+    dopamineScore: row.dopamine_rating ?? undefined,
+    taskType: undefined, // Not available in this function
+    resistanceLevel: undefined, // Not available in this function
+    dependencyTaskId: undefined, // Not available in this function
+  }));
+}
+
 
