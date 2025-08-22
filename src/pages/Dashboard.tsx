@@ -125,178 +125,133 @@ const Dashboard: React.FC<DashboardProps> = ({
   const insights = getProductivityInsights();
 
   return (
-    <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Welcome back! 🚀
-          </h1>
-          <p className="text-gray-400 text-lg">
-            {currentProject ? `Working on: ${currentProject.name}` : 'Ready to tackle your goals'}
-          </p>
-          {typeof onRefresh === 'function' && (
-            <div className="mt-4">
-              <button
-                onClick={onRefresh}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh Tasks
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {isLoadingTasks ? (
-            // Loading state
-            Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-3 md:p-4 text-center animate-pulse"
-              >
-                <div className="text-2xl md:text-3xl mb-2 text-gray-600">
-                  ⏳
-                </div>
-                <div className="text-lg md:text-2xl font-bold text-gray-600 mb-1">
-                  ...
-                </div>
-                <div className="text-xs md:text-sm text-gray-500 font-medium">
-                  Loading...
-                </div>
-              </div>
-            ))
-          ) : (
-            stats.map((stat, index) => (
-              <div
-                key={index}
-                className={`${stat.bgColor} border border-gray-700/30 rounded-xl p-3 md:p-4 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg`}
-              >
-                <div className={`text-2xl md:text-3xl mb-2 ${stat.color}`}>
-                  {stat.icon}
-                </div>
-                <div className={`text-lg md:text-2xl font-bold ${stat.color} mb-1`}>
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-gray-400 font-medium">
-                  {stat.label}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">Overall Progress</h3>
-            <span className="text-2xl font-bold text-blue-400">{getProgressPercentage()}%</span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
-              style={{ width: `${getProgressPercentage()}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-sm text-gray-400 mt-2">
-            <span>{completedTasks.length} completed</span>
-            <span>{totalTasks - completedTasks.length} remaining</span>
-          </div>
-        </div>
-
-        {/* Productivity Insights */}
-        {insights && (
-          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">📊 Productivity Insights</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400 mb-1">{insights.totalSessions}</div>
-                <div className="text-sm text-gray-400">Total Sessions</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400 mb-1">{insights.avgMotivationBefore}</div>
-                <div className="text-sm text-gray-400">Avg Motivation Before</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400 mb-1">{insights.avgMotivationAfter}</div>
-                <div className="text-sm text-gray-400">Avg Motivation After</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400 mb-1">{insights.avgDopamineRating}</div>
-                <div className="text-sm text-gray-400">Avg Dopamine Rating</div>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <div className="text-sm text-gray-300">
-                💡 Your motivation increased by <span className="text-green-400 font-semibold">
-                  {insights.avgMotivationAfter - insights.avgMotivationBefore > 0 ? '+' : ''}
-                  {(insights.avgMotivationAfter - insights.avgMotivationBefore).toFixed(1)}
-                </span> points on average!
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content Grid */}
-        {tasks.length === 0 && !isLoadingTasks ? (
-          <div className="col-span-full text-center py-12">
-            <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-8">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-bold text-white mb-2">No tasks found</h3>
-              <p className="text-gray-400">
-                {currentProject 
-                  ? `No tasks have been created for "${currentProject.name}" yet.`
-                  : 'Select a project to see its tasks.'
-                }
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Left Column - Task Module */}
-            <div className="lg:col-span-1">
-              <TaskModule
-                nextTask={nextTask}
-                onStartTask={onStartTask}
-                onTaskComplete={handleTaskComplete}
-                onDirectComplete={handleDirectComplete}
-              />
-            </div>
-
-          {/* Center Column - Journal Module */}
-          <div className="lg:col-span-1">
-            <JournalModule />
-          </div>
-
-          {/* Right Column - Task List (Desktop) */}
-          <div className="hidden lg:block">
-            <TaskList
-              tasks={tasks}
-              nextTaskId={nextTaskId}
-              onTaskSelect={onTaskSelect}
-            />
-          </div>
-          </>
+    <div className="flex-1 p-6 overflow-y-auto">
+      {/* Welcome Section */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Welcome back! 🚀
+        </h1>
+        <p className="text-gray-400 mb-4">
+          Working on: {currentProject?.name || 'No project selected'}
+        </p>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Tasks
+          </button>
         )}
       </div>
 
-      {/* Mobile Task List */}
-      {tasks.length > 0 && (
-        <div className="lg:hidden">
-          <MobileTaskList
-            tasks={tasks}
-            nextTaskId={nextTaskId}
-            onTaskSelect={onTaskSelect}
-          />
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Task Module and Journal */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Task Module */}
+          {nextTask && (
+            <TaskModule
+              nextTask={nextTask}
+              onStartTask={onStartTask}
+              onDirectComplete={onDirectComplete}
+              onTaskComplete={onTaskComplete}
+            />
+          )}
+
+          {/* Journal Module */}
+          <JournalModule />
+        </div>
+
+        {/* Right Column - Task Lists */}
+        <div className="space-y-6">
+          {/* Desktop Task List */}
+          <div className="hidden lg:block">
+            {tasks.length > 0 ? (
+              <TaskList
+                tasks={tasks}
+                nextTaskId={nextTask?.id || null}
+                onTaskSelect={onTaskSelect}
+              />
+            ) : !isLoadingTasks ? (
+              <div className="text-center py-8 text-gray-400">
+                <p>No tasks found</p>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Mobile Task List */}
+          <div className="lg:hidden">
+            {tasks.length > 0 ? (
+              <MobileTaskList
+                tasks={tasks}
+                nextTaskId={nextTask?.id || null}
+                onTaskSelect={onTaskSelect}
+              />
+            ) : !isLoadingTasks ? (
+              <div className="text-center py-8 text-gray-400">
+                <p>No tasks found</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6 mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-white">Overall Progress</h3>
+          <span className="text-2xl font-bold text-blue-400">{getProgressPercentage()}%</span>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-3">
+          <div
+            className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
+            style={{ width: `${getProgressPercentage()}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-sm text-gray-400 mt-2">
+          <span>{completedTasks.length} completed</span>
+          <span>{totalTasks - completedTasks.length} remaining</span>
+        </div>
+      </div>
+
+      {/* Productivity Insights */}
+      {insights && (
+        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-6 mt-6">
+          <h3 className="text-xl font-bold text-white mb-4">📊 Productivity Insights</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400 mb-1">{insights.totalSessions}</div>
+              <div className="text-sm text-gray-400">Total Sessions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400 mb-1">{insights.avgMotivationBefore}</div>
+              <div className="text-sm text-gray-400">Avg Motivation Before</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-400 mb-1">{insights.avgMotivationAfter}</div>
+              <div className="text-sm text-gray-400">Avg Motivation After</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-400 mb-1">{insights.avgDopamineRating}</div>
+              <div className="text-sm text-gray-400">Avg Dopamine Rating</div>
+            </div>
+          </div>
+          <div className="mt-4 text-center">
+            <div className="text-sm text-gray-300">
+              💡 Your motivation increased by <span className="text-green-400 font-semibold">
+                {insights.avgMotivationAfter - insights.avgMotivationBefore > 0 ? '+' : ''}
+                {(insights.avgMotivationAfter - insights.avgMotivationBefore).toFixed(1)}
+              </span> points on average!
+            </div>
+          </div>
         </div>
       )}
 
       {/* Neuroscience Tip */}
-      <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
+      <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center mt-6">
         <h3 className="text-xl font-bold text-white mb-3">🧠 Pomodoro+ Neuroscience</h3>
         <p className="text-gray-300 mb-4">
           The Pomodoro+ protocol creates artificial completion opportunities every 25 minutes, 

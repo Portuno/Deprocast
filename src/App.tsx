@@ -50,7 +50,19 @@ function App() {
   }, []);
 
   const currentProject = currentProjectId ? projects.find(p => p.id === currentProjectId) || null : null;
-  const currentProjectTasks = tasks.filter(task => task.projectId === (currentProjectId || ''));
+  const currentProjectTasks = tasks.filter(task => 
+    task.projectId === currentProjectId
+  );
+
+  // Calculate task statistics
+  const taskStats = {
+    total: currentProjectTasks.length,
+    pending: currentProjectTasks.filter(task => task.status === 'pending').length,
+    inProgress: currentProjectTasks.filter(task => task.status === 'in-progress').length,
+    completed: currentProjectTasks.filter(task => task.status === 'completed').length,
+  };
+
+  const nextTask = currentProjectTasks.find(task => task.status === 'pending') || null;
 
   // Fetch tasks from DB whenever currentProjectId changes
   useEffect(() => {
@@ -83,8 +95,6 @@ function App() {
       setNextTaskId(null);
     }
   }, [currentProjectId, tasks]);
-
-  const nextTask = nextTaskId ? tasks.find(task => task.id === nextTaskId) || null : null;
 
   const handleProjectChange = (projectId: string) => {
     setCurrentProjectId(projectId);
@@ -329,10 +339,12 @@ function App() {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-20 md:pb-0">
           {/* Left Navigation - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:block">
-            <Navigation
-              activeItem={activeNavItem}
-              onItemClick={setActiveNavItem}
+            <Navigation 
+              activeItem={activeNavItem} 
+              onItemClick={setActiveNavItem} 
               items={navigationItems}
+              currentProject={currentProject ? { id: currentProject.id, name: currentProject.title } : null}
+              taskStats={taskStats}
             />
           </div>
 
