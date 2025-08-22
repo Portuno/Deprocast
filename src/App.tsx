@@ -34,7 +34,8 @@ function App() {
   const [projects, setProjects] = useState<DbProject[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState('dashboard');
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
   const [activePomodoroTaskId, setActivePomodoroTaskId] = useState<string | null>(null);
   const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
@@ -54,15 +55,15 @@ function App() {
   useEffect(() => {
     (async () => {
       if (!currentProjectId) return;
+      setIsLoadingTasks(true);
       try {
         const dbTasks = await listTasksByProject(currentProjectId);
-        setTasks(prev => {
-          // Merge: remove old tasks for this project, then add fresh ones
-          const others = prev.filter(t => t.projectId !== currentProjectId);
-          return [...others, ...dbTasks];
-        });
-      } catch {
-        // ignore
+        setTasks(dbTasks); // Only use database tasks, no mock data
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        setTasks([]); // Set empty array on error
+      } finally {
+        setIsLoadingTasks(false);
       }
     })();
   }, [currentProjectId]);
@@ -201,6 +202,7 @@ function App() {
         return (
           <Dashboard
             tasks={currentProjectTasks}
+            isLoadingTasks={isLoadingTasks}
             nextTaskId={nextTaskId}
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
@@ -211,10 +213,7 @@ function App() {
                 (async () => {
                   try {
                     const refreshedTasks = await refreshProjectTasks(currentProjectId);
-                    setTasks(prev => {
-                      const others = prev.filter(t => t.projectId !== currentProjectId);
-                      return [...others, ...refreshedTasks];
-                    });
+                    setTasks(refreshedTasks);
                   } catch (error) {
                     console.error('Error refreshing tasks:', error);
                   }
@@ -240,6 +239,7 @@ function App() {
         return (
           <Dashboard
             tasks={currentProjectTasks}
+            isLoadingTasks={isLoadingTasks}
             nextTaskId={nextTaskId}
             nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
@@ -250,10 +250,7 @@ function App() {
                 (async () => {
                   try {
                     const refreshedTasks = await refreshProjectTasks(currentProjectId);
-                    setTasks(prev => {
-                      const others = prev.filter(t => t.projectId !== currentProjectId);
-                      return [...others, ...refreshedTasks];
-                    });
+                    setTasks(refreshedTasks);
                   } catch (error) {
                     console.error('Error refreshing tasks:', error);
                   }

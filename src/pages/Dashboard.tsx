@@ -7,6 +7,7 @@ import { Task } from '../data/mockData';
 
 interface DashboardProps {
   tasks: Task[];
+  isLoadingTasks?: boolean;
   nextTaskId: string | null;
   nextTask: Task | null;
   onTaskSelect: (taskId: string) => void;
@@ -31,6 +32,7 @@ interface TaskCompletionData {
 
 const Dashboard: React.FC<DashboardProps> = ({
   tasks,
+  isLoadingTasks = false,
   nextTaskId,
   nextTask,
   onTaskSelect,
@@ -146,22 +148,42 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className={`${stat.bgColor} border border-gray-700/30 rounded-xl p-3 md:p-4 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg`}
-            >
-              <div className={`text-2xl md:text-3xl mb-2 ${stat.color}`}>
-                {stat.icon}
+          {isLoadingTasks ? (
+            // Loading state
+            Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-3 md:p-4 text-center animate-pulse"
+              >
+                <div className="text-2xl md:text-3xl mb-2 text-gray-600">
+                  ⏳
+                </div>
+                <div className="text-lg md:text-2xl font-bold text-gray-600 mb-1">
+                  ...
+                </div>
+                <div className="text-xs md:text-sm text-gray-500 font-medium">
+                  Loading...
+                </div>
               </div>
-              <div className={`text-lg md:text-2xl font-bold ${stat.color} mb-1`}>
-                {stat.value}
+            ))
+          ) : (
+            stats.map((stat, index) => (
+              <div
+                key={index}
+                className={`${stat.bgColor} border border-gray-700/30 rounded-xl p-3 md:p-4 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+              >
+                <div className={`text-2xl md:text-3xl mb-2 ${stat.color}`}>
+                  {stat.icon}
+                </div>
+                <div className={`text-lg md:text-2xl font-bold ${stat.color} mb-1`}>
+                  {stat.value}
+                </div>
+                <div className="text-xs md:text-sm text-gray-400 font-medium">
+                  {stat.label}
+                </div>
               </div>
-              <div className="text-xs md:text-sm text-gray-400 font-medium">
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Progress Bar */}
@@ -216,16 +238,30 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Task Module */}
-          <div className="lg:col-span-1">
-            <TaskModule
-              nextTask={nextTask}
-              onStartTask={onStartTask}
-              onTaskComplete={handleTaskComplete}
-              onDirectComplete={handleDirectComplete}
-            />
+        {tasks.length === 0 && !isLoadingTasks ? (
+          <div className="col-span-full text-center py-12">
+            <div className="bg-gray-900/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-8">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-xl font-bold text-white mb-2">No tasks found</h3>
+              <p className="text-gray-400">
+                {currentProject 
+                  ? `No tasks have been created for "${currentProject.name}" yet.`
+                  : 'Select a project to see its tasks.'
+                }
+              </p>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* Left Column - Task Module */}
+            <div className="lg:col-span-1">
+              <TaskModule
+                nextTask={nextTask}
+                onStartTask={onStartTask}
+                onTaskComplete={handleTaskComplete}
+                onDirectComplete={handleDirectComplete}
+              />
+            </div>
 
           {/* Center Column - Journal Module */}
           <div className="lg:col-span-1">
@@ -240,16 +276,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               onTaskSelect={onTaskSelect}
             />
           </div>
-        </div>
+          </>
+        )}
+      </div>
 
         {/* Mobile Task List */}
-        <div className="lg:hidden">
-          <MobileTaskList
-            tasks={tasks}
-            nextTaskId={nextTaskId}
-            onTaskSelect={onTaskSelect}
-          />
-        </div>
+        {tasks.length > 0 && (
+          <div className="lg:hidden">
+            <MobileTaskList
+              tasks={tasks}
+              nextTaskId={nextTaskId}
+              onTaskSelect={onTaskSelect}
+            />
+          </div>
+        )}
 
         {/* Neuroscience Tip */}
         <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
