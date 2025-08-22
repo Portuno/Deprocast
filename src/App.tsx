@@ -253,6 +253,7 @@ function App() {
                 })();
               }
             }}
+            onTaskComplete={handleTaskComplete}
             currentProject={currentProject}
           />
         );
@@ -290,6 +291,7 @@ function App() {
                 })();
               }
             }}
+            onTaskComplete={handleTaskComplete}
             currentProject={currentProject}
           />
         );
