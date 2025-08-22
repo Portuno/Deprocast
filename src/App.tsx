@@ -13,7 +13,8 @@ import {
   listTasksByProject, 
   updateTaskStatusInProgress, 
   updateTaskStatusCompleted, 
-  refreshProjectTasks 
+  refreshProjectTasks,
+  updateTaskCompletionData
 } from './integrations/supabase/tasks';
 import { listProjects, type DbProject } from './integrations/supabase/projects';
 
@@ -163,37 +164,69 @@ function App() {
     }
   };
 
-  const handleTaskComplete = (completionData: TaskCompletionData) => {
-    // Add to completion history
-    setCompletionHistory(prev => [...prev, completionData]);
-    
-    // Update task status to completed
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.title === completionData.taskTitle
-          ? { ...task, status: 'completed' as const, completionDate: completionData.completionDate }
-          : task
-      )
-    );
-    
-    setActivePomodoroTaskId(null);
-    
-    // Update next task if this was the current next task
-    if (nextTaskId && nextTask && nextTask.title === completionData.taskTitle) {
-      const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
-      if (pendingTasks.length > 0) {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        const sortedTasks = pendingTasks.sort((a, b) => 
-          priorityOrder[b.priority] - priorityOrder[a.priority]
-        );
-        setNextTaskId(sortedTasks[0].id);
-      } else {
-        setNextTaskId(null);
-      }
-    }
+  const handleTaskComplete = async (completionData: TaskCompletionData) => {
+    try {
+      // Determine the DB UUID of the task being completed
+      const taskByActive = activePomodoroTaskId ? tasks.find(t => t.id === activePomodoroTaskId) : null;
+      const taskByTitle = tasks.find(t => t.title === completionData.taskTitle);
+      const targetTask = taskByActive || taskByTitle || null;
 
-    // Here you would typically send completionData to your backend/AI coaching system
-    console.log('Task completed with data:', completionData);
+      if (targetTask) {
+        // Persist completion data in DB
+        await updateTaskCompletionData(
+          targetTask.id,
+          completionData.actualTimeMinutes,
+          completionData.motivationBefore,
+          completionData.motivationAfter,
+          completionData.dopamineRating,
+          completionData.nextTaskMotivation,
+          completionData.breakthroughMoments,
+          completionData.obstaclesEncountered
+        );
+      }
+
+      // Add to local completion history
+      setCompletionHistory(prev => [...prev, completionData]);
+
+      // Update local task status
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          (targetTask && task.id === targetTask.id) || (!targetTask && task.title === completionData.taskTitle)
+            ? { ...task, status: 'completed' as const, completionDate: completionData.completionDate }
+            : task
+        )
+      );
+
+      setActivePomodoroTaskId(null);
+
+      // Update next task if this was the current next task
+      if ((targetTask && nextTaskId === targetTask.id) || (!targetTask && nextTask && nextTask.title === completionData.taskTitle)) {
+        const pendingTasks = currentProjectTasks.filter(task => task.status === 'pending');
+        if (pendingTasks.length > 0) {
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const sortedTasks = pendingTasks.sort((a, b) => 
+            priorityOrder[b.priority] - priorityOrder[a.priority]
+          );
+          setNextTaskId(sortedTasks[0].id);
+        } else {
+          setNextTaskId(null);
+        }
+      }
+
+      // Refresh tasks from DB to ensure counts and statuses are accurate
+      if (currentProjectId) {
+        try {
+          const refreshedTasks = await refreshProjectTasks(currentProjectId);
+          setTasks(refreshedTasks);
+        } catch (refreshError) {
+          console.error('Error refreshing tasks after completion:', refreshError);
+        }
+      }
+
+      console.log('Task completed with data:', completionData);
+    } catch (error) {
+      console.error('Error persisting task completion:', error);
+    }
   };
 
   const renderCurrentPage = () => {

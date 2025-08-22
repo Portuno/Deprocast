@@ -36,7 +36,7 @@ export async function bulkInsertTasks(projectId: string | null | undefined, task
     .select('*');
   if (error) throw error;
   return (data ?? []).map(row => ({
-    id: row.task_id_external || row.id,
+    id: row.id, // ALWAYS use DB UUID for runtime operations
     title: row.title,
     description: row.description ?? undefined,
     status: row.status,
@@ -63,7 +63,7 @@ export async function listTasksByProject(projectId: string): Promise<Task[]> {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(row => ({
-    id: row.task_id_external || row.id,
+    id: row.id, // ALWAYS use DB UUID for runtime operations
     title: row.title,
     description: row.description ?? undefined,
     status: row.status,
