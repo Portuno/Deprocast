@@ -44,7 +44,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [currentTip, setCurrentTip] = useState('');
   const [tipIndex, setTipIndex] = useState(0);
 
-  // Neuroscience tips array
+  // Neuroscience tips array for the loading screen
   const neuroscienceTips = [
     "Gratitude is the engine of abundance. Celebrate your small victories.",
     "Effort isn't the goal, it's the path. Enjoy the process.",
