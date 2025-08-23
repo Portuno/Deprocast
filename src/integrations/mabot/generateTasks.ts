@@ -17,13 +17,27 @@ export interface GeneratedTask {
 
 export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest): Promise<GeneratedTask[]> => {
   try {
-    // Get user authentication
+    // Get user authentication and session
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
+    // Get the Supabase URL and anon key
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://hiipxfzsdjgpgrbarxkb.supabase.co';
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+
     // Call the existing Mabot edge function with the correct endpoint
-    const { data, error } = await supabase.functions.invoke('mabot-integration', {
-      body: {
+    // We need to call the specific /generate-microtasks endpoint
+    const response = await fetch(`${supabaseUrl}/functions/v1/mabot-integration/generate-microtasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': supabaseAnonKey
+      },
+      body: JSON.stringify({
         title: request.projectTitle,
         project_description: request.projectDescription,
         outcome_goal: request.projectDescription,
@@ -34,16 +48,18 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
         skills_resources_needed: [],
         available_time_blocks: [],
         target_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-        access_token: user.access_token,
+        access_token: session.access_token,
         chat_id: null,
         platform_chat_id: null,
         bot_name: 'mabot'
-      }
+      })
     });
 
-    if (error) {
-      throw new Error(`Mabot function error: ${error.message}`);
+    if (!response.ok) {
+      throw new Error(`Mabot function error: HTTP ${response.status} - ${response.statusText}`);
     }
+
+    const data = await response.json();
 
     if (!data || !data.data || !data.data.tasks) {
       throw new Error('No tasks returned from Mabot');
