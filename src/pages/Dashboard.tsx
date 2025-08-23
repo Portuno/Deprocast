@@ -6,73 +6,102 @@ import MobileTaskList from '../components/MobileTaskList';
 import { Task } from '../data/mockData';
 import { generateMicrotasksWithMabot } from '../integrations/mabot/generateTasks';
 
-interface DashboardProps {
-  tasks: Task[];
-  isLoadingTasks?: boolean;
-  nextTaskId: string | null;
-  nextTask: Task | null;
-  onTaskSelect: (taskId: string) => void;
-  onStartTask: (taskId: string) => void;
-  onDirectComplete?: (taskId: string) => void;
-  onRefresh?: () => void;
-  onTaskComplete?: (completionData: TaskCompletionData) => void;
-  currentProject: any;
-}
-
 interface TaskCompletionData {
   taskTitle: string;
-  estimatedTimeMinutes?: number;
+  estimatedTimeMinutes: number;
   actualTimeMinutes: number;
   motivationBefore: number;
   motivationAfter: number;
   dopamineRating: number;
   nextTaskMotivation: number;
   breakthroughMoments: string;
-  obstaclesEncountered: any[];
-  completionDate: string;
+}
+
+interface DashboardProps {
+  tasks: Task[];
+  onTaskSelect: (taskId: string) => void;
+  onStartTask: (taskId: string) => void;
+  onTaskComplete: (completionData: TaskCompletionData) => void;
+  onDirectComplete: (taskId: string) => void;
+  isLoadingTasks: boolean;
+  onRefresh: () => void;
+  currentProject: any;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   tasks,
-  isLoadingTasks = false,
-  nextTaskId,
-  nextTask,
   onTaskSelect,
   onStartTask,
-  onDirectComplete,
-  onRefresh,
   onTaskComplete,
+  onDirectComplete,
+  isLoadingTasks,
+  onRefresh,
   currentProject
 }) => {
   const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [currentTip, setCurrentTip] = useState('');
+  const [tipIndex, setTipIndex] = useState(0);
 
-  // Calculate real-time statistics
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
-  const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
-  const totalTasks = tasks.length;
+  // Neuroscience tips array
+  const neuroscienceTips = [
+    "Gratitude is the engine of abundance. Celebrate your small victories.",
+    "Effort isn't the goal, it's the path. Enjoy the process.",
+    "Your brain doesn't distinguish between big and small wins. Celebrate them all.",
+    "Dopamine is your motivation currency. Earn it smartly.",
+    "Your willpower isn't infinite. Use it wisely to just start.",
+    "Transformation isn't about more action, but more alignment.",
+    "Success is a series of small, well-executed habits.",
+    "True desires are a frequency, not a prize. Tune in to them.",
+    "Your brain has its own rhythm. Don't exhaust it; give it rest.",
+    "Procrastination isn't a flaw; it's a signal the task feels overwhelming.",
+    "Less noise, more focus. Eliminate distractions.",
+    "Creativity doesn't shout; it whispers. Take a moment to listen.",
+    "Don't ask \"What else should I do?\" Ask \"What's polluting my focus?\"",
+    "Perfectionism is the enemy of progress. Don't wait for perfect to begin.",
+    "True change happens when your body feels safe with it.",
+    "Discomfort is your brain's gym. Embrace it; it's a sign of growth.",
+    "Don't deceive yourself: real work happens during the effort, not the reward.",
+    "Your inner state is everything. External reality is just a reflection.",
+    "Act from peace, not from desperation.",
+    "Your brain can't focus if it can't rest.",
+    "Magic happens when you stop forcing and start flowing.",
+    "The \"how\" isn't your responsibility. Trust the \"now.\"",
+    "Dopamine gets depleted. Don't chase high spikes; seek a steady flow.",
+    "Doubt is your biggest obstacle. Replace it with faith in your process.",
+    "Don't be defined by failures. Every stumble is data to improve.",
+    "Focus is a muscle. Train it with small acts of concentration.",
+    "The mind is the map, not the territory. Choose your thoughts wisely.",
+    "Your micro-victories build the path to your bigger future.",
+    "Your nervous system is the bridge between your inner world and reality.",
+    "Move away from distraction, move toward intention.",
+    "Discipline is the price of freedom.",
+    "True manifestation is being, not pretending.",
+    "Fear is just an emotion. Don't let it become a decision.",
+    "Mental fatigue is real. Don't ignore it; give it a break.",
+    "Patience is a virtue, especially when building a habit.",
+    "Your \"future self\" is waiting for you in the present.",
+    "Don't compare yourself. Your journey is unique, and so are your rules.",
+    "What the world calls procrastination, you call data.",
+    "Strength isn't in pushing, but in flowing.",
+    "Every 25 minutes of focus is a step to rewiring your brain."
+  ];
 
   const getProgressPercentage = () => {
-    if (totalTasks === 0) return 0;
-    return Math.round((completedTasks.length / totalTasks) * 100);
+    if (tasks.length === 0) return 0;
+    const completed = tasks.filter(task => task.status === 'completed').length;
+    return Math.round((completed / tasks.length) * 100);
   };
 
-  const handleTaskComplete = (completionData: TaskCompletionData) => {
-    setCompletionHistory(prev => [...prev, completionData]);
-    // forward to parent for DB persist
-    if (onTaskComplete) {
-      onTaskComplete(completionData);
-    }
-    console.log('Task completion data collected:', completionData);
-  };
-
-  const handleDirectComplete = (taskId: string) => {
-    if (onDirectComplete) {
-      onDirectComplete(taskId);
-    }
+  const getProductivityInsights = () => {
+    const completed = tasks.filter(task => task.status === 'completed').length;
+    const inProgress = tasks.filter(task => task.status === 'in-progress').length;
+    
+    if (completed === 0 && inProgress === 0) return "Ready to start your journey!";
+    if (completed === 0) return "Great start! Keep the momentum going.";
+    if (inProgress === 0) return "Excellent completion rate! Time to tackle new challenges.";
+    return "Balanced progress! You're maintaining steady momentum.";
   };
 
   const generateMicrotasks = async () => {
@@ -83,87 +112,67 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     setIsGeneratingTasks(true);
     setGenerationProgress(0);
-    
-    const tips = [
-      "🧠 Breaking down complex projects into microtasks activates your brain's reward system",
-      "⚡ Small, achievable tasks create momentum and reduce procrastination",
-      "🎯 Each microtask should take 15-45 minutes to complete",
-      "🚀 Start with the highest impact, lowest effort tasks",
-      "💡 Focus on one task at a time - multitasking reduces efficiency by 40%"
-    ];
+    setTipIndex(0);
+    setCurrentTip(neuroscienceTips[0]);
 
-    let tipIndex = 0;
-    setCurrentTip(tips[tipIndex]);
+    // 18-second total duration with 3 tips of 6 seconds each
+    const totalDuration = 18000; // 18 seconds
+    const tipDuration = 6000; // 6 seconds per tip
+    const progressIncrement = 100 / (totalDuration / 100); // Progress per 100ms
 
-    // Simulate progress with tips
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval);
           return 100;
         }
-        
-        // Change tip every 20% progress
-        if (prev % 20 === 0 && tipIndex < tips.length - 1) {
-          tipIndex++;
-          setCurrentTip(tips[tipIndex]);
-        }
-        
-        return prev + 10;
+        return prev + progressIncrement;
       });
-    }, 200);
+    }, 100);
+
+    // Rotate tips every 6 seconds
+    const tipInterval = setInterval(() => {
+      setTipIndex(prev => {
+        const nextIndex = (prev + 1) % 3; // Show only 3 tips
+        setCurrentTip(neuroscienceTips[nextIndex]);
+        return nextIndex;
+      });
+    }, tipDuration);
 
     try {
-      // Call Mabot to generate microtasks
       const result = await generateMicrotasksWithMabot({
         projectId: currentProject.id,
         projectTitle: currentProject.title,
         projectDescription: currentProject.description || '',
         existingTasks: tasks.length
       });
-      
-      // Wait for progress to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Wait for the full 18 seconds to complete
+      await new Promise(resolve => setTimeout(resolve, totalDuration));
       setGenerationProgress(100);
-      
-      // Refresh tasks to show newly generated ones
+
       if (onRefresh) {
         onRefresh();
       }
 
       console.log('Generated tasks:', result);
-      
+
     } catch (error) {
       console.error('Error generating tasks:', error);
       alert('Failed to generate tasks. Please try again.');
     } finally {
+      clearInterval(progressInterval);
+      clearInterval(tipInterval);
       setTimeout(() => {
         setIsGeneratingTasks(false);
         setGenerationProgress(0);
         setCurrentTip('');
+        setTipIndex(0);
       }, 1500);
     }
   };
 
-  // Calculate productivity insights from completion history
-  const getProductivityInsights = () => {
-    if (completionHistory.length === 0) return null;
-
-    const avgMotivationBefore = completionHistory.reduce((sum, item) => sum + item.motivationBefore, 0) / completionHistory.length;
-    const avgMotivationAfter = completionHistory.reduce((sum, item) => sum + item.motivationAfter, 0) / completionHistory.length;
-    const avgDopamineRating = completionHistory.reduce((sum, item) => sum + item.dopamineRating, 0) / completionHistory.length;
-    const avgNextTaskMotivation = completionHistory.reduce((sum, item) => sum + item.nextTaskMotivation, 0) / completionHistory.length;
-
-    return {
-      avgMotivationBefore: Math.round(avgMotivationBefore * 10) / 10,
-      avgMotivationAfter: Math.round(avgMotivationAfter * 10) / 10,
-      avgDopamineRating: Math.round(avgDopamineRating * 10) / 10,
-      avgNextTaskMotivation: Math.round(avgNextTaskMotivation * 10) / 10,
-      totalSessions: completionHistory.length
-    };
-  };
-
-  const insights = getProductivityInsights();
+  const nextTask = tasks.find(task => task.status === 'pending') || null;
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -197,28 +206,66 @@ const Dashboard: React.FC<DashboardProps> = ({
         </p>
       </div>
 
-      {/* Generation Progress */}
+      {/* Enhanced Generation Progress */}
       {isGeneratingTasks && (
-        <div className="mb-6 bg-gray-800/50 rounded-lg p-6 border border-gray-700/30">
+        <div className="mb-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30 shadow-2xl">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-4">🤖 AI Task Generation in Progress</h3>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-700 rounded-full h-3 mb-4">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${generationProgress}%` }}
-              ></div>
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">🧠 AI Task Generation in Progress</h3>
+              <p className="text-gray-300">Mabot is analyzing your project and creating intelligent microtasks...</p>
             </div>
-            
-            <div className="text-sm text-gray-300 mb-4">
-              {generationProgress}% Complete
+
+            {/* Enhanced Progress Bar */}
+            <div className="mb-6">
+              <div className="w-full bg-gray-700/50 rounded-full h-4 mb-4 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-purple-500 via-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300 ease-out relative"
+                  style={{ width: `${generationProgress}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                </div>
+              </div>
+              <div className="text-lg text-white font-semibold mb-2">
+                {Math.round(generationProgress)}% Complete
+              </div>
+              <div className="text-sm text-gray-400">
+                Estimated time: {Math.max(0, Math.ceil((100 - generationProgress) * 0.18))}s remaining
+              </div>
             </div>
-            
-            {/* Current Tip */}
-            <div className="bg-purple-900/30 border border-purple-700/30 rounded-lg p-4">
-              <div className="text-purple-300 text-sm font-medium mb-2">💡 Neuroscience Tip</div>
-              <div className="text-white">{currentTip}</div>
+
+            {/* Enhanced Tip Display */}
+            <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-700/30 rounded-xl p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-purple-300 text-lg">💡</span>
+                </div>
+                <div className="text-purple-300 text-lg font-semibold">Neuroscience Insight</div>
+                <div className="ml-3 text-purple-400 text-sm font-medium">
+                  Tip {tipIndex + 1} of 3
+                </div>
+              </div>
+              <div className="text-white text-lg leading-relaxed font-medium">
+                {currentTip}
+              </div>
+              <div className="mt-4 flex justify-center">
+                <div className="flex space-x-2">
+                  {[0, 1, 2].map((index) => (
+                    <div
+                      key={index}
+                      className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                        index === tipIndex
+                          ? 'bg-purple-400 scale-125'
+                          : 'bg-gray-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -228,7 +275,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Task Module and Journal */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Task Module */}
           {nextTask && (
             <TaskModule
               nextTask={nextTask}
@@ -237,14 +283,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               onTaskComplete={onTaskComplete}
             />
           )}
-
-          {/* Journal Module */}
           <JournalModule />
         </div>
 
         {/* Right Column - Task Lists */}
         <div className="space-y-6">
-          {/* Desktop Task List */}
           <div className="hidden lg:block">
             {tasks.length > 0 ? (
               <TaskList
@@ -259,7 +302,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             ) : null}
           </div>
 
-          {/* Mobile Task List */}
           <div className="lg:hidden">
             {tasks.length > 0 ? (
               <MobileTaskList
