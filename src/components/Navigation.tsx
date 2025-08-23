@@ -65,27 +65,27 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, acti
       {/* Task Statistics */}
       {taskStats && (
         <div className="p-4 border-t border-gray-700">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Task Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-blue-900/50 rounded-lg p-3 text-center border border-blue-700/30">
-              <ClipboardList className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-              <div className="text-blue-400 font-semibold text-sm">{taskStats.total}</div>
-              <div className="text-gray-300 text-xs">Total</div>
+          <h3 className="text-sm font-medium text-white mb-4">Task Overview</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-blue-900/60 rounded-lg p-4 text-center border border-blue-700/40">
+              <ClipboardList className="w-5 h-5 text-blue-300 mx-auto mb-2" />
+              <div className="text-blue-200 font-bold text-lg">{taskStats.total}</div>
+              <div className="text-blue-100 text-sm">Total</div>
             </div>
-            <div className="bg-yellow-900/50 rounded-lg p-3 text-center border border-yellow-700/30">
-              <Clock className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
-              <div className="text-yellow-400 font-semibold text-sm">{taskStats.pending}</div>
-              <div className="text-gray-300 text-xs">Pending</div>
+            <div className="bg-yellow-900/60 rounded-lg p-4 text-center border border-yellow-700/40">
+              <Clock className="w-5 h-5 text-yellow-300 mx-auto mb-2" />
+              <div className="text-yellow-200 font-bold text-lg">{taskStats.pending}</div>
+              <div className="text-yellow-100 text-sm">Pending</div>
             </div>
-            <div className="bg-blue-900/50 rounded-lg p-3 text-center border border-blue-700/30">
-              <Rocket className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-              <div className="text-blue-400 font-semibold text-sm">{taskStats.inProgress}</div>
-              <div className="text-gray-300 text-xs">In Progress</div>
+            <div className="bg-blue-900/60 rounded-lg p-4 text-center border border-blue-700/40">
+              <Rocket className="w-5 h-5 text-blue-300 mx-auto mb-2" />
+              <div className="text-blue-200 font-bold text-lg">{taskStats.inProgress}</div>
+              <div className="text-blue-100 text-sm">In Progress</div>
             </div>
-            <div className="bg-green-900/50 rounded-lg p-3 text-center border border-green-700/30">
-              <CheckCircle className="w-4 h-4 text-green-400 mx-auto mb-1" />
-              <div className="text-green-400 font-semibold text-sm">{taskStats.completed}</div>
-              <div className="text-gray-300 text-xs">Completed</div>
+            <div className="bg-green-900/60 rounded-lg p-4 text-center border border-green-700/40">
+              <CheckCircle className="w-5 h-5 text-green-300 mx-auto mb-2" />
+              <div className="text-green-200 font-bold text-lg">{taskStats.completed}</div>
+              <div className="text-green-100 text-sm">Completed</div>
             </div>
           </div>
         </div>
