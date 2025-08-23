@@ -333,9 +333,6 @@ function App() {
           currentProject={currentProject}
           projects={projects}
           onProjectChange={handleProjectChange}
-          progressPercentage={taskStats.total > 0 ? Math.round((taskStats.completed / taskStats.total) * 100) : 0}
-          completedTasks={taskStats.completed}
-          totalTasks={taskStats.total}
         />
 
         {/* Main Content */}

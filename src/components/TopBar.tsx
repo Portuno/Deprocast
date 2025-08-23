@@ -6,18 +6,12 @@ interface TopBarProps {
   currentProject: DbProject | null;
   projects: DbProject[];
   onProjectChange: (projectId: string) => void;
-  progressPercentage?: number;
-  completedTasks?: number;
-  totalTasks?: number;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
   currentProject, 
   projects, 
-  onProjectChange,
-  progressPercentage = 0,
-  completedTasks = 0,
-  totalTasks = 0
+  onProjectChange
 }) => {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
 
