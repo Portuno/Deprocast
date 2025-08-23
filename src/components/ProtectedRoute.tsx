@@ -9,64 +9,35 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const [isOAuthRedirect, setIsOAuthRedirect] = useState(false);
   const [fallbackLoading, setFallbackLoading] = useState(false);
 
-  // Use the OAuth redirect hook
+  // Use the simplified OAuth redirect hook
   useOAuthRedirect();
 
-  // Detect OAuth redirects
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const hasOAuthCode = !!code;
-    setIsOAuthRedirect(hasOAuthCode);
-    
-    if (hasOAuthCode) {
-      console.log('ProtectedRoute: OAuth code detected, setting shorter timeout');
-    }
-  }, []);
-
-  // Fallback loading state
+  // Simple fallback loading state
   useEffect(() => {
     if (loading) {
-      // Shorter timeout for OAuth redirects (5 seconds) vs regular loading (8 seconds)
-      const timeout = isOAuthRedirect ? 5000 : 8000;
-      
       const timer = setTimeout(() => {
-        console.log(`ProtectedRoute: Fallback timeout reached after ${timeout}ms`);
         setFallbackLoading(true);
-      }, timeout);
+      }, 10000); // 10 seconds timeout
 
       return () => clearTimeout(timer);
     } else {
       setFallbackLoading(false);
     }
-  }, [loading, isOAuthRedirect]);
+  }, [loading]);
 
   if (loading) {
     return (
       <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold mb-4">
-            {isOAuthRedirect ? 'Processing Google login...' : 'Loading... Setting up your session...'}
-          </h1>
-          <p className="text-gray-400 mb-6">
-            {isOAuthRedirect 
-              ? 'Please wait while we complete your authentication...' 
-              : 'Please wait...'
-            }
-          </p>
+          <h1 className="text-2xl font-bold mb-4">Loading... Setting up your session...</h1>
+          <p className="text-gray-400 mb-6">Please wait...</p>
           
           {fallbackLoading && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-500">
-                {isOAuthRedirect 
-                  ? 'OAuth process taking longer than expected. Try:' 
-                  : 'If this takes too long, try:'
-                }
-              </p>
+              <p className="text-sm text-gray-500">If this takes too long, try:</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => window.location.reload()}
