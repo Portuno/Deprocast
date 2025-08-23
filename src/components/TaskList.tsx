@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, Play, Target } from 'lucide-react';
 import { Task } from '../data/mockData';
 
 interface TaskListProps {
@@ -9,25 +9,36 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) => {
-  const getStatusIcon = (status: Task['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-green-400" />;
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'in-progress':
-        return <Clock className="w-5 h-5 text-blue-400" />;
+        return <Play className="w-4 h-4 text-blue-500" />;
       default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
+        return <Clock className="w-4 h-4 text-yellow-500" />;
     }
   };
 
-  const getPriorityColor = (priority: Task['priority']) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-900/30 text-green-300 border-green-700/30';
+      case 'in-progress':
+        return 'bg-blue-900/30 text-blue-300 border-blue-700/30';
+      default:
+        return 'bg-yellow-900/30 text-yellow-300 border-yellow-700/30';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'border-l-red-400';
+        return 'bg-red-900/50 text-red-300 border-red-700/30';
       case 'medium':
-        return 'border-l-yellow-400';
+        return 'bg-yellow-900/50 text-yellow-300 border-yellow-700/30';
       default:
-        return 'border-l-green-400';
+        return 'bg-green-900/50 text-green-300 border-green-700/30';
     }
   };
 
@@ -35,119 +46,126 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
-  const renderTaskGroup = (tasks: Task[], title: string, icon: React.ReactNode) => {
-    if (tasks.length === 0) return null;
-
-    return (
-      <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-3">
-          {icon}
-          <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
-            {title} ({tasks.length})
-          </h4>
-        </div>
-        <div className="space-y-2">
-          {tasks.map((task) => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
-              isNext={task.id === nextTaskId}
-              onSelect={onTaskSelect}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="w-80 bg-gray-900/20 backdrop-blur-xl border-l border-gray-700/30 p-6 overflow-y-auto">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Task Management</h3>
-        <p className="text-sm text-gray-400">Select a task to make it your next focus</p>
-      </div>
+    <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
+      <h3 className="text-lg font-semibold text-white mb-4">Task Management</h3>
+      <p className="text-sm text-gray-400 mb-4">Select a task to make it your next focus.</p>
 
-      {renderTaskGroup(
-        inProgressTasks,
-        'In Progress',
-        <Clock className="w-4 h-4 text-blue-400" />
-      )}
-
-      {renderTaskGroup(
-        pendingTasks,
-        'Pending',
-        <AlertCircle className="w-4 h-4 text-yellow-400" />
-      )}
-
-      {renderTaskGroup(
-        completedTasks,
-        'Completed',
-        <CheckCircle2 className="w-4 h-4 text-green-400" />
-      )}
-    </div>
-  );
-};
-
-interface TaskCardProps {
-  task: Task;
-  isNext: boolean;
-  onSelect: (taskId: string) => void;
-}
-
-const TaskCard: React.FC<TaskCardProps> = ({ task, isNext, onSelect }) => {
-  const getStatusIcon = (status: Task['status']) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-green-400" />;
-      case 'in-progress':
-        return <Clock className="w-5 h-5 text-blue-400" />;
-      default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'border-l-red-400';
-      case 'medium':
-        return 'border-l-yellow-400';
-      default:
-        return 'border-l-green-400';
-    }
-  };
-
-  return (
-    <div
-      onClick={() => task.status === 'pending' && onSelect(task.id)}
-      className={`p-4 bg-gray-800/30 border-l-4 ${getPriorityColor(task.priority)} rounded-r-lg border border-gray-700/30 transition-all duration-200 ${
-        task.status === 'pending' 
-          ? 'cursor-pointer hover:bg-gray-700/40 hover:border-gray-600/40' 
-          : 'opacity-60'
-      } ${isNext ? 'ring-2 ring-blue-400/50 bg-blue-900/20' : ''}`}
-    >
-      <div className="flex items-start justify-between mb-2">
-        {getStatusIcon(task.status)}
-        <div className={`px-2 py-1 rounded text-xs font-medium ${
-          task.priority === 'high' 
-            ? 'bg-red-500/20 text-red-300' 
-            : task.priority === 'medium'
-            ? 'bg-yellow-500/20 text-yellow-300'
-            : 'bg-green-500/20 text-green-300'
-        }`}>
-          {task.priority.toUpperCase()}
+      {/* Pending Tasks */}
+      {pendingTasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <Clock className="w-4 h-4 text-yellow-500" />
+            <h4 className="text-sm font-medium text-yellow-300">PENDING ({pendingTasks.length})</h4>
+          </div>
+          <div className="space-y-2">
+            {pendingTasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => onTaskSelect(task.id)}
+                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {getStatusIcon(task.status)}
+                      {task.id === nextTaskId && (
+                        <span className="text-blue-400 text-xs font-medium bg-blue-900/30 px-2 py-1 rounded-full border border-blue-700/30">
+                          - NEXT TASK
+                        </span>
+                      )}
+                    </div>
+                    <h5 className="text-sm font-medium text-white mb-1 leading-tight">{task.title}</h5>
+                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
+                  </div>
+                  <div className="ml-3 flex flex-col items-end space-y-1">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                      {task.priority.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-400">{task.estimatedTimeMinutes}min</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <p className={`text-sm font-medium ${
-        task.status === 'completed' 
-          ? 'text-gray-400 line-through' 
-          : 'text-white'
-      } ${isNext ? 'text-blue-300' : ''}`}>
-        {task.title}
-      </p>
-      {isNext && (
-        <div className="mt-2 text-xs text-blue-400 font-medium">
-          ← NEXT TASK
+      )}
+
+      {/* In Progress Tasks */}
+      {inProgressTasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <Play className="w-4 h-4 text-blue-500" />
+            <h4 className="text-sm font-medium text-blue-300">IN PROGRESS ({inProgressTasks.length})</h4>
+          </div>
+          <div className="space-y-2">
+            {inProgressTasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => onTaskSelect(task.id)}
+                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {getStatusIcon(task.status)}
+                    </div>
+                    <h5 className="text-sm font-medium text-white mb-1 leading-tight">{task.title}</h5>
+                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
+                  </div>
+                  <div className="ml-3 flex flex-col items-end space-y-1">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                      {task.priority.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-400">{task.estimatedTimeMinutes}min</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Completed Tasks */}
+      {completedTasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <h4 className="text-sm font-medium text-green-300">COMPLETED ({completedTasks.length})</h4>
+          </div>
+          <div className="space-y-2">
+            {completedTasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => onTaskSelect(task.id)}
+                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30 opacity-75"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {getStatusIcon(task.status)}
+                    </div>
+                    <h5 className="text-sm font-medium text-white mb-1 leading-tight line-through">{task.title}</h5>
+                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
+                  </div>
+                  <div className="ml-3 flex flex-col items-end space-y-1">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                      {task.priority.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-400">{task.estimatedTimeMinutes}min</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tasks.length === 0 && (
+        <div className="text-center py-8 text-gray-400">
+          <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No tasks available</p>
+          <p className="text-sm">Generate some microtasks to get started!</p>
         </div>
       )}
     </div>

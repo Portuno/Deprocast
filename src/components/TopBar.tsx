@@ -77,9 +77,9 @@ const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/30 px-6 py-4">
+    <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/30">
       {/* Top row - Logo and Sign Out */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="px-6 py-3 flex items-center justify-between">
         {/* Left side - Logo */}
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
@@ -100,20 +100,19 @@ const TopBar: React.FC<TopBarProps> = ({
         </button>
       </div>
 
-      {/* Bottom row - Tip and Project Selector */}
-      <div className="flex items-center justify-between">
-        {/* Left side - Random Tip */}
-        <div className="flex-1 max-w-2xl">
-          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700/30 rounded-lg px-4 py-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-purple-300 text-sm">💡</span>
-              <span className="text-white text-sm font-medium">{currentTip}</span>
-            </div>
+      {/* Middle row - Tip spanning full width */}
+      <div className="px-6 py-3">
+        <div className="w-full bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700/30 rounded-lg px-6 py-3 text-center">
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-purple-300 text-base">💡</span>
+            <span className="text-white text-base font-medium">{currentTip}</span>
           </div>
         </div>
+      </div>
 
-        {/* Right side - Project selector */}
-        <div className="relative ml-4">
+      {/* Bottom row - Project Selector */}
+      <div className="px-6 py-3 flex justify-end">
+        <div className="relative">
           <button
             onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
             className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg border border-gray-700/30 transition-colors"

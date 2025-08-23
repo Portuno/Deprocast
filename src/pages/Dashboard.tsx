@@ -38,7 +38,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   onRefresh,
   currentProject
 }) => {
-  const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [currentTip, setCurrentTip] = useState('');
@@ -97,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const getProductivityInsights = () => {
     const completed = tasks.filter(task => task.status === 'completed').length;
     const inProgress = tasks.filter(task => task.status === 'in-progress').length;
-    
+
     if (completed === 0 && inProgress === 0) return "Ready to start your journey!";
     if (completed === 0) return "Great start! Keep the momentum going.";
     if (inProgress === 0) return "Excellent completion rate! Time to tackle new challenges.";
@@ -128,7 +127,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         }
         return prev + progressIncrement;
       });
-    }, 100);
+        }, 100);
 
     // Rotate tips every 6 seconds
     const tipInterval = setInterval(() => {
@@ -176,35 +175,37 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
-      {/* Generate Tasks Button */}
-      <div className="mb-6 text-center">
-        <button
-          onClick={generateMicrotasks}
-          disabled={isGeneratingTasks}
-          className={`inline-flex items-center px-6 py-3 font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl ${
-            isGeneratingTasks
-              ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-              : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-          }`}
-        >
-          {isGeneratingTasks ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Generating Tasks...
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Generate Microtasks
-            </>
-          )}
-        </button>
-        <p className="text-sm text-gray-400 mt-2">
-          Create focused, actionable tasks to break down your project
-        </p>
-      </div>
+      {/* Generate Tasks Button - Only visible when no tasks exist */}
+      {tasks.length === 0 && (
+        <div className="mb-6 text-center">
+          <button
+            onClick={generateMicrotasks}
+            disabled={isGeneratingTasks}
+            className={`inline-flex items-center px-6 py-3 font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl ${
+              isGeneratingTasks
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+            }`}
+          >
+            {isGeneratingTasks ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Generating Tasks...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Generate Microtasks
+              </>
+            )}
+          </button>
+          <p className="text-sm text-gray-400 mt-2">
+            Create focused, actionable tasks to break down your project
+          </p>
+        </div>
+      )}
 
       {/* Enhanced Generation Progress */}
       {isGeneratingTasks && (
@@ -271,10 +272,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Task Module and Journal */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Main Content Grid - Adjusted for wider task management */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Left Column - Task Module and Journal (smaller) */}
+        <div className="xl:col-span-2 space-y-6">
           {nextTask && (
             <TaskModule
               nextTask={nextTask}
@@ -286,8 +287,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           <JournalModule />
         </div>
 
-        {/* Right Column - Task Lists */}
-        <div className="space-y-6">
+        {/* Right Column - Task Lists (wider) */}
+        <div className="xl:col-span-2 space-y-6">
           <div className="hidden lg:block">
             {tasks.length > 0 ? (
               <TaskList
