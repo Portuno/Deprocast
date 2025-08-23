@@ -31,45 +31,14 @@ export const useAuth = () => {
         } else {
           console.log('No existing session found');
           
-          // Check if we're in an OAuth redirect
-          const hash = window.location.hash;
-          if (hash && hash.includes('access_token')) {
-            console.log('OAuth redirect detected, starting session polling...');
-            
-            // Start polling for session establishment
-            sessionCheckInterval = setInterval(async () => {
-              if (!mounted) return;
-              
-              console.log('Polling for session...');
-              const { data: { session: polledSession }, error: pollError } = await supabase.auth.getSession();
-              
-              if (pollError) {
-                console.error('Error polling for session:', pollError);
-              } else if (polledSession) {
-                console.log('Session established via polling:', polledSession.user.email);
-                setSession(polledSession);
-                setUser(polledSession.user);
-                setLoading(false);
-                
-                // Clear the interval
-                if (sessionCheckInterval) {
-                  clearInterval(sessionCheckInterval);
-                  sessionCheckInterval = null;
-                }
-              }
-            }, 1000); // Check every second
-            
-            // Stop polling after 10 seconds
-            setTimeout(() => {
-              if (sessionCheckInterval) {
-                clearInterval(sessionCheckInterval);
-                sessionCheckInterval = null;
-                console.log('Session polling timeout, setting loading to false');
-                setLoading(false);
-              }
-            }, 10000);
-            
-            return; // Don't set loading to false yet
+          // Check if we're in an OAuth redirect with a code parameter
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+          
+          if (code) {
+            console.log('OAuth code detected in URL, waiting for processing...');
+            // Don't set loading to false yet, let useOAuthRedirect handle it
+            return;
           }
         }
       } catch (error) {

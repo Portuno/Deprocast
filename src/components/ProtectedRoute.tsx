@@ -1,94 +1,84 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useOAuthRedirect } from '../hooks/useOAuthRedirect';
 
-type ProtectedRouteProps = {
-	children: React.ReactElement;
-};
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-	const { isAuthenticated, loading } = useAuth();
-	const [fallbackLoading, setFallbackLoading] = useState(false);
-	const [isOAuthRedirect, setIsOAuthRedirect] = useState(false);
-	
-	// Process OAuth redirects first
-	useOAuthRedirect();
+  const { user, loading } = useAuth();
+  const [isOAuthRedirect, setIsOAuthRedirect] = useState(false);
+  const [fallbackLoading, setFallbackLoading] = useState(false);
 
-	// Check if we're in an OAuth redirect
-	useEffect(() => {
-		const hash = window.location.hash;
-		if (hash && hash.includes('access_token')) {
-			setIsOAuthRedirect(true);
-		}
-	}, []);
+  // Use the OAuth redirect hook
+  useOAuthRedirect();
 
-	// Fallback mechanism: if loading takes too long, show a timeout message
-	useEffect(() => {
-		if (loading) {
-			const timeout = setTimeout(() => {
-				setFallbackLoading(true);
-			}, 8000); // 8 seconds timeout
+  // Detect OAuth redirects
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    setIsOAuthRedirect(!!code);
+  }, []);
 
-			return () => clearTimeout(timeout);
-		} else {
-			setFallbackLoading(false);
-		}
-	}, [loading]);
+  // Fallback loading state
+  useEffect(() => {
+    if (loading && !isOAuthRedirect) {
+      const timer = setTimeout(() => {
+        setFallbackLoading(true);
+      }, 8000); // Show fallback after 8 seconds
 
-	const handleForceLogin = () => {
-		// Clear any stored auth data and redirect to login
-		localStorage.removeItem('sb-hiipxfzsdjgpgrbarxkb-auth-token');
-		window.location.href = '/login';
-	};
+      return () => clearTimeout(timer);
+    } else {
+      setFallbackLoading(false);
+    }
+  }, [loading, isOAuthRedirect]);
 
-	if (loading) {
-		return (
-			<div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-					<h1 className="text-2xl font-bold mb-2">Loading...</h1>
-					
-					{isOAuthRedirect ? (
-						<div className="space-y-2">
-							<p className="text-blue-300">Processing Google login...</p>
-							<p className="text-gray-400 text-sm">Setting up your session</p>
-						</div>
-					) : (
-						<p className="text-gray-400">Setting up your session...</p>
-					)}
-					
-					{fallbackLoading && (
-						<div className="mt-6 p-4 bg-yellow-900/30 border border-yellow-700/30 rounded-lg">
-							<p className="text-yellow-300 text-sm mb-3">Taking longer than expected?</p>
-							<div className="space-y-2">
-								<button
-									onClick={() => window.location.reload()}
-									className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm transition-colors"
-								>
-									Refresh Page
-								</button>
-								<button
-									onClick={handleForceLogin}
-									className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
-								>
-									Force Login
-								</button>
-							</div>
-						</div>
-					)}
-				</div>
-			</div>
-		);
-	}
-	
-	if (!isAuthenticated) {
-		console.log('User not authenticated, redirecting to login');
-		return <Navigate to="/login" replace />;
-	}
-	
-	console.log('User authenticated, rendering protected content');
-	return children;
+  if (loading) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-4">
+            {isOAuthRedirect ? 'Processing Google login...' : 'Loading... Setting up your session...'}
+          </h1>
+          <p className="text-gray-400 mb-6">
+            {isOAuthRedirect 
+              ? 'Please wait while we complete your authentication...' 
+              : 'Please wait...'
+            }
+          </p>
+          
+          {fallbackLoading && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">If this takes too long, try:</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                >
+                  Refresh Page
+                </button>
+                <button
+                  onClick={() => window.location.href = '/login'}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                >
+                  Force Login
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;
