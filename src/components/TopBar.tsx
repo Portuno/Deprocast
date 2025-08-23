@@ -38,29 +38,6 @@ const TopBar: React.FC<TopBarProps> = ({
         <span className="text-xl font-bold text-white">Deprocast</span>
       </div>
 
-      {/* Center - Overall Progress */}
-      <div className="flex-1 flex justify-center">
-        <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30 max-w-xs">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              <h3 className="text-sm font-medium text-gray-300">Progress</h3>
-            </div>
-            <span className="text-sm font-bold text-blue-400">{progressPercentage}%</span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-1000 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>{completedTasks} done</span>
-            <span>{totalTasks - completedTasks} left</span>
-          </div>
-        </div>
-      </div>
-
       {/* Right side - Project selector and sign out */}
       <div className="flex items-center space-x-4">
         {/* Project Selector */}
