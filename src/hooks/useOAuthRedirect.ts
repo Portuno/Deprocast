@@ -14,7 +14,19 @@ export const useOAuthRedirect = () => {
       console.log('🔄 useOAuthRedirect: OAuth code found:', !!code);
       
       if (code) {
-        console.log('✅ useOAuthRedirect: OAuth code detected, processing...');
+        console.log('✅ useOAuthRedirect: OAuth code detected, checking if session exists...');
+        
+        // Check if we already have a session (user might already be authenticated)
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        if (existingSession) {
+          console.log('✅ useOAuthRedirect: Session already exists, just cleaning URL');
+          // Clean the URL since user is already authenticated
+          window.history.replaceState(null, '', '/app');
+          return;
+        }
+        
+        console.log('✅ useOAuthRedirect: No existing session, processing OAuth code...');
         
         try {
           // Manually exchange the authorization code for a session

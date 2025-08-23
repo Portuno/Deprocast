@@ -8,25 +8,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  console.log('🚀 ProtectedRoute: Component mounting...');
-  
   const { user, loading, session } = useAuth();
   const [fallbackLoading, setFallbackLoading] = useState(false);
 
-  console.log('🚀 ProtectedRoute: useAuth result:', { user: user?.email, loading, hasSession: !!session });
-
   // Use the simplified OAuth redirect hook
   useOAuthRedirect();
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🛡️ ProtectedRoute: State update:', { 
-      user: user?.email, 
-      loading, 
-      hasSession: !!session,
-      sessionExpiry: session?.expires_at 
-    });
-  }, [user, loading, session]);
 
   // Simple fallback loading state
   useEffect(() => {
@@ -43,7 +29,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, [loading]);
 
   if (loading) {
-    console.log('🛡️ ProtectedRoute: Still loading, showing loading screen');
     return (
       <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -76,13 +61,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    console.log('🛡️ ProtectedRoute: No user found, redirecting to login');
-    console.log('🛡️ ProtectedRoute: User state:', user);
-    console.log('🛡️ ProtectedRoute: Session state:', session);
     return <Navigate to="/login" replace />;
   }
 
-  console.log('🛡️ ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
 };
 
