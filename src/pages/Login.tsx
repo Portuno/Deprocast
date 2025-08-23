@@ -15,11 +15,18 @@ const Login: React.FC = () => {
 		(async () => {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!mounted) return;
-			if (session) navigate('/app', { replace: true });
+			if (session) {
+				console.log('Session found in Login, redirecting to /app');
+				navigate('/app', { replace: true });
+			}
 		})();
-		const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+		const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
 			if (!mounted) return;
-			if (session) navigate('/app', { replace: true });
+			console.log('Auth state change in Login:', event, session?.user?.email);
+			if (session) {
+				console.log('Session established in Login, redirecting to /app');
+				navigate('/app', { replace: true });
+			}
 		});
 		return () => { subscription.subscription?.unsubscribe(); mounted = false; };
 	}, [navigate]);
@@ -43,9 +50,38 @@ const Login: React.FC = () => {
 	const handleGoogleLogin = async () => {
 		setError(null);
 		setLoading(true);
-		const { error: signInError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/app' } });
-		setLoading(false);
-		if (signInError) setError(signInError.message);
+		
+		try {
+			console.log('Initiating Google OAuth...');
+			
+			// Use the current origin and redirect to /app
+			const redirectTo = `${window.location.origin}/app`;
+			console.log('Redirect URL:', redirectTo);
+			
+			const { error: signInError } = await supabase.auth.signInWithOAuth({ 
+				provider: 'google', 
+				options: { 
+					redirectTo,
+					queryParams: {
+						access_type: 'offline',
+						prompt: 'consent',
+					}
+				} 
+			});
+			
+			if (signInError) {
+				console.error('Google OAuth error:', signInError);
+				setError(signInError.message);
+			} else {
+				console.log('Google OAuth initiated successfully');
+				// The user will be redirected to Google, then back to our app
+			}
+		} catch (error) {
+			console.error('Unexpected error during Google OAuth:', error);
+			setError('An unexpected error occurred. Please try again.');
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (

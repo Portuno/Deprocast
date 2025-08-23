@@ -10,7 +10,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 let client: SupabaseClient | null = null;
 if (supabaseUrl && supabaseAnonKey) {
-	client = createClient(supabaseUrl, supabaseAnonKey);
+	client = createClient(supabaseUrl, supabaseAnonKey, {
+		auth: {
+			autoRefreshToken: true,
+			persistSession: true,
+			detectSessionInUrl: true, // This is crucial for OAuth redirects
+		},
+	});
 }
 
 // Fallback shim to prevent hard crashes during local setup without envs

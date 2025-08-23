@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { DbProject } from '../integrations/supabase/projects';
+import { useAuth } from '../hooks/useAuth';
 
 interface TopBarProps {
   currentProject: DbProject | null;
@@ -15,6 +16,7 @@ const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [currentTip, setCurrentTip] = useState('');
+  const { user, signOut } = useAuth();
 
   // Array of tips that will be randomly selected
   const tips = [
@@ -72,8 +74,13 @@ const TopBar: React.FC<TopBarProps> = ({
     setCurrentTip(tips[randomIndex]);
   }, []);
 
-  const handleSignOut = () => {
-    console.log('Sign out clicked');
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // The useAuth hook will handle the redirect
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -90,14 +97,22 @@ const TopBar: React.FC<TopBarProps> = ({
           <span className="text-xl font-bold text-white">Deprocast</span>
         </div>
 
-        {/* Right side - Sign out */}
-        <button
-          onClick={handleSignOut}
-          className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-          title="Sign Out"
-        >
-          <LogOut className="w-5 h-5" />
-        </button>
+        {/* Right side - User info and Sign out */}
+        <div className="flex items-center space-x-3">
+          {user && (
+            <div className="text-sm text-gray-300">
+              <span className="hidden sm:inline">Welcome, </span>
+              <span className="font-medium text-white">{user.user_metadata?.full_name || user.email}</span>
+            </div>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+            title="Sign Out"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Middle row - Tip spanning full width */}
