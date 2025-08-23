@@ -19,15 +19,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    setIsOAuthRedirect(!!code);
+    const hasOAuthCode = !!code;
+    setIsOAuthRedirect(hasOAuthCode);
+    
+    if (hasOAuthCode) {
+      console.log('ProtectedRoute: OAuth code detected, setting shorter timeout');
+    }
   }, []);
 
   // Fallback loading state
   useEffect(() => {
-    if (loading && !isOAuthRedirect) {
+    if (loading) {
+      // Shorter timeout for OAuth redirects (5 seconds) vs regular loading (8 seconds)
+      const timeout = isOAuthRedirect ? 5000 : 8000;
+      
       const timer = setTimeout(() => {
+        console.log(`ProtectedRoute: Fallback timeout reached after ${timeout}ms`);
         setFallbackLoading(true);
-      }, 8000); // Show fallback after 8 seconds
+      }, timeout);
 
       return () => clearTimeout(timer);
     } else {
@@ -52,7 +61,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           
           {fallbackLoading && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-500">If this takes too long, try:</p>
+              <p className="text-sm text-gray-500">
+                {isOAuthRedirect 
+                  ? 'OAuth process taking longer than expected. Try:' 
+                  : 'If this takes too long, try:'
+                }
+              </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => window.location.reload()}
