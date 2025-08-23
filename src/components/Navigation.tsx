@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, acti
   return (
     <nav className="w-64 bg-gray-900 text-white h-screen flex flex-col">
       {/* Navigation Items */}
-      <div className="flex-1 p-4 pt-4">
+      <div className="p-4 pt-4">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const IconComponent = item.icon;
@@ -64,7 +64,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, acti
 
       {/* Task Statistics */}
       {taskStats && (
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-gray-700 mt-auto">
           <h3 className="text-sm font-medium text-white mb-4">Task Overview</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-900/60 rounded-lg p-4 text-center border border-blue-700/40">
