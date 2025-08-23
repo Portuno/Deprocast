@@ -12,44 +12,21 @@ export const useAuth = () => {
 
     const getInitialSession = async () => {
       try {
-        // Check if we have a hash fragment (OAuth redirect)
-        const hash = window.location.hash;
-        if (hash && hash.includes('access_token')) {
-          console.log('OAuth redirect detected, processing...');
-          
-          // Wait a bit for the OAuth flow to complete
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Try to get the session again
-          const { data: { session: newSession }, error } = await supabase.auth.getSession();
-          
-          if (!mounted) return;
-          
-          if (error) {
-            console.error('Error getting session after OAuth:', error);
-          } else if (newSession) {
-            console.log('OAuth session established:', newSession.user.email);
-            setSession(newSession);
-            setUser(newSession.user);
-            
-            // Clear the hash fragment from the URL
-            if (window.history.replaceState) {
-              window.history.replaceState(null, '', window.location.pathname + window.location.search);
-            }
-          }
+        console.log('Checking for existing session...');
+        
+        // Get the current session
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Error getting initial session:', error);
+        } else if (currentSession) {
+          console.log('Session found:', currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
         } else {
-          // Normal session check
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-          
-          if (!mounted) return;
-          
-          if (error) {
-            console.error('Error getting initial session:', error);
-          } else if (currentSession) {
-            console.log('Initial session found:', currentSession.user.email);
-            setSession(currentSession);
-            setUser(currentSession.user);
-          }
+          console.log('No existing session found');
         }
       } catch (error) {
         console.error('Unexpected error in getInitialSession:', error);
@@ -70,17 +47,19 @@ export const useAuth = () => {
         console.log('Auth state change:', event, newSession?.user?.email);
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          console.log('User signed in or token refreshed');
           setSession(newSession);
           setUser(newSession?.user ?? null);
+          setLoading(false);
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
           setSession(null);
           setUser(null);
+          setLoading(false);
           
           // Redirect to login page after sign out
           window.location.href = '/login';
         }
-        
-        setLoading(false);
       }
     );
 
@@ -92,11 +71,13 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
+      console.log('Signing out...');
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
         throw error;
       }
+      console.log('Sign out successful');
       // The onAuthStateChange listener will handle the redirect
     } catch (error) {
       console.error('Unexpected error during sign out:', error);
