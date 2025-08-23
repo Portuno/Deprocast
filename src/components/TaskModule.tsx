@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Play, Clock, Target, Brain, Zap, CheckCircle2 } from 'lucide-react';
+import { Target, Brain, Play, CheckCircle } from 'lucide-react';
 import { Task } from '../data/mockData';
 import PomodoroTimer from './PomodoroTimer';
 
 interface TaskModuleProps {
-  nextTask: Task | null;
+  nextTask: Task;
   onStartTask: (taskId: string) => void;
-  onTaskComplete?: (completionData: any) => void;
+  onTaskComplete: (completionData: any) => void;
   onDirectComplete?: (taskId: string) => void;
 }
 
@@ -66,65 +66,35 @@ const TaskModule: React.FC<TaskModuleProps> = ({
   return (
     <>
       <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-6 md:p-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-              <h3 className="text-base md:text-lg font-semibold text-blue-400 uppercase tracking-wide">
-                Your Next Task
-              </h3>
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-              {nextTask.title}
-            </h2>
-            <div className="flex items-center space-x-4 text-sm text-gray-400">
-              <div className="flex items-center space-x-1">
-                <Clock className="w-4 h-4" />
-                <span>Priority: {nextTask.priority}</span>
-              </div>
-              {nextTask.estimatedTimeMinutes && (
-                <div className="flex items-center space-x-1">
-                  <Target className="w-4 h-4" />
-                  <span>~{nextTask.estimatedTimeMinutes} min</span>
-                </div>
-              )}
-            </div>
+        {/* Task Header */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <h3 className="text-lg md:text-xl font-semibold text-white">YOUR NEXT TASK</h3>
           </div>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight">
+            {nextTask.title}
+          </h2>
+          <p className="text-gray-300 text-sm md:text-base leading-relaxed">
+            {nextTask.description}
+          </p>
         </div>
 
-        {/* Task Description */}
-        {nextTask.description && (
-          <div className="mb-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700/30">
-            <p className="text-sm md:text-base text-gray-300 leading-relaxed">
-              {nextTask.description}
-            </p>
+        {/* Task Details */}
+        <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-400">
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-500">Priority:</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              nextTask.priority === 'high' ? 'bg-red-900/50 text-red-300 border border-red-700/30' :
+              nextTask.priority === 'medium' ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-700/30' :
+              'bg-green-900/50 text-green-300 border border-green-700/30'
+            }`}>
+              {nextTask.priority}
+            </span>
           </div>
-        )}
-
-        {/* Neuroscience Protocol Info */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg">
-          <div className="flex items-center space-x-3 mb-3">
-            <Brain className="w-5 h-5 text-purple-400" />
-            <h4 className="font-semibold text-white">🧠 Pomodoro+ Protocol</h4>
-          </div>
-          <div className="space-y-2 text-sm text-gray-300">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>25-minute focused work sessions with dopamine priming</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span>5-minute celebration breaks to reinforce neural pathways</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Real-time obstacle resolution with AI-powered solutions</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              <span>Comprehensive data collection for personalized coaching</span>
-            </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-500">Estimated time:</span>
+            <span className="text-white font-medium">~{nextTask.estimatedTimeMinutes} min</span>
           </div>
         </div>
 
@@ -133,44 +103,29 @@ const TaskModule: React.FC<TaskModuleProps> = ({
           {!isTaskInProgress ? (
             <button
               onClick={handleInitiateTask}
-              className="w-full group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold text-lg rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 active:scale-95"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative flex items-center space-x-3">
-                <Zap className="w-6 h-6 animate-pulse" />
-                <span>🚀 Initiate Task</span>
-              </div>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Initiate Task</span>
             </button>
           ) : (
-            <>
-              <div className="inline-flex items-center space-x-3 px-6 py-3 bg-green-600/20 border border-green-500/30 rounded-lg w-full justify-center">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-400 font-medium">Task in Progress</span>
-              </div>
-              
-              {/* Direct Complete Button */}
-              <button
-                onClick={handleDirectComplete}
-                className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-              >
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Complete Task
-              </button>
-            </>
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+              <p className="text-purple-400 text-sm">Task in progress...</p>
+            </div>
           )}
-        </div>
 
-        {/* Quick Tips */}
-        <div className="mt-6 p-4 bg-gray-800/20 rounded-lg border border-gray-700/20">
-          <h4 className="text-sm font-medium text-gray-300 mb-2">💡 Quick Tips:</h4>
-          <ul className="text-xs text-gray-400 space-y-1">
-            <li>• Clear your workspace before starting</li>
-            <li>• Put your phone in another room</li>
-            <li>• Have water and snacks ready</li>
-            <li>• Remember: 25 minutes of focus beats 2 hours of distracted work</li>
-            <li>• Celebrate every micro-win to train your brain</li>
-            <li>• Use "Complete Task" if you finished without the timer</li>
-          </ul>
+          {!isTaskInProgress && (
+            <button
+              onClick={handleDirectComplete}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Complete Task</span>
+            </button>
+          )}
         </div>
       </div>
 
