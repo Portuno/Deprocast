@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
 
 export const useOAuthRedirect = () => {
   useEffect(() => {
     console.log('🔄 useOAuthRedirect: Hook executing...');
     
-    const handleOAuthRedirect = () => {
+    const handleOAuthRedirect = async () => {
       // Check for OAuth code in URL parameters
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
@@ -13,15 +14,32 @@ export const useOAuthRedirect = () => {
       console.log('🔄 useOAuthRedirect: OAuth code found:', !!code);
       
       if (code) {
-        console.log('✅ useOAuthRedirect: OAuth code detected, cleaning URL...');
+        console.log('✅ useOAuthRedirect: OAuth code detected, processing...');
         
-        // Clean the URL by removing the code parameter
-        // Let Supabase handle the OAuth flow natively
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState(null, '', cleanUrl);
-        
-        console.log('✅ useOAuthRedirect: URL cleaned to:', cleanUrl);
-        console.log('✅ useOAuthRedirect: Supabase will handle the rest');
+        try {
+          // Manually exchange the authorization code for a session
+          console.log('🔄 useOAuthRedirect: Calling exchangeCodeForSession...');
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            console.error('❌ useOAuthRedirect: Error exchanging code:', error);
+            // Clean URL even on error
+            window.history.replaceState(null, '', '/app');
+          } else if (data.session) {
+            console.log('✅ useOAuthRedirect: Session established successfully:', data.user.email);
+            // Clean the URL after successful exchange
+            window.history.replaceState(null, '', '/app');
+            // Force a page reload to ensure the session is properly established
+            console.log('🔄 useOAuthRedirect: Forcing page reload...');
+            window.location.reload();
+          } else {
+            console.log('⚠️ useOAuthRedirect: No session data returned');
+            window.history.replaceState(null, '', '/app');
+          }
+        } catch (error) {
+          console.error('❌ useOAuthRedirect: Unexpected error:', error);
+          window.history.replaceState(null, '', '/app');
+        }
       } else {
         console.log('ℹ️ useOAuthRedirect: No OAuth code found in URL');
       }

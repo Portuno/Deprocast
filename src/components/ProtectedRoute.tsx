@@ -8,8 +8,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  console.log('🚀 ProtectedRoute: Component mounting...');
+  
   const { user, loading, session } = useAuth();
   const [fallbackLoading, setFallbackLoading] = useState(false);
+
+  console.log('🚀 ProtectedRoute: useAuth result:', { user: user?.email, loading, hasSession: !!session });
 
   // Use the simplified OAuth redirect hook
   useOAuthRedirect();

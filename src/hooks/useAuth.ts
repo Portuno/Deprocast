@@ -28,12 +28,27 @@ export const useAuth = () => {
           setUser(currentSession.user);
         } else {
           console.log('ℹ️ useAuth: No existing session found');
+          
+          // Check if we're in an OAuth redirect
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+          
+          if (code) {
+            console.log('🔄 useAuth: OAuth code detected, waiting for processing...');
+            // Don't set loading to false yet, let useOAuthRedirect handle it
+            return;
+          }
         }
       } catch (error) {
         console.error('❌ useAuth: Unexpected error in getInitialSession:', error);
       } finally {
-        console.log('🏁 useAuth: Setting loading to false');
-        setLoading(false);
+        // Add a small delay to allow OAuth processing to complete
+        setTimeout(() => {
+          if (mounted) {
+            console.log('🏁 useAuth: Setting loading to false');
+            setLoading(false);
+          }
+        }, 1000); // 1 second delay
       }
     };
 
