@@ -15,6 +15,7 @@ if (supabaseUrl && supabaseAnonKey) {
 			autoRefreshToken: true,
 			persistSession: true,
 			detectSessionInUrl: true, // This is crucial for OAuth redirects
+			flowType: 'pkce', // Use PKCE flow for better OAuth handling
 		},
 	});
 }

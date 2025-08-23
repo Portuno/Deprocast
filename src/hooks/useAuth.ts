@@ -9,6 +9,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     let mounted = true;
+    let sessionCheckInterval: NodeJS.Timeout | null = null;
 
     const getInitialSession = async () => {
       try {
@@ -25,16 +26,57 @@ export const useAuth = () => {
           console.log('Session found:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
+          setLoading(false);
+          return;
         } else {
           console.log('No existing session found');
+          
+          // Check if we're in an OAuth redirect
+          const hash = window.location.hash;
+          if (hash && hash.includes('access_token')) {
+            console.log('OAuth redirect detected, starting session polling...');
+            
+            // Start polling for session establishment
+            sessionCheckInterval = setInterval(async () => {
+              if (!mounted) return;
+              
+              console.log('Polling for session...');
+              const { data: { session: polledSession }, error: pollError } = await supabase.auth.getSession();
+              
+              if (pollError) {
+                console.error('Error polling for session:', pollError);
+              } else if (polledSession) {
+                console.log('Session established via polling:', polledSession.user.email);
+                setSession(polledSession);
+                setUser(polledSession.user);
+                setLoading(false);
+                
+                // Clear the interval
+                if (sessionCheckInterval) {
+                  clearInterval(sessionCheckInterval);
+                  sessionCheckInterval = null;
+                }
+              }
+            }, 1000); // Check every second
+            
+            // Stop polling after 10 seconds
+            setTimeout(() => {
+              if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+                sessionCheckInterval = null;
+                console.log('Session polling timeout, setting loading to false');
+                setLoading(false);
+              }
+            }, 10000);
+            
+            return; // Don't set loading to false yet
+          }
         }
       } catch (error) {
         console.error('Unexpected error in getInitialSession:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
       }
+      
+      setLoading(false);
     };
 
     getInitialSession();
@@ -51,6 +93,12 @@ export const useAuth = () => {
           setSession(newSession);
           setUser(newSession?.user ?? null);
           setLoading(false);
+          
+          // Clear any polling interval
+          if (sessionCheckInterval) {
+            clearInterval(sessionCheckInterval);
+            sessionCheckInterval = null;
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setSession(null);
@@ -65,6 +113,9 @@ export const useAuth = () => {
 
     return () => {
       mounted = false;
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
       subscription?.unsubscribe();
     };
   }, []);

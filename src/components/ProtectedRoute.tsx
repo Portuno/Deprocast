@@ -28,13 +28,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 		if (loading) {
 			const timeout = setTimeout(() => {
 				setFallbackLoading(true);
-			}, 10000); // 10 seconds timeout
+			}, 8000); // 8 seconds timeout
 
 			return () => clearTimeout(timeout);
 		} else {
 			setFallbackLoading(false);
 		}
 	}, [loading]);
+
+	const handleForceLogin = () => {
+		// Clear any stored auth data and redirect to login
+		localStorage.removeItem('sb-hiipxfzsdjgpgrbarxkb-auth-token');
+		window.location.href = '/login';
+	};
 
 	if (loading) {
 		return (
@@ -54,13 +60,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 					
 					{fallbackLoading && (
 						<div className="mt-6 p-4 bg-yellow-900/30 border border-yellow-700/30 rounded-lg">
-							<p className="text-yellow-300 text-sm mb-2">Taking longer than expected?</p>
-							<button
-								onClick={() => window.location.reload()}
-								className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm transition-colors"
-							>
-								Refresh Page
-							</button>
+							<p className="text-yellow-300 text-sm mb-3">Taking longer than expected?</p>
+							<div className="space-y-2">
+								<button
+									onClick={() => window.location.reload()}
+									className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm transition-colors"
+								>
+									Refresh Page
+								</button>
+								<button
+									onClick={handleForceLogin}
+									className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+								>
+									Force Login
+								</button>
+							</div>
 						</div>
 					)}
 				</div>
