@@ -21,10 +21,9 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Call the existing Mabot edge function with the correct parameters
+    // Call the existing Mabot edge function with the correct endpoint
     const { data, error } = await supabase.functions.invoke('mabot-integration', {
       body: {
-        action: 'generate-microtasks',
         title: request.projectTitle,
         project_description: request.projectDescription,
         outcome_goal: request.projectDescription,
