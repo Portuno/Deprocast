@@ -42,6 +42,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [generationProgress, setGenerationProgress] = useState(0);
   const [currentTip, setCurrentTip] = useState('');
   const [tipIndex, setTipIndex] = useState(0);
+  const [nextTaskId, setNextTaskId] = useState<string | null>(null);
 
   // Neuroscience tips array for the loading screen
   const neuroscienceTips = [
@@ -86,6 +87,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     "Strength isn't in pushing, but in flowing.",
     "Every 25 minutes of focus is a step to rewiring your brain."
   ];
+
+  // Set a random tip on component mount (page reload)
+  React.useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * neuroscienceTips.length);
+    setCurrentTip(neuroscienceTips[randomIndex]);
+  }, []);
 
   const getProgressPercentage = () => {
     if (tasks.length === 0) return 0;
@@ -171,7 +178,22 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const nextTask = tasks.find(task => task.status === 'pending') || null;
+  // Handle selecting the next task
+  const handleSelectNextTask = (taskId: string) => {
+    setNextTaskId(taskId);
+    console.log('Next task selected:', taskId);
+  };
+
+  // Handle editing task title
+  const handleEditTaskTitle = (taskId: string, newTitle: string) => {
+    console.log('Task title edited:', taskId, newTitle);
+    // Here you would typically update the task in the database
+    // For now, we'll just log it
+  };
+
+  const nextTask = nextTaskId 
+    ? tasks.find(task => task.id === nextTaskId) 
+    : tasks.find(task => task.status === 'pending') || null;
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -293,8 +315,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {tasks.length > 0 ? (
               <TaskList
                 tasks={tasks}
-                nextTaskId={nextTask?.id || null}
+                nextTaskId={nextTaskId}
                 onTaskSelect={onTaskSelect}
+                onSelectNextTask={handleSelectNextTask}
+                onEditTaskTitle={handleEditTaskTitle}
               />
             ) : !isLoadingTasks ? (
               <div className="text-center py-8 text-gray-400">
@@ -307,8 +331,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {tasks.length > 0 ? (
               <MobileTaskList
                 tasks={tasks}
-                nextTaskId={nextTask?.id || null}
+                nextTaskId={nextTaskId}
                 onTaskSelect={onTaskSelect}
+                onSelectNextTask={handleSelectNextTask}
+                onEditTaskTitle={handleEditTaskTitle}
               />
             ) : !isLoadingTasks ? (
               <div className="text-center py-8 text-gray-400">

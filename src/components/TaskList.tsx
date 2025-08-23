@@ -1,14 +1,19 @@
-import React from 'react';
-import { CheckCircle, Clock, Play, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, Clock, Play, Target, Edit2, Check, X } from 'lucide-react';
 import { Task } from '../data/mockData';
 
 interface TaskListProps {
   tasks: Task[];
   nextTaskId: string | null;
   onTaskSelect: (taskId: string) => void;
+  onSelectNextTask: (taskId: string) => void;
+  onEditTaskTitle: (taskId: string, newTitle: string) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect, onSelectNextTask, onEditTaskTitle }) => {
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -42,6 +47,28 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
     }
   };
 
+  const handleStartEditing = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditingTitle(task.title);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingTaskId && editingTitle.trim()) {
+      onEditTaskTitle(editingTaskId, editingTitle.trim());
+      setEditingTaskId(null);
+      setEditingTitle('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditingTitle('');
+  };
+
+  const handleSelectNextTask = (taskId: string) => {
+    onSelectNextTask(taskId);
+  };
+
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
@@ -49,7 +76,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
   return (
     <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/30 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4">
       <h3 className="text-lg font-semibold text-white mb-4">Task Management</h3>
-      <p className="text-sm text-gray-400 mb-4">Select a task to make it your next focus.</p>
+      <p className="text-sm text-gray-400 mb-4">Click on a task to select it as your next focus, or edit the title.</p>
 
       {/* Pending Tasks */}
       {pendingTasks.length > 0 && (
@@ -62,8 +89,9 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
             {pendingTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => onTaskSelect(task.id)}
-                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30"
+                className={`bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 transition-colors border border-gray-700/30 ${
+                  task.id === nextTaskId ? 'ring-2 ring-blue-400/50 bg-blue-900/20' : ''
+                }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -75,7 +103,49 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
                         </span>
                       )}
                     </div>
-                    <h5 className="text-sm font-medium text-white mb-1 leading-tight">{task.title}</h5>
+                    
+                    {/* Task Title - Editable or Clickable */}
+                    {editingTaskId === task.id ? (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          className="flex-1 bg-gray-700 text-white text-sm px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleSaveEdit}
+                          className="p-1 text-green-400 hover:text-green-300 hover:bg-green-900/30 rounded"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h5 
+                          className="text-sm font-medium text-white leading-tight cursor-pointer hover:text-blue-300 transition-colors"
+                          onClick={() => handleSelectNextTask(task.id)}
+                          title="Click to select as next task"
+                        >
+                          {task.title}
+                        </h5>
+                        <button
+                          onClick={() => handleStartEditing(task)}
+                          className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded opacity-0 group-hover:opacity-100 transition-all"
+                          title="Edit task title"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
                   </div>
                   <div className="ml-3 flex flex-col items-end space-y-1">
@@ -102,15 +172,52 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
             {inProgressTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => onTaskSelect(task.id)}
-                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30"
+                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 transition-colors border border-gray-700/30"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-2">
                       {getStatusIcon(task.status)}
                     </div>
-                    <h5 className="text-sm font-medium text-white mb-1 leading-tight">{task.title}</h5>
+                    
+                    {/* Task Title - Editable */}
+                    {editingTaskId === task.id ? (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          className="flex-1 bg-gray-700 text-white text-sm px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleSaveEdit}
+                          className="p-1 text-green-400 hover:text-green-300 hover:bg-green-900/30 rounded"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h5 className="text-sm font-medium text-white leading-tight">
+                          {task.title}
+                        </h5>
+                        <button
+                          onClick={() => handleStartEditing(task)}
+                          className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded opacity-0 group-hover:opacity-100 transition-all"
+                          title="Edit task title"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
                   </div>
                   <div className="ml-3 flex flex-col items-end space-y-1">
@@ -137,15 +244,52 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, nextTaskId, onTaskSelect }) 
             {completedTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => onTaskSelect(task.id)}
-                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 cursor-pointer transition-colors border border-gray-700/30 opacity-75"
+                className="bg-gray-800/50 hover:bg-gray-700/50 rounded-lg p-3 transition-colors border border-gray-700/30 opacity-75"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-2">
                       {getStatusIcon(task.status)}
                     </div>
-                    <h5 className="text-sm font-medium text-white mb-1 leading-tight line-through">{task.title}</h5>
+                    
+                    {/* Task Title - Editable */}
+                    {editingTaskId === task.id ? (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          className="flex-1 bg-gray-700 text-white text-sm px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleSaveEdit}
+                          className="p-1 text-green-400 hover:text-green-300 hover:bg-green-900/30 rounded"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h5 className="text-sm font-medium text-white leading-tight line-through">
+                          {task.title}
+                        </h5>
+                        <button
+                          onClick={() => handleStartEditing(task)}
+                          className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded opacity-0 group-hover:opacity-100 transition-all"
+                          title="Edit task title"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{task.description}</p>
                   </div>
                   <div className="ml-3 flex flex-col items-end space-y-1">
