@@ -85,7 +85,7 @@ const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/30">
-      {/* Top row - Logo and Sign Out */}
+      {/* Single row - Logo, Tip, and User Info */}
       <div className="px-6 py-3 flex items-center justify-between">
         {/* Left side - Logo */}
         <div className="flex items-center space-x-3">
@@ -97,14 +97,60 @@ const TopBar: React.FC<TopBarProps> = ({
           <span className="text-xl font-bold text-white">Deprocast</span>
         </div>
 
-        {/* Right side - User info and Sign out */}
-        <div className="flex items-center space-x-3">
+        {/* Center - Tip (compact) */}
+        <div className="flex-1 max-w-2xl mx-6">
+          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700/30 rounded-lg px-4 py-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-purple-300 text-sm">💡</span>
+              <span className="text-white text-sm font-medium truncate">{currentTip}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - User info, Project selector, and Sign out */}
+        <div className="flex items-center space-x-4">
+          {/* User info */}
           {user && (
             <div className="text-sm text-gray-300">
               <span className="hidden sm:inline">Welcome, </span>
               <span className="font-medium text-white">{user.user_metadata?.full_name || user.email}</span>
             </div>
           )}
+
+          {/* Project selector */}
+          <div className="relative">
+            <button
+              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg border border-gray-700/30 transition-colors"
+            >
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span className="text-sm font-medium">
+                {currentProject ? currentProject.title : 'Select Project'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+
+            {isProjectDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  {projects.map((project) => (
+                    <button
+                      key={project.id}
+                      onClick={() => {
+                        onProjectChange(project.id);
+                        setIsProjectDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    >
+                      {project.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sign out */}
           <button
             onClick={handleSignOut}
             className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
@@ -112,51 +158,6 @@ const TopBar: React.FC<TopBarProps> = ({
           >
             <LogOut className="w-5 h-5" />
           </button>
-        </div>
-      </div>
-
-      {/* Middle row - Tip spanning full width */}
-      <div className="px-6 py-3">
-        <div className="w-full bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700/30 rounded-lg px-6 py-3 text-center">
-          <div className="flex items-center justify-center space-x-2">
-            <span className="text-purple-300 text-base">💡</span>
-            <span className="text-white text-base font-medium">{currentTip}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom row - Project Selector */}
-      <div className="px-6 py-3 flex justify-end">
-        <div className="relative">
-          <button
-            onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg border border-gray-700/30 transition-colors"
-          >
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-            <span className="text-sm font-medium">
-              {currentProject ? currentProject.title : 'Select Project'}
-            </span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          </button>
-
-          {isProjectDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
-              <div className="py-2">
-                {projects.map((project) => (
-                  <button
-                    key={project.id}
-                    onClick={() => {
-                      onProjectChange(project.id);
-                      setIsProjectDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                  >
-                    {project.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
