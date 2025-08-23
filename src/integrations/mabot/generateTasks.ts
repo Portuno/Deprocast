@@ -60,20 +60,25 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
       taskType: 'Deep Work' // Default to Deep Work, could be enhanced with mapping logic
     }));
 
-    // Insert generated tasks into database
+    // Insert generated tasks into database with exact field names from micro_tasks table
     const { data: insertedTasks, error: insertError } = await supabase
       .from('micro_tasks')
       .insert(
         generatedTasks.map(task => ({
           user_id: user.id,
           project_id: request.projectId,
+          task_id_external: null, // Optional field, can be null
           title: task.title,
           description: task.description,
           status: 'pending',
           priority: task.priority,
           estimated_minutes: task.estimatedTimeMinutes,
+          actual_minutes: null, // Will be set when task is completed
+          completion_date: null, // Will be set when task is completed
+          dopamine_score: null, // Will be set when task is completed
           task_type: task.taskType,
           resistance_level: 'medium',
+          dependency_task_external_id: null, // Optional field, can be null
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }))
