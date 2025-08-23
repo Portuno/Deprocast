@@ -1,125 +1,109 @@
-import React from 'react';
-import ModalPortal from './ModalPortal';
-import { ChevronDown, Zap, LogOut } from 'lucide-react';
-import type { DbProject } from '../integrations/supabase/projects';
-import { supabase } from '../integrations/supabase/client';
+import React, { useState } from 'react';
+import { ChevronDown, LogOut, TrendingUp } from 'lucide-react';
+import { DbProject } from '../integrations/supabase/projects';
 
 interface TopBarProps {
   currentProject: DbProject | null;
   projects: DbProject[];
   onProjectChange: (projectId: string) => void;
+  progressPercentage?: number;
+  completedTasks?: number;
+  totalTasks?: number;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ currentProject, projects, onProjectChange }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-  const toggleRef = React.useRef<HTMLButtonElement | null>(null);
-  const [menuPos, setMenuPos] = React.useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 320 });
+const TopBar: React.FC<TopBarProps> = ({ 
+  currentProject, 
+  projects, 
+  onProjectChange,
+  progressPercentage = 0,
+  completedTasks = 0,
+  totalTasks = 0
+}) => {
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
 
-  const updateMenuPosition = React.useCallback(() => {
-    const el = toggleRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const width = 320;
-    let left = rect.right - width;
-    if (left < 8) left = 8;
-    const maxLeft = window.innerWidth - width - 8;
-    if (left > maxLeft) left = maxLeft;
-    const top = rect.bottom + 8;
-    setMenuPos({ top, left, width });
-  }, []);
-
-  React.useEffect(() => {
-    if (!isDropdownOpen) return;
-    updateMenuPosition();
-    const handler = () => updateMenuPosition();
-    window.addEventListener('resize', handler);
-    window.addEventListener('scroll', handler, true);
-    return () => {
-      window.removeEventListener('resize', handler);
-      window.removeEventListener('scroll', handler, true);
-    };
-  }, [isDropdownOpen, updateMenuPosition]);
+  const handleSignOut = () => {
+    // Implement sign out logic
+    console.log('Sign out clicked');
+  };
 
   return (
-    <div className="h-16 md:h-16 bg-gray-900/30 backdrop-blur-xl border-b border-gray-700/30 px-4 md:px-6 flex items-center justify-between">
-      {/* Logo and App Name */}
-      <div className="flex items-center space-x-2 md:space-x-3">
-        <div className="w-8 h-8 md:w-8 md:h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg flex items-center justify-center">
-          <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
+    <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/30 px-6 py-4 flex items-center justify-between">
+      {/* Left side - Logo */}
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+          </svg>
         </div>
-        <h1 className="text-lg md:text-xl font-bold text-white tracking-wide">Deprocast</h1>
+        <span className="text-xl font-bold text-white">Deprocast</span>
       </div>
 
-      {/* Project Selector */}
-      <div className="relative flex items-center gap-2 md:gap-3">
-        <button
-          ref={toggleRef}
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center space-x-2 px-3 md:px-4 py-2 md:py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-600/30 rounded-lg text-white hover:bg-gray-700/50 hover:border-gray-500/50 transition-all duration-200 hover:glow-sm text-sm md:text-base min-w-0"
-        >
-          <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></div>
-          <span className="font-medium truncate max-w-24 md:max-w-32 lg:max-w-40">
-            {currentProject?.title || 'Select Project'}
-          </span>
-          <ChevronDown
-            className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ${
-              isDropdownOpen ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-        <button
-          onClick={async () => { await supabase.auth.signOut(); }}
-          className="p-2 md:p-2 rounded-lg bg-gray-800/50 border border-gray-600/30 hover:bg-gray-700/50 transition-all duration-200 hover:scale-105"
-          aria-label="Sign out"
-        >
-          <LogOut className="w-4 h-4 md:w-4 md:h-4 text-gray-300" />
-        </button>
+      {/* Center - Overall Progress */}
+      <div className="flex-1 max-w-md mx-8">
+        <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-medium text-gray-300">Overall Progress</h3>
+            </div>
+            <span className="text-sm font-bold text-blue-400">{progressPercentage}%</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-1000 ease-out"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>{completedTasks} completed</span>
+            <span>{totalTasks - completedTasks} remaining</span>
+          </div>
+        </div>
+      </div>
 
-        {isDropdownOpen && (
-          <ModalPortal>
-            <div className="fixed inset-0 z-[120]" onClick={() => setIsDropdownOpen(false)}>
-              <div
-                className="absolute bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl max-h-80 overflow-y-auto w-[calc(100vw-32px)] max-w-sm mx-4"
-                style={{ 
-                  top: menuPos.top, 
-                  left: '50%', 
-                  transform: 'translateX(-50%)',
-                  width: 'calc(100vw - 32px)',
-                  maxWidth: '400px'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {projects.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-gray-400">No projects yet</div>
-                ) : (
-                  projects.map((project, index) => (
-                    <button
-                      key={project.id}
-                      onClick={() => {
-                        onProjectChange(project.id);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-150 flex items-start gap-3 ${
-                        currentProject && project.id === currentProject.id ? 'bg-gray-700/30' : ''
-                      } ${index === 0 ? 'rounded-t-xl' : ''} ${
-                        index === projects.length - 1 ? 'rounded-b-xl' : ''
-                      }`}
-                    >
-                      <div className="mt-1 w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-white truncate">{project.title}</div>
-                        <div className="text-xs text-gray-400 flex items-center gap-2 mt-1">
-                          <span>Due {new Date(project.target_completion_date).toLocaleDateString()}</span>
-                          {project.category && <span className="px-2 py-0.5 rounded bg-gray-800/60 border border-gray-700/40 text-gray-300">{project.category}</span>}
-                        </div>
-                      </div>
-                    </button>
-                  ))
-                )}
+      {/* Right side - Project selector and sign out */}
+      <div className="flex items-center space-x-4">
+        {/* Project Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg border border-gray-700/30 transition-colors"
+          >
+            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <span className="text-sm font-medium">
+              {currentProject ? currentProject.title : 'Select Project'}
+            </span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </button>
+
+          {isProjectDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+              <div className="py-2">
+                {projects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => {
+                      onProjectChange(project.id);
+                      setIsProjectDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                  >
+                    {project.title}
+                  </button>
+                ))}
               </div>
             </div>
-          </ModalPortal>
-        )}
+          )}
+        </div>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+          title="Sign Out"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

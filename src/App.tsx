@@ -333,6 +333,9 @@ function App() {
           currentProject={currentProject}
           projects={projects}
           onProjectChange={handleProjectChange}
+          progressPercentage={taskStats.total > 0 ? Math.round((taskStats.completed / taskStats.total) * 100) : 0}
+          completedTasks={taskStats.completed}
+          totalTasks={taskStats.total}
         />
 
         {/* Main Content */}
@@ -342,7 +345,6 @@ function App() {
             <Navigation 
               activeItem={activeNavItem} 
               onItemClick={setActiveNavItem} 
-              items={navigationItems}
               currentProject={currentProject ? { id: currentProject.id, name: currentProject.title } : null}
               taskStats={taskStats}
             />

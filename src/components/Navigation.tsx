@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, acti
   return (
     <nav className="w-64 bg-gray-900 text-white h-screen flex flex-col">
       {/* Navigation Items */}
-      <div className="flex-1 p-4 pt-6">
+      <div className="flex-1 p-4 pt-4">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const IconComponent = item.icon;
@@ -65,27 +65,27 @@ const Navigation: React.FC<NavigationProps> = ({ currentProject, taskStats, acti
       {/* Task Statistics */}
       {taskStats && (
         <div className="p-4 border-t border-gray-700">
-          <h3 className="text-sm font-medium text-gray-400 mb-3">Task Overview</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">Task Overview</h3>
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-blue-900/50 rounded-lg p-3 text-center">
+            <div className="bg-blue-900/50 rounded-lg p-3 text-center border border-blue-700/30">
               <ClipboardList className="w-4 h-4 text-blue-400 mx-auto mb-1" />
               <div className="text-blue-400 font-semibold text-sm">{taskStats.total}</div>
-              <div className="text-gray-400 text-xs">Total</div>
+              <div className="text-gray-300 text-xs">Total</div>
             </div>
-            <div className="bg-yellow-900/50 rounded-lg p-3 text-center">
+            <div className="bg-yellow-900/50 rounded-lg p-3 text-center border border-yellow-700/30">
               <Clock className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
               <div className="text-yellow-400 font-semibold text-sm">{taskStats.pending}</div>
-              <div className="text-gray-400 text-xs">Pending</div>
+              <div className="text-gray-300 text-xs">Pending</div>
             </div>
-            <div className="bg-blue-900/50 rounded-lg p-3 text-center">
+            <div className="bg-blue-900/50 rounded-lg p-3 text-center border border-blue-700/30">
               <Rocket className="w-4 h-4 text-blue-400 mx-auto mb-1" />
               <div className="text-blue-400 font-semibold text-sm">{taskStats.inProgress}</div>
-              <div className="text-gray-400 text-xs">In Progress</div>
+              <div className="text-gray-300 text-xs">In Progress</div>
             </div>
-            <div className="bg-green-900/50 rounded-lg p-3 text-center">
+            <div className="bg-green-900/50 rounded-lg p-3 text-center border border-green-700/30">
               <CheckCircle className="w-4 h-4 text-green-400 mx-auto mb-1" />
               <div className="text-green-400 font-semibold text-sm">{taskStats.completed}</div>
-              <div className="text-gray-400 text-xs">Completed</div>
+              <div className="text-gray-300 text-xs">Completed</div>
             </div>
           </div>
         </div>
