@@ -27,6 +27,7 @@ interface TaskCompletionData {
   dopamineRating: number;
   nextTaskMotivation: number;
   breakthroughMoments: string;
+  taskInitiationDelay: number;
 }
 
 function App() {

@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { Target, Brain, Play, CheckCircle } from 'lucide-react';
 import { Task } from '../data/mockData';
 import PomodoroTimer from './PomodoroTimer';
+import TaskCompletionModal from './TaskCompletionModal';
+
+interface TaskCompletionData {
+  taskTitle: string;
+  estimatedTimeMinutes: number;
+  actualTimeMinutes: number;
+  motivationBefore: number;
+  motivationAfter: number;
+  dopamineRating: number;
+  nextTaskMotivation: number;
+  breakthroughMoments: string;
+  taskInitiationDelay: number;
+}
 
 interface TaskModuleProps {
   nextTask: Task;
@@ -18,11 +31,14 @@ const TaskModule: React.FC<TaskModuleProps> = ({
 }) => {
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [isTaskInProgress, setIsTaskInProgress] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [taskStartTime, setTaskStartTime] = useState<Date | null>(null);
 
   const handleInitiateTask = () => {
     if (nextTask) {
       setIsTaskInProgress(true);
       setShowPomodoro(true);
+      setTaskStartTime(new Date());
       onStartTask(nextTask.id);
     }
   };
@@ -43,10 +59,37 @@ const TaskModule: React.FC<TaskModuleProps> = ({
   };
 
   const handleDirectComplete = () => {
-    if (nextTask && onDirectComplete) {
-      onDirectComplete(nextTask.id);
-      setIsTaskInProgress(false);
+    if (nextTask) {
+      setShowCompletionModal(true);
     }
+  };
+
+  const handleModalComplete = (completionData: TaskCompletionData) => {
+    // Update the completion data with the actual task start time
+    const actualTimeMinutes = taskStartTime 
+      ? Math.max(1, Math.round((new Date().getTime() - taskStartTime.getTime()) / 60000))
+      : completionData.actualTimeMinutes;
+
+    const finalCompletionData = {
+      ...completionData,
+      actualTimeMinutes,
+      taskInitiationDelay: taskStartTime 
+        ? Math.round((taskStartTime.getTime() - new Date().getTime()) / 1000)
+        : 0
+    };
+
+    // Call the parent's completion handler
+    if (onDirectComplete) {
+      onDirectComplete(nextTask.id);
+    }
+
+    // Also call the detailed completion handler if available
+    if (onTaskComplete) {
+      onTaskComplete(finalCompletionData);
+    }
+
+    setIsTaskInProgress(false);
+    setTaskStartTime(null);
   };
 
   if (!nextTask) {
@@ -81,17 +124,7 @@ const TaskModule: React.FC<TaskModuleProps> = ({
         </div>
 
         {/* Task Details */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-400">
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-500">Priority:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              nextTask.priority === 'high' ? 'bg-red-900/50 text-red-300 border border-red-700/30' :
-              nextTask.priority === 'medium' ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-700/30' :
-              'bg-green-900/50 text-green-300 border border-green-700/30'
-            }`}>
-              {nextTask.priority}
-            </span>
-          </div>
+        <div className="mb-6 flex items-center gap-4 text-sm text-gray-400">
           <div className="flex items-center space-x-2">
             <span className="text-gray-500">Estimated time:</span>
             <span className="text-white font-medium">~{nextTask.estimatedTimeMinutes} min</span>
@@ -139,6 +172,14 @@ const TaskModule: React.FC<TaskModuleProps> = ({
           estimatedTimeMinutes={nextTask.estimatedTimeMinutes}
         />
       )}
+
+      {/* Task Completion Modal */}
+      <TaskCompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        task={nextTask}
+        onComplete={handleModalComplete}
+      />
     </>
   );
 };

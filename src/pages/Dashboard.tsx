@@ -15,6 +15,7 @@ interface TaskCompletionData {
   dopamineRating: number;
   nextTaskMotivation: number;
   breakthroughMoments: string;
+  taskInitiationDelay: number;
 }
 
 interface DashboardProps {
