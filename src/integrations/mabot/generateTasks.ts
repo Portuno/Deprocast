@@ -21,14 +21,24 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Call the existing Mabot edge function
+    // Call the existing Mabot edge function with the correct parameters
     const { data, error } = await supabase.functions.invoke('mabot-integration', {
       body: {
-        action: 'generate_tasks',
-        projectId: request.projectId,
-        projectTitle: request.projectTitle,
-        projectDescription: request.projectDescription,
-        existingTasks: request.existingTasks
+        action: 'generate-microtasks',
+        title: request.projectTitle,
+        project_description: request.projectDescription,
+        outcome_goal: request.projectDescription,
+        category: 'Project',
+        motivation: 'High',
+        perceived_difficulty: 5,
+        known_obstacles: '',
+        skills_resources_needed: [],
+        available_time_blocks: [],
+        target_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        access_token: user.access_token,
+        chat_id: null,
+        platform_chat_id: null,
+        bot_name: 'mabot'
       }
     });
 
@@ -36,11 +46,19 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
       throw new Error(`Mabot function error: ${error.message}`);
     }
 
-    if (!data || !data.tasks) {
+    if (!data || !data.data || !data.data.tasks) {
       throw new Error('No tasks returned from Mabot');
     }
 
-    const generatedTasks: GeneratedTask[] = data.tasks;
+    // Transform the response to match our GeneratedTask interface
+    const mabotTasks = data.data.tasks as any[];
+    const generatedTasks: GeneratedTask[] = mabotTasks.map(task => ({
+      title: task.micro_task || task.title || 'Untitled Task',
+      description: task.why || task.description || 'No description provided',
+      priority: task.risk === 'high' ? 'high' : task.risk === 'low' ? 'low' : 'medium',
+      estimatedTimeMinutes: task.estimate_minutes || 25,
+      taskType: 'Deep Work' // Default to Deep Work, could be enhanced with mapping logic
+    }));
 
     // Insert generated tasks into database
     const { data: insertedTasks, error: insertError } = await supabase
