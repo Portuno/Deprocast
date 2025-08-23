@@ -12,8 +12,6 @@ export const useAuth = () => {
 
     const getInitialSession = async () => {
       try {
-        console.log('🔍 useAuth: Checking for existing session...');
-        
         // Get the current session
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
@@ -23,12 +21,9 @@ export const useAuth = () => {
           console.error('❌ useAuth: Error getting initial session:', error);
         } else if (currentSession) {
           console.log('✅ useAuth: Session found:', currentSession.user.email);
-          console.log('📋 useAuth: Session data:', currentSession);
           setSession(currentSession);
           setUser(currentSession.user);
         } else {
-          console.log('ℹ️ useAuth: No existing session found');
-          
           // Check if we're in an OAuth redirect
           const urlParams = new URLSearchParams(window.location.search);
           const code = urlParams.get('code');
@@ -45,7 +40,6 @@ export const useAuth = () => {
         // Add a small delay to allow OAuth processing to complete
         setTimeout(() => {
           if (mounted) {
-            console.log('🏁 useAuth: Setting loading to false');
             setLoading(false);
           }
         }, 1000); // 1 second delay
@@ -59,11 +53,8 @@ export const useAuth = () => {
       async (event, newSession) => {
         if (!mounted) return;
         
-        console.log('🔄 useAuth: Auth state change:', event, newSession?.user?.email);
-        
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('✅ useAuth: User signed in or token refreshed');
-          console.log('📋 useAuth: New session data:', newSession);
+          console.log('✅ useAuth: User signed in:', newSession?.user?.email);
           setSession(newSession);
           setUser(newSession?.user ?? null);
           setLoading(false);
