@@ -20,15 +20,13 @@ import { listProjects, type DbProject } from './integrations/supabase/projects';
 
 interface TaskCompletionData {
   taskTitle: string;
-  estimatedTimeMinutes?: number;
+  estimatedTimeMinutes: number;
   actualTimeMinutes: number;
   motivationBefore: number;
   motivationAfter: number;
   dopamineRating: number;
   nextTaskMotivation: number;
   breakthroughMoments: string;
-  obstaclesEncountered: any[];
-  completionDate: string;
 }
 
 function App() {
@@ -191,7 +189,7 @@ function App() {
           completionData.dopamineRating,
           completionData.nextTaskMotivation,
           completionData.breakthroughMoments,
-          completionData.obstaclesEncountered
+          [] // obstaclesEncountered - empty array for now
         );
       }
 
@@ -202,7 +200,7 @@ function App() {
       setTasks(prevTasks => 
         prevTasks.map(task => 
           (targetTask && task.id === targetTask.id) || (!targetTask && task.title === completionData.taskTitle)
-            ? { ...task, status: 'completed' as const, completionDate: completionData.completionDate }
+            ? { ...task, status: 'completed' as const, completionDate: new Date().toISOString() }
             : task
         )
       );
@@ -245,12 +243,11 @@ function App() {
         return (
           <Dashboard
             tasks={currentProjectTasks}
-            isLoadingTasks={isLoadingTasks}
-            nextTaskId={nextTaskId}
-            nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            onTaskComplete={handleTaskComplete}
             onDirectComplete={handleDirectComplete}
+            isLoadingTasks={isLoadingTasks}
             onRefresh={() => {
               if (currentProjectId) {
                 (async () => {
@@ -263,7 +260,6 @@ function App() {
                 })();
               }
             }}
-            onTaskComplete={handleTaskComplete}
             currentProject={currentProject}
           />
         );
@@ -283,12 +279,11 @@ function App() {
         return (
           <Dashboard
             tasks={currentProjectTasks}
-            isLoadingTasks={isLoadingTasks}
-            nextTaskId={nextTaskId}
-            nextTask={nextTask}
             onTaskSelect={handleTaskSelect}
             onStartTask={handleStartTask}
+            onTaskComplete={handleTaskComplete}
             onDirectComplete={handleDirectComplete}
+            isLoadingTasks={isLoadingTasks}
             onRefresh={() => {
               if (currentProjectId) {
                 (async () => {
@@ -301,7 +296,6 @@ function App() {
                 })();
               }
             }}
-            onTaskComplete={handleTaskComplete}
             currentProject={currentProject}
           />
         );
