@@ -12,7 +12,7 @@ export const useAuth = () => {
 
     const getInitialSession = async () => {
       try {
-        console.log('Checking for existing session...');
+        console.log('🔍 useAuth: Checking for existing session...');
         
         // Get the current session
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
@@ -20,15 +20,19 @@ export const useAuth = () => {
         if (!mounted) return;
         
         if (error) {
-          console.error('Error getting initial session:', error);
+          console.error('❌ useAuth: Error getting initial session:', error);
         } else if (currentSession) {
-          console.log('Session found:', currentSession.user.email);
+          console.log('✅ useAuth: Session found:', currentSession.user.email);
+          console.log('📋 useAuth: Session data:', currentSession);
           setSession(currentSession);
           setUser(currentSession.user);
+        } else {
+          console.log('ℹ️ useAuth: No existing session found');
         }
       } catch (error) {
-        console.error('Unexpected error in getInitialSession:', error);
+        console.error('❌ useAuth: Unexpected error in getInitialSession:', error);
       } finally {
+        console.log('🏁 useAuth: Setting loading to false');
         setLoading(false);
       }
     };
@@ -40,15 +44,16 @@ export const useAuth = () => {
       async (event, newSession) => {
         if (!mounted) return;
         
-        console.log('Auth state change:', event, newSession?.user?.email);
+        console.log('🔄 useAuth: Auth state change:', event, newSession?.user?.email);
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('User signed in or token refreshed');
+          console.log('✅ useAuth: User signed in or token refreshed');
+          console.log('📋 useAuth: New session data:', newSession);
           setSession(newSession);
           setUser(newSession?.user ?? null);
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+          console.log('🚪 useAuth: User signed out');
           setSession(null);
           setUser(null);
           setLoading(false);
@@ -67,16 +72,16 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      console.log('Signing out...');
+      console.log('🚪 useAuth: Signing out...');
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error signing out:', error);
+        console.error('❌ useAuth: Error signing out:', error);
         throw error;
       }
-      console.log('Sign out successful');
+      console.log('✅ useAuth: Sign out successful');
       // The onAuthStateChange listener will handle the redirect
     } catch (error) {
-      console.error('Unexpected error during sign out:', error);
+      console.error('❌ useAuth: Unexpected error during sign out:', error);
       throw error;
     }
   };
