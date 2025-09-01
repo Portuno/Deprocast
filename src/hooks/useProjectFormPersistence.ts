@@ -25,19 +25,34 @@ const initialFormState: NewProjectFormData = {
 };
 
 const STORAGE_KEY = 'deprocast_project_form_draft';
+const MODAL_STATE_KEY = 'deprocast_project_modal_state';
 
 export const useProjectFormPersistence = () => {
 	const [formData, setFormData] = useState<NewProjectFormData>(initialFormState);
 	const [skillsInput, setSkillsInput] = useState('');
 	const [showCreateForm, setShowCreateForm] = useState(false);
 
-	// Load form data from localStorage on mount
+	// Load form data and modal state from localStorage on mount
 	useEffect(() => {
 		try {
 			const savedData = localStorage.getItem(STORAGE_KEY);
+			const savedModalState = localStorage.getItem(MODAL_STATE_KEY);
+			
 			if (savedData) {
 				const parsedData = JSON.parse(savedData);
 				setFormData(parsedData);
+				
+				// Check if there's draft data and auto-open modal if needed
+				const hasContent = parsedData.title.trim() || 
+								  parsedData.description.trim() || 
+								  parsedData.targetCompletionDate.trim() ||
+								  parsedData.motivation?.trim() ||
+								  parsedData.knownObstacles?.trim() ||
+								  parsedData.skillsResourcesNeeded.length > 0;
+				
+				if (hasContent && savedModalState === 'true') {
+					setShowCreateForm(true);
+				}
 			}
 		} catch (error) {
 			console.warn('Failed to load project form data from localStorage:', error);
@@ -76,28 +91,33 @@ export const useProjectFormPersistence = () => {
 		setFormData(initialFormState);
 		setSkillsInput('');
 		localStorage.removeItem(STORAGE_KEY);
+		localStorage.removeItem(MODAL_STATE_KEY);
 	}, []);
 
 	// Handle opening the form
 	const handleOpenForm = useCallback(() => {
 		setShowCreateForm(true);
+		localStorage.setItem(MODAL_STATE_KEY, 'true');
 	}, []);
 
 	// Handle canceling the form
 	const handleCancel = useCallback(() => {
 		setShowCreateForm(false);
+		localStorage.setItem(MODAL_STATE_KEY, 'false');
 		// Don't reset form data immediately - let user decide
 	}, []);
 
 	// Handle confirming cancellation (actually reset the form)
 	const handleConfirmCancel = useCallback(() => {
 		setShowCreateForm(false);
+		localStorage.removeItem(MODAL_STATE_KEY);
 		resetFormData();
 	}, []);
 
 	// Handle successful form submission
 	const handleSubmitSuccess = useCallback(() => {
 		setShowCreateForm(false);
+		localStorage.removeItem(MODAL_STATE_KEY);
 		resetFormData();
 	}, []);
 

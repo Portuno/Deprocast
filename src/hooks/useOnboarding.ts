@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getOrCreateProfile, updateProfile } from '../integrations/supabase/profiles';
 import { OnboardingFormData } from '../types/onboarding';
@@ -10,14 +10,24 @@ export const useOnboarding = () => {
   const [isOnboardingRequired, setIsOnboardingRequired] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const hasCheckedOnboarding = useRef(false);
+  const lastCheckedUser = useRef<string | null>(null);
 
   const checkOnboardingStatus = useCallback(async () => {
+    // Prevent multiple calls for the same user
+    const currentUserEmail = user?.email || null;
+    if (hasCheckedOnboarding.current && lastCheckedUser.current === currentUserEmail) {
+      return;
+    }
+
     console.log('🔍 useOnboarding: checkOnboardingStatus called', { isAuthenticated, user: user?.email });
     
     if (!isAuthenticated || !user) {
       console.log('🔍 useOnboarding: No auth or user, setting loading false');
       setIsLoading(false);
       setIsOnboardingRequired(null);
+      hasCheckedOnboarding.current = false;
+      lastCheckedUser.current = null;
       return;
     }
 
@@ -40,6 +50,8 @@ export const useOnboarding = () => {
       setIsOnboardingRequired(true);
     } finally {
       setIsLoading(false);
+      hasCheckedOnboarding.current = true;
+      lastCheckedUser.current = currentUserEmail;
     }
   }, [isAuthenticated, user]);
 
@@ -68,6 +80,14 @@ export const useOnboarding = () => {
       throw error;
     }
   };
+
+  // Reset onboarding check when user changes
+  useEffect(() => {
+    const currentUserEmail = user?.email || null;
+    if (lastCheckedUser.current !== currentUserEmail) {
+      hasCheckedOnboarding.current = false;
+    }
+  }, [user?.email]);
 
   return {
     isOnboardingRequired,
