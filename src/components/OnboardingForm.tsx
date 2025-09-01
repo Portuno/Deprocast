@@ -22,13 +22,13 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
     switch (type) {
       case 'select':
         return (
-          <select
-            key={key}
-            value={formData[key] || ''}
-            onChange={(e) => handleInputChange(key, e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            required
-          >
+                                <select
+                        key={key}
+                        value={formData[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                      >
             <option value="">Select an option...</option>
             {key === 'energyLevel' && (
               <>
@@ -72,39 +72,39 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
       case 'text':
         if (key === 'projectTitle') {
           return (
-            <input
-              key={key}
-              type="text"
-              value={formData[key] || ''}
-              onChange={(e) => handleInputChange(key, e.target.value)}
-              placeholder="e.g., Web Development, Marketing Campaign"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              required
-            />
+                                    <input
+                          key={key}
+                          type="text"
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          placeholder="e.g., Web Development, Marketing Campaign"
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
           );
         }
         if (key === 'projectDescription') {
           return (
-            <textarea
-              key={key}
-              value={formData[key] || ''}
-              onChange={(e) => handleInputChange(key, e.target.value)}
-              placeholder="Describe what you want to achieve in as much detail as possible..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px] resize-none"
-              required
-            />
+                                    <textarea
+                          key={key}
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          placeholder="Describe what you want to achieve in as much detail as possible..."
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
+                          required
+                        />
           );
         }
         if (key === 'motivation') {
           return (
-            <textarea
-              key={key}
-              value={formData[key] || ''}
-              onChange={(e) => handleInputChange(key, e.target.value)}
-              placeholder="Why do you want to complete this project?"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
-              required
-            />
+                                    <textarea
+                          key={key}
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          placeholder="Why do you want to complete this project?"
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px] resize-none"
+                          required
+                        />
           );
         }
         return (
@@ -113,27 +113,27 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
             value={formData[key] || ''}
             onChange={(e) => handleInputChange(key, e.target.value)}
             placeholder="Enter your response..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
+            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px] resize-none"
             required
           />
         );
       
       case 'date':
         return (
-          <input
-            key={key}
-            type="date"
-            value={formData[key] || ''}
-            onChange={(e) => handleInputChange(key, e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            required
-          />
+                                  <input
+                          key={key}
+                          type="date"
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
         );
       
       case 'number':
         if (key === 'perceivedDifficulty') {
           return (
-            <div key={key} className="space-y-2">
+            <div key={key} className="space-y-1.5">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>1 (Easy)</span>
                 <span>10 (Very Hard)</span>
@@ -147,26 +147,26 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 required
               />
-              <div className="text-center text-lg font-semibold text-purple-600">
+              <div className="text-center text-base font-semibold text-purple-600">
                 {formData[key] || 5}
               </div>
             </div>
           );
         }
         return (
-          <input
-            key={key}
-            type="number"
-            value={formData[key] || ''}
-            onChange={(e) => handleInputChange(key, parseInt(e.target.value))}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            required
-          />
+                                  <input
+                          key={key}
+                          type="number"
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, parseInt(e.target.value))}
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
         );
       
       case 'tags':
         return (
-          <div key={key} className="space-y-2">
+          <div key={key} className="space-y-1.5">
             <input
               type="text"
               placeholder={key === 'knownObstacles' ? 'e.g., Lack of time, Fear of failure' : 'e.g., Learn Python, Hire a designer'}
@@ -181,13 +181,13 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                   }
                 }
               }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {(formData[key] as string[])?.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
+                  className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs flex items-center gap-1"
                 >
                   {tag}
                   <button
@@ -213,10 +213,10 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 h-full flex flex-col">
-      <div className="flex-1 space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 h-full flex flex-col">
+      <div className="flex-1 space-y-3">
         {Object.entries(slide.dataCollection).map(([key, type]) => (
-          <div key={key} className="space-y-2">
+          <div key={key} className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 capitalize">
               {key.replace(/([A-Z])/g, ' $1').trim()}
             </label>
@@ -227,7 +227,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
       
       <button
         type="submit"
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0"
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0"
       >
         {slide.callToAction}
       </button>
