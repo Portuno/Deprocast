@@ -1,39 +1,29 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, FolderOpen, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, FolderOpen, Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
 import ModalPortal from '../components/ModalPortal';
 import { createProject, listProjects, updateProject, deleteProject, type DbProject } from '../integrations/supabase/projects';
+import { useProjectFormPersistence, type NewProjectFormData } from '../hooks/useProjectFormPersistence';
 
 type ProjectCategory = 'Professional' | 'Personal' | 'Learning' | 'Other';
 
-type NewProjectFormData = {
-	title: string;
-	description: string;
-	targetCompletionDate: string;
-	category?: ProjectCategory;
-	motivation?: string;
-	perceivedDifficulty?: number; // 1-10
-	knownObstacles?: string;
-	skillsResourcesNeeded: string[];
-};
-
-const initialFormState: NewProjectFormData = {
-	title: '',
-	description: '',
-	targetCompletionDate: '',
-	category: undefined,
-	motivation: '',
-	perceivedDifficulty: 5,
-	knownObstacles: '',
-	skillsResourcesNeeded: []
-};
-
 const Projects: React.FC = () => {
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [formData, setFormData] = useState<NewProjectFormData>(initialFormState);
-	const [skillsInput, setSkillsInput] = useState('');
+	const {
+		formData,
+		skillsInput,
+		setSkillsInput,
+		showCreateForm,
+		updateFormData,
+		handleOpenForm,
+		handleCancel,
+		handleConfirmCancel,
+		handleSubmitSuccess,
+		hasDraftData
+	} = useProjectFormPersistence();
+	
 	const [projects, setProjects] = useState<DbProject[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [openProjectId, setOpenProjectId] = useState<string | null>(null);
+	const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 	const isSubmitDisabled = useMemo(() => {
 		return (
 			formData.title.trim().length === 0 ||
@@ -42,19 +32,26 @@ const Projects: React.FC = () => {
 		);
 	}, [formData]);
 
-	const handleOpenForm = () => {
-		setShowCreateForm(true);
-	};
-
-	const handleCancel = () => {
-		setShowCreateForm(false);
-		setFormData(initialFormState);
-		setSkillsInput('');
-	};
-
 	const handleChange = (field: keyof NewProjectFormData) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
 		const value = field === 'perceivedDifficulty' ? Number(event.target.value) : event.target.value;
-		setFormData((prev) => ({ ...prev, [field]: value }));
+		updateFormData({ [field]: value });
+	};
+
+	const handleCancelClick = () => {
+		if (hasDraftData) {
+			setShowCancelConfirm(true);
+		} else {
+			handleCancel();
+		}
+	};
+
+	const handleConfirmCancelClick = () => {
+		handleConfirmCancel();
+		setShowCancelConfirm(false);
+	};
+
+	const handleDismissCancelConfirm = () => {
+		setShowCancelConfirm(false);
 	};
 
 	const handleAddSkillsFromInput = () => {
@@ -64,12 +61,16 @@ const Projects: React.FC = () => {
 			.map((s) => s.trim())
 			.filter((s) => s.length > 0);
 		if (parsed.length === 0) return;
-		setFormData((prev) => ({ ...prev, skillsResourcesNeeded: Array.from(new Set([...prev.skillsResourcesNeeded, ...parsed])) }));
+		updateFormData({ 
+			skillsResourcesNeeded: Array.from(new Set([...formData.skillsResourcesNeeded, ...parsed])) 
+		});
 		setSkillsInput('');
 	};
 
 	const handleRemoveSkill = (skill: string) => {
-		setFormData((prev) => ({ ...prev, skillsResourcesNeeded: prev.skillsResourcesNeeded.filter((s) => s !== skill) }));
+		updateFormData({ 
+			skillsResourcesNeeded: formData.skillsResourcesNeeded.filter((s) => s !== skill) 
+		});
 	};
 
 	const handleSkillsKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -106,7 +107,7 @@ const Projects: React.FC = () => {
 				skills_resources_needed: formData.skillsResourcesNeeded,
 			});
 			await refreshProjects();
-			handleCancel();
+			handleSubmitSuccess();
 		} finally {
 			setLoading(false);
 		}
@@ -120,21 +121,41 @@ const Projects: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Projects</h1>
 						<p className="text-gray-400 text-sm md:text-base">Create a new project to kickstart your personalized AI breakdown</p>
           </div>
-          <button
-						onClick={handleOpenForm}
-            className="flex items-center justify-center space-x-2 px-4 md:px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:glow-sm transform hover:-translate-y-0.5 active:scale-95 text-sm md:text-base w-full md:w-auto"
-						aria-label="Create a new project"
-						role="button"
-						tabIndex={0}
-          >
-            <Plus className="w-4 h-4 md:w-5 md:h-5" />
-            <span>New Project</span>
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleOpenForm}
+              className="flex items-center justify-center space-x-2 px-4 md:px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:glow-sm transform hover:-translate-y-0.5 active:scale-95 text-sm md:text-base w-full md:w-auto"
+              aria-label="Create a new project"
+              role="button"
+              tabIndex={0}
+            >
+              <Plus className="w-4 h-4 md:w-5 md:h-5" />
+              <span>New Project</span>
+            </button>
+            {hasDraftData && (
+              <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                <AlertTriangle className="w-3 h-3" />
+                <span>You have unsaved project data</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {showCreateForm && (
-          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Create New Project</h3>
+          <ModalPortal>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCancelClick} />
+              <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900/95 backdrop-blur-xl border border-gray-700/30 rounded-xl p-4 md:p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Create New Project</h3>
+                  <button 
+                    onClick={handleCancelClick}
+                    className="p-2 rounded hover:bg-gray-800/80" 
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4 text-gray-400" />
+                  </button>
+                </div>
 						<div className="space-y-4 md:space-y-6">
 							{/* Essential Information */}
             <div className="space-y-3 md:space-y-4">
@@ -286,7 +307,7 @@ const Projects: React.FC = () => {
 									{loading ? 'Creating...' : 'Create Project'}
                 </button>
                 <button
-									onClick={handleCancel}
+									onClick={handleCancelClick}
 									className="px-4 md:px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 rounded-lg font-medium transition-all duration-200 text-sm md:text-base"
 									aria-label="Cancel project creation"
                 >
@@ -294,7 +315,39 @@ const Projects: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </ModalPortal>
+        )}
+
+        {/* Cancel Confirmation Modal */}
+        {showCancelConfirm && (
+          <ModalPortal>
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDismissCancelConfirm} />
+              <div className="relative w-full max-w-md bg-gray-900 border border-gray-700 rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                  <h3 className="text-lg font-semibold text-white">Discard Changes?</h3>
+                </div>
+                <p className="text-gray-300 mb-6">
+                  You have unsaved changes. Are you sure you want to discard them? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleDismissCancelConfirm}
+                    className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 rounded-lg font-medium transition-colors"
+                  >
+                    Keep Editing
+                  </button>
+                  <button
+                    onClick={handleConfirmCancelClick}
+                    className="px-4 py-2 bg-red-600/80 hover:bg-red-500/80 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Discard Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ModalPortal>
         )}
 
         {/* Projects Grid - Mobile Optimized */}
