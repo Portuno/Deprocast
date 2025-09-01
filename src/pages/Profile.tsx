@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { User, Settings, TrendingUp, Calendar, Edit3, Save, Brain, Sparkles, BarChart3, LineChart } from 'lucide-react';
+import { User, Settings, TrendingUp, Calendar, Edit3, Save, Brain, Sparkles, BarChart3, LineChart, Download } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { getOrCreateProfile, updateProfile } from '../integrations/supabase/profiles';
+import { generateUserBlueprint, type UserBlueprint } from '../integrations/supabase/blueprint';
 
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -77,6 +79,52 @@ const Profile: React.FC = () => {
     }).catch(() => {});
   };
 
+  const handleGenerateBlueprint = async () => {
+    setIsGeneratingBlueprint(true);
+    try {
+      const blueprint = await generateUserBlueprint();
+      
+      // Create a downloadable JSON file
+      const dataStr = JSON.stringify(blueprint, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `deprocast-blueprint-${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      // Show success message with brief summary
+      const summary = `🎉 Blueprint Generated Successfully!\n\n` +
+        `📊 Profile: ${blueprint.profile.personalInfo.name}\n` +
+        `📁 Projects: ${blueprint.projects.total}\n` +
+        `✅ Tasks: ${blueprint.tasks.total} (${blueprint.tasks.completed} completed)\n` +
+        `📖 Journal Entries: ${blueprint.journal.totalEntries}\n` +
+        `🚧 Obstacles Tracked: ${blueprint.obstacles.total}\n` +
+        `📅 Calendar Events: ${blueprint.calendar.totalEvents}\n` +
+        `📈 Productivity Score: ${blueprint.insights.productivityScore}%\n` +
+        `🧠 Consistency Score: ${blueprint.insights.consistencyScore}%\n\n` +
+        `✨ Your complete context blueprint has been downloaded!\n\n` +
+        `This JSON file contains ALL your Deprocast data structured for AI context:\n` +
+        `• Work patterns & preferences\n` +
+        `• Productivity metrics & insights\n` +
+        `• Emotional patterns & energy levels\n` +
+        `• Common obstacles & solutions\n` +
+        `• Project goals & motivations\n\n` +
+        `Use this with ChatGPT, Claude, or any AI for personalized productivity coaching! 🚀`;
+      
+      alert(summary);
+      console.log('Blueprint generated successfully:', blueprint);
+      
+    } catch (error) {
+      console.error('Error generating blueprint:', error);
+      alert('Error generating blueprint. Please try again.');
+    } finally {
+      setIsGeneratingBlueprint(false);
+    }
+  };
+
   return (
     <div className="flex-1 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto">
@@ -137,12 +185,22 @@ const Profile: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => { /* wire to AI generation later */ }}
-              className="px-5 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white font-medium flex items-center gap-2"
+              onClick={handleGenerateBlueprint}
+              disabled={isGeneratingBlueprint}
+              className="px-5 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-medium flex items-center gap-2 transition-all duration-200"
               aria-label="Generate my profile"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Generate My Blueprint</span>
+              {isGeneratingBlueprint ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Generate My Blueprint</span>
+                </>
+              )}
             </button>
           </div>
         </div>

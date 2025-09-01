@@ -80,6 +80,38 @@ export const getTaskObstacles = async (taskId: string): Promise<TaskObstacle[]> 
 };
 
 /**
+ * Get all obstacles for the current user
+ */
+export const getAllUserObstacles = async (): Promise<TaskObstacle[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('task_obstacles')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching user obstacles:', error);
+    throw error;
+  }
+
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    taskId: row.task_id,
+    projectId: row.project_id,
+    description: row.description,
+    emotionalState: row.emotional_state,
+    frustrationLevel: row.frustration_level,
+    timeSpentMinutes: row.time_spent_minutes,
+    timeRemainingSeconds: row.time_remaining_seconds,
+    aiSolution: row.ai_solution,
+    createdAt: row.created_at
+  }));
+};
+
+/**
  * Get all obstacles for a specific project
  */
 export const getProjectObstacles = async (projectId: string): Promise<ProjectObstacle[]> => {
