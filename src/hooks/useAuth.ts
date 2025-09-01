@@ -19,11 +19,14 @@ export const useAuth = () => {
         
         if (error) {
           console.error('❌ useAuth: Error getting initial session:', error);
+          setLoading(false);
         } else if (currentSession) {
           console.log('✅ useAuth: Session found:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
+          setLoading(false);
         } else {
+          console.log('ℹ️ useAuth: No session found');
           // Check if we're in an OAuth redirect
           const urlParams = new URLSearchParams(window.location.search);
           const code = urlParams.get('code');
@@ -32,17 +35,14 @@ export const useAuth = () => {
             console.log('🔄 useAuth: OAuth code detected, waiting for processing...');
             // Don't set loading to false yet, let useOAuthRedirect handle it
             return;
+          } else {
+            // No session and no OAuth code
+            setLoading(false);
           }
         }
       } catch (error) {
         console.error('❌ useAuth: Unexpected error in getInitialSession:', error);
-      } finally {
-        // Add a small delay to allow OAuth processing to complete
-        setTimeout(() => {
-          if (mounted) {
-            setLoading(false);
-          }
-        }, 1000); // 1 second delay
+        setLoading(false);
       }
     };
 

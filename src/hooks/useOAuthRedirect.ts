@@ -1,8 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../integrations/supabase/client';
 
 export const useOAuthRedirect = () => {
+  const hasProcessed = useRef(false);
+
   useEffect(() => {
+    // Only process OAuth redirect once
+    if (hasProcessed.current) {
+      return;
+    }
+
     console.log('🔄 useOAuthRedirect: Hook executing...');
     
     const handleOAuthRedirect = async () => {
@@ -14,6 +21,7 @@ export const useOAuthRedirect = () => {
       console.log('🔄 useOAuthRedirect: OAuth code found:', !!code);
       
       if (code) {
+        hasProcessed.current = true;
         console.log('✅ useOAuthRedirect: OAuth code detected, checking if session exists...');
         
         // Check if we already have a session (user might already be authenticated)
@@ -54,9 +62,10 @@ export const useOAuthRedirect = () => {
         }
       } else {
         console.log('ℹ️ useOAuthRedirect: No OAuth code found in URL');
+        hasProcessed.current = true;
       }
     };
 
     handleOAuthRedirect();
-  }, []);
+  }, []); // Empty dependency array - only run once
 };
