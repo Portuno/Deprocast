@@ -12,8 +12,24 @@ declare const Deno: any;
 // Implements basic rate limiting (IP-based), token reuse, and optional dev mocking.
 
 // CORS helpers
-const ALLOWED_ORIGINS = ["*"]; // tighten in production
-const DEFAULT_ALLOWED_HEADERS = ["authorization", "x-client-info", "apikey", "content-type"];
+const ALLOWED_ORIGINS = [
+  "https://deprocast.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "*" // fallback for development
+];
+
+const DEFAULT_ALLOWED_HEADERS = [
+  "authorization", 
+  "x-client-info", 
+  "apikey", 
+  "content-type",
+  "x-requested-with",
+  "accept",
+  "origin",
+  "access-control-request-method",
+  "access-control-request-headers"
+];
 
 function corsHeaders(origin: string | null, req?: Request): HeadersInit {
   const allowOrigin = origin && origin !== "null" ? origin : "*";
@@ -22,12 +38,14 @@ function corsHeaders(origin: string | null, req?: Request): HeadersInit {
   const allowHeaders = requested
     ? requested
     : DEFAULT_ALLOWED_HEADERS.join(", ");
+  
   return {
     "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes("*") ? "*" : allowOrigin,
     "Access-Control-Allow-Headers": allowHeaders,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin, Access-Control-Request-Headers",
+    "Access-Control-Allow-Credentials": "true",
   };
 }
 
@@ -150,23 +168,40 @@ async function callMabotInput(accessToken: string, payload: JsonRecord): Promise
     fake.platform_chat_id = body.platform_chat_id ?? null;
     return { ok: true, json: fake, status: 200 };
   }
+  
   const url = `${MABOT_API_URL}/io/input`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-    body: JSON.stringify(payload),
-  });
-  if (!resp.ok) {
-    let j: JsonRecord | undefined;
-    try {
-      j = (await resp.json()) as JsonRecord;
-    } catch {
-      // ignore
+  
+  // Add timeout to prevent 504 Gateway Timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+  
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!resp.ok) {
+      let j: JsonRecord | undefined;
+      try {
+        j = (await resp.json()) as JsonRecord;
+      } catch {
+        // ignore
+      }
+      return { ok: false, status: resp.status, json: j };
     }
-    return { ok: false, status: resp.status, json: j };
+    
+    const j = (await resp.json()) as JsonRecord;
+    return { ok: true, status: resp.status, json: j };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    logDebug("Mabot API call failed:", error);
+    return { ok: false, status: 504, json: { error: "Request timeout or network error" } };
   }
-  const j = (await resp.json()) as JsonRecord;
-  return { ok: true, status: resp.status, json: j };
 }
 
 function ensureUuidChatId(existing: unknown): string {
@@ -245,7 +280,48 @@ async function handleGenerateMicrotasks(req: Request): Promise<Response> {
     prefix_with_bot_name: false,
   };
   const call = await callMabotInput(tokenRes.token, payload);
-  if (!call.ok) return json(call.status, { success: false, error: { message: "Mabot error", code: `mabot_${call.status}` } }, req);
+  if (!call.ok) {
+    // If Mabot API is down, return a fallback response
+    if (call.status === 504 || call.status >= 500) {
+      logDebug("Mabot API unavailable, returning fallback response");
+      const fallbackData = {
+        tasks: [
+          {
+            id: "setup-project-structure",
+            micro_task: "Set up basic project structure and folder organization",
+            why: "Establishing a clear foundation makes all subsequent tasks easier to execute",
+            estimate_minutes: 30,
+            required_context: ["Basic organization skills"],
+            acceptance_criteria: ["Project folders created", "File structure documented"],
+            suggested_time_block: { date: new Date().toISOString().split('T')[0], start: "09:00", end: "09:30" },
+            tags: [projCategory || "General", "Planning"],
+            risk: "low"
+          },
+          {
+            id: "define-requirements",
+            micro_task: "Define and document project requirements",
+            why: "Clear requirements prevent scope creep and provide direction",
+            estimate_minutes: 25,
+            required_context: ["Analysis skills"],
+            acceptance_criteria: ["Requirements documented", "Success criteria defined"],
+            suggested_time_block: { date: new Date().toISOString().split('T')[0], start: "10:00", end: "10:25" },
+            tags: [projCategory || "General", "Planning"],
+            risk: "low"
+          }
+        ],
+        summary: {
+          goal: `${projTitle} — ${projDesc}`,
+          total_estimated_minutes: 55,
+          critical_path_ids: ["setup-project-structure", "define-requirements"],
+          first_three_tasks: ["setup-project-structure", "define-requirements"],
+          assumptions: ["Mabot API temporarily unavailable - using fallback tasks"]
+        }
+      };
+      const resp: SuccessResponse = { success: true, data: fallbackData, chat_id: ensuredChatId };
+      return json(200, resp, req);
+    }
+    return json(call.status, { success: false, error: { message: "Mabot error", code: `mabot_${call.status}` } }, req);
+  }
   const raw = call.json as JsonRecord;
   // Extract assistant text and parse JSON
   let assistantText: string | null = null;
