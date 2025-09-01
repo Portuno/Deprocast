@@ -147,11 +147,6 @@ const TopBar: React.FC<TopBarProps> = ({
                 <span className="text-sm font-medium block truncate">
                   {currentProject ? currentProject.title : 'Select Project'}
                 </span>
-                {currentProject && (
-                  <span className="text-xs text-gray-400">
-                    Current Project
-                  </span>
-                )}
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
                 isProjectDropdownOpen ? 'rotate-180' : ''
@@ -161,71 +156,61 @@ const TopBar: React.FC<TopBarProps> = ({
             {isProjectDropdownOpen && (
               <>
                 {/* Backdrop */}
-                <div className="fixed inset-0 z-40" onClick={() => setIsProjectDropdownOpen(false)} />
+                <div className="fixed inset-0 z-[9999]" onClick={() => setIsProjectDropdownOpen(false)} />
                 
                 {/* Dropdown */}
-                <div className="absolute right-0 mt-2 w-80 bg-gray-800/95 backdrop-blur-xl border border-gray-600/50 rounded-xl shadow-2xl z-50 max-h-96 overflow-y-auto">
-                  <div className="py-3">
-                    {/* Header */}
-                    <div className="px-4 pb-2 mb-2 border-b border-gray-700/50">
-                      <h3 className="text-sm font-medium text-gray-300">Switch Project</h3>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {projects.length} project{projects.length !== 1 ? 's' : ''} available
-                      </p>
+                <div className="absolute right-0 mt-2 w-72 bg-gray-900/98 backdrop-blur-xl border border-gray-600/60 rounded-xl shadow-2xl z-[10000] max-h-80 overflow-y-auto">
+                  {projects.length === 0 ? (
+                    <div className="px-4 py-6 text-center">
+                      <FolderOpen className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No projects found</p>
+                      <p className="text-xs text-gray-500 mt-1">Create a project to get started</p>
                     </div>
-
-                    {projects.length === 0 ? (
-                      <div className="px-4 py-6 text-center">
-                        <FolderOpen className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">No projects found</p>
-                        <p className="text-xs text-gray-500 mt-1">Create a project to get started</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {projects.map((project) => (
-                          <button
-                            key={project.id}
-                            onClick={() => {
-                              onProjectChange(project.id);
-                              setIsProjectDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-3 transition-all duration-200 group ${
-                              currentProject?.id === project.id
-                                ? 'bg-blue-600/20 border-l-4 border-l-blue-500'
-                                : 'hover:bg-gray-700/50 border-l-4 border-l-transparent hover:border-l-gray-600'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                                currentProject?.id === project.id 
-                                  ? 'bg-blue-400' 
-                                  : 'bg-gray-500 group-hover:bg-gray-400'
-                              }`} />
-                              <div className="flex-1 min-w-0">
-                                <div className={`text-sm font-medium truncate ${
-                                  currentProject?.id === project.id 
-                                    ? 'text-blue-300' 
-                                    : 'text-gray-200 group-hover:text-white'
-                                }`}>
-                                  {project.title}
-                                </div>
-                                {project.description && (
-                                  <div className="text-xs text-gray-500 mt-1 truncate">
-                                    {project.description}
-                                  </div>
-                                )}
+                  ) : (
+                    <div className="py-2">
+                      {projects.map((project) => (
+                        <button
+                          key={project.id}
+                          onClick={() => {
+                            onProjectChange(project.id);
+                            setIsProjectDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 transition-all duration-200 group relative ${
+                            currentProject?.id === project.id
+                              ? 'bg-blue-600/25 text-blue-300'
+                              : 'hover:bg-gray-700/60 text-gray-200 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                              currentProject?.id === project.id 
+                                ? 'bg-blue-400' 
+                                : 'bg-gray-500 group-hover:bg-gray-400'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">
+                                {project.title}
                               </div>
-                              {currentProject?.id === project.id && (
-                                <div className="flex-shrink-0">
-                                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              {project.description && (
+                                <div className="text-xs text-gray-500 mt-1 truncate">
+                                  {project.description}
                                 </div>
                               )}
                             </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                            {currentProject?.id === project.id && (
+                              <div className="flex-shrink-0">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                              </div>
+                            )}
+                          </div>
+                          {/* Active project indicator line */}
+                          {currentProject?.id === project.id && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r"></div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}
