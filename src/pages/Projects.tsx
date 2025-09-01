@@ -292,6 +292,7 @@ const Projects: React.FC = () => {
 									)}
                 </div>
               </div>
+						</div>
 
 							<div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
