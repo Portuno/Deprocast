@@ -532,7 +532,7 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900/98 border border-gray-700/50 rounded-3xl p-12 max-w-4xl w-full max-h-[95vh] overflow-y-auto">
+      <div className="relative bg-gray-900/98 border border-gray-700/50 rounded-3xl p-12 max-w-4xl w-full max-h-[95vh] overflow-y-auto">
         {/* Dopamine Priming Prompt */}
         {showDopaminePrompt && (
           <div className="text-center mb-12">
@@ -615,21 +615,21 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         {/* External UI Elements - Outside the main card */}
         {!showDopaminePrompt && (
           <>
-            {/* Left Side - Execution Rules Icons (2x2 Grid) */}
-            <div className="fixed left-8 bottom-8">
-              <div className="grid grid-cols-2 gap-3">
+            {/* Left Side - Execution Rules Icons (2x2 Grid) - Aligned with card */}
+            <div className="absolute -left-40 bottom-8">
+              <div className="grid grid-cols-2 gap-4">
                 {executionRules.map((rule) => (
                   <div
                     key={rule.id}
                     className="group relative"
                     title={rule.description}
                   >
-                    <div className={`p-4 rounded-full border-2 transition-all duration-200 cursor-help ${
+                    <div className={`p-5 rounded-full border-2 transition-all duration-200 cursor-help ${
                       rule.completed 
                         ? 'bg-green-500/20 border-green-500/50 text-green-400' 
                         : 'bg-gray-800/40 border-gray-600/40 text-gray-400 hover:border-gray-500/60 hover:text-gray-300'
                     }`}>
-                      <div className="w-6 h-6">
+                      <div className="w-7 h-7">
                         {rule.icon}
                       </div>
                     </div>
@@ -645,8 +645,8 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               </div>
             </div>
 
-            {/* Right Side - Top Controls */}
-            <div className="fixed right-8 top-8 flex items-center gap-4">
+            {/* Right Side - Top Controls - Aligned with card */}
+            <div className="absolute -right-40 top-8 flex items-center gap-4">
               {/* Cancel Button */}
               <button
                 onClick={onCancel}
@@ -668,8 +668,8 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               </button>
             </div>
 
-            {/* Right Side - Bottom - Complete Task Button */}
-            <div className="fixed right-8 bottom-8">
+            {/* Right Side - Bottom - Complete Task Button - Aligned with card */}
+            <div className="absolute -right-40 bottom-8">
               <button
                 onClick={completePomodoro}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all duration-200 hover:scale-105 shadow-2xl flex items-center"
