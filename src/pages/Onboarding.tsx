@@ -91,8 +91,8 @@ const Onboarding: React.FC = () => {
     // Complete onboarding with collected data
     await completeOnboarding(collectedData);
     
-    console.log('🚀 Onboarding complete, navigating to dashboard...');
-    navigate('/dashboard', { replace: true });
+    console.log('🚀 Onboarding complete, navigating to onboarding finish...');
+    navigate('/onboarding-finish', { replace: true });
   };
 
   const handleFormSubmit = (data: OnboardingFormData) => {

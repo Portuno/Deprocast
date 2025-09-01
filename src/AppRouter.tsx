@@ -9,6 +9,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
+import OnboardingFinish from './pages/OnboardingFinish';
 import ProtectedRoute from './components/ProtectedRoute';
 import App from './App';
 
@@ -27,6 +28,10 @@ const AppRouter: React.FC = () => {
 				<Route
 					path="/onboarding"
 					element={<Onboarding />}
+				/>
+				<Route
+					path="/onboarding-finish"
+					element={<OnboardingFinish />}
 				/>
 				<Route
 					path="/app/*"
