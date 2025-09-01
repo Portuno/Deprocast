@@ -62,7 +62,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
     if (slide.type === 'taskCreation' && slide.slideNumber === 9) {
       return (
-        <div className="w-full flex flex-col justify-end h-full">
+        <div className="w-full flex flex-col justify-end flex-1">
           <button
             onClick={handleGenerateTasks}
             disabled={isGeneratingTasks}
@@ -83,7 +83,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
     if (slide.type === 'summary' && slide.slideNumber === 15) {
       return (
-        <div className="w-full flex flex-col justify-end h-full">
+        <div className="w-full flex flex-col justify-end flex-1">
           <button
             onClick={handleActivatePersona}
             disabled={isActivatingPersona}
@@ -103,7 +103,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
 
     return (
-      <div className="w-full flex flex-col justify-end h-full">
+      <div className="w-full flex flex-col justify-end flex-1">
         <button
           onClick={handleNext}
           className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
@@ -207,11 +207,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </p>
           </div>
 
-          {/* Interactive Content - Fixed height to ensure consistent layout */}
-          <div className="flex-1 flex flex-col justify-start min-h-0">
-            <div className="space-y-2 md:space-y-3">
-              {renderSlideContent(currentSlide)}
-            </div>
+          {/* Interactive Content - This will push the button to the bottom */}
+          <div className="flex-1 flex flex-col">
+            {renderSlideContent(currentSlide)}
           </div>
 
           {/* Slide Navigation - Reduced margin */}
