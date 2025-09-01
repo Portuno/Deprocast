@@ -123,6 +123,36 @@ const Onboarding: React.FC = () => {
       return null;
     }
 
+    // Special handling for slide 7 (Project Details)
+    if (currentSlide.slideNumber === 7) {
+      return (
+        <div className="space-y-6">
+          {/* Project Type */}
+          <div className="space-y-3">
+            <label className="block text-lg font-semibold text-gray-800">
+              What type of project is this?
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Choose the category that best describes your project
+            </p>
+            {renderField('projectType', 'select')}
+          </div>
+
+          {/* Perceived Difficulty */}
+          <div className="space-y-3">
+            <label className="block text-lg font-semibold text-gray-800">
+              How difficult does this project feel to you?
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Rate from 1 (Easy) to 10 (Very Hard) - this helps us create the right micro-tasks
+            </p>
+            {renderField('perceivedDifficulty', 'number')}
+          </div>
+        </div>
+      );
+    }
+
+    // Default form rendering for other slides
     return (
       <div className="space-y-4">
         {Object.entries(currentSlide.dataCollection).map(([key, type]) => (
@@ -147,7 +177,7 @@ const Onboarding: React.FC = () => {
           <select
             value={fieldValue}
             onChange={(e) => handleFieldChange(key, e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm transition-all duration-200 hover:border-purple-300"
             required
           >
             <option value="">Select an option...</option>
@@ -175,18 +205,19 @@ const Onboarding: React.FC = () => {
                 <option value="always">I constantly feel like an imposter</option>
               </>
             )}
-            {key === 'projectType' && (
-              <>
-                <option value="development">Development</option>
-                <option value="marketing">Marketing</option>
-                <option value="design">Design</option>
-                <option value="writing">Writing</option>
-                <option value="business">Business</option>
-                <option value="learning">Learning</option>
-                <option value="health">Health & Fitness</option>
-                <option value="other">Other</option>
-              </>
-            )}
+                         {key === 'projectType' && (
+               <>
+                 <option value="">Choose your project type...</option>
+                 <option value="development">🚀 Development - Software, apps, websites</option>
+                 <option value="marketing">📢 Marketing - Campaigns, social media, ads</option>
+                 <option value="design">🎨 Design - Graphics, UI/UX, branding</option>
+                 <option value="writing">✍️ Writing - Content, books, articles</option>
+                 <option value="business">💼 Business - Planning, strategy, operations</option>
+                 <option value="learning">📚 Learning - Skills, courses, education</option>
+                 <option value="health">💪 Health & Fitness - Wellness, training, nutrition</option>
+                 <option value="other">✨ Other - Creative projects, hobbies, personal</option>
+               </>
+             )}
           </select>
         );
       
@@ -247,24 +278,43 @@ const Onboarding: React.FC = () => {
         );
       
       case 'number':
-        if (key === 'perceivedDifficulty') {
+                if (key === 'perceivedDifficulty') {
           return (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>1 (Easy)</span>
-                <span>10 (Very Hard)</span>
+            <div className="space-y-4 p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+              <div className="flex justify-between text-sm font-medium text-gray-700">
+                <span className="flex items-center">
+                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                  1 - Easy
+                </span>
+                <span className="flex items-center">
+                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                  10 - Very Hard
+                </span>
               </div>
-                             <input
-                 type="range"
-                 min="1"
-                 max="10"
-                 value={fieldValue || 5}
-                 onChange={(e) => handleFieldChange(key, e.target.value)}
-                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                 required
-               />
-              <div className="text-center text-lg font-semibold text-purple-600">
-                {fieldValue || 5}
+              
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={fieldValue || 5}
+                onChange={(e) => handleFieldChange(key, e.target.value)}
+                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                required
+              />
+              
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-1">
+                  {fieldValue || 5}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {(() => {
+                    const difficulty = parseInt(fieldValue || '5');
+                    if (difficulty <= 3) return 'Easy - You got this! 💪';
+                    if (difficulty <= 6) return 'Medium - A good challenge! 🎯';
+                    if (difficulty <= 8) return 'Hard - But definitely achievable! 🔥';
+                    return 'Very Hard - We\'ll break it down together! 🚀';
+                  })()}
+                </div>
               </div>
             </div>
           );
@@ -384,6 +434,15 @@ const Onboarding: React.FC = () => {
   };
 
   const renderVisual = () => {
+    // Special visual for slide 7 (Project Details)
+    if (currentSlide.slideNumber === 7) {
+      return (
+        <div className="w-24 h-24 bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <span className="text-white text-4xl">⚙️</span>
+        </div>
+      );
+    }
+
     switch (currentSlide.type) {
       case 'welcome':
         return (
@@ -498,12 +557,21 @@ const Onboarding: React.FC = () => {
           {renderVisual()}
         </div>
 
-        {/* Description */}
-        <div className="text-center mb-8">
-          <p className="text-gray-700 text-lg leading-relaxed">
-            {currentSlide.description}
-          </p>
-        </div>
+                 {/* Description */}
+         <div className="text-center mb-8">
+           <p className="text-gray-700 text-lg leading-relaxed">
+             {currentSlide.description}
+           </p>
+           
+           {/* Special motivational message for slide 7 */}
+           {currentSlide.slideNumber === 7 && (
+             <div className="mt-4 p-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg border border-purple-200">
+               <p className="text-sm text-purple-700 font-medium">
+                 💡 <strong>Pro tip:</strong> Be honest about the difficulty level. This helps us create micro-tasks that are perfectly sized for your brain!
+               </p>
+             </div>
+           )}
+         </div>
 
         {/* Form or Content */}
         <div className="mb-8">
