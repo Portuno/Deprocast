@@ -11,6 +11,10 @@ const Onboarding: React.FC = () => {
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isActivatingPersona, setIsActivatingPersona] = useState(false);
   
+  // Field values state - moved to component level
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [tagValues, setTagValues] = useState<Record<string, string[]>>({});
+  
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { completeOnboarding } = useOnboarding();
@@ -52,6 +56,13 @@ const Onboarding: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [currentSlideIndex]);
 
+  // Clear field values when changing slides (optional - remove if you want to persist data)
+  useEffect(() => {
+    // Uncomment the next line if you want to clear fields between slides
+    // setFieldValues({});
+    // setTagValues({});
+  }, [currentSlideIndex]);
+
   const handleNext = () => {
     if (isLastSlide) {
       return; // Don't auto-complete on last slide
@@ -89,6 +100,16 @@ const Onboarding: React.FC = () => {
     handleNext();
   };
 
+  const handleFieldChange = (key: string, value: string) => {
+    setFieldValues(prev => ({ ...prev, [key]: value }));
+    setCollectedData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleTagsChange = (key: string, newTags: string[]) => {
+    setTagValues(prev => ({ ...prev, [key]: newTags }));
+    setCollectedData(prev => ({ ...prev, [key]: newTags }));
+  };
+
   const handleBack = () => {
     if (currentSlideIndex > 0) {
       setCurrentSlideIndex(prev => prev - 1);
@@ -117,25 +138,15 @@ const Onboarding: React.FC = () => {
   };
 
   const renderField = (key: string, type: 'select' | 'text' | 'number' | 'date' | 'tags') => {
-    const [fieldValue, setFieldValue] = useState('');
-    const [tags, setTags] = useState<string[]>([]);
-
-    const handleInputChange = (value: string) => {
-      setFieldValue(value);
-      setCollectedData(prev => ({ ...prev, [key]: value }));
-    };
-
-    const handleTagsChange = (newTags: string[]) => {
-      setTags(newTags);
-      setCollectedData(prev => ({ ...prev, [key]: newTags }));
-    };
+    const fieldValue = fieldValues[key] || '';
+    const tags = tagValues[key] || [];
 
     switch (type) {
       case 'select':
         return (
           <select
             value={fieldValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => handleFieldChange(key, e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             required
           >
@@ -185,7 +196,7 @@ const Onboarding: React.FC = () => {
             <input
               type="text"
               value={fieldValue}
-              onChange={(e) => handleInputChange(e.target.value)}
+              onChange={(e) => handleFieldChange(key, e.target.value)}
               placeholder="e.g., Web Development, Marketing Campaign"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
@@ -196,7 +207,7 @@ const Onboarding: React.FC = () => {
           return (
             <textarea
               value={fieldValue}
-              onChange={(e) => handleInputChange(e.target.value)}
+              onChange={(e) => handleFieldChange(key, e.target.value)}
               placeholder="Describe what you want to achieve in as much detail as possible..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px] resize-none"
               required
@@ -207,7 +218,7 @@ const Onboarding: React.FC = () => {
           return (
             <textarea
               value={fieldValue}
-              onChange={(e) => handleInputChange(e.target.value)}
+              onChange={(e) => handleFieldChange(key, e.target.value)}
               placeholder="Why do you want to complete this project?"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
               required
@@ -217,7 +228,7 @@ const Onboarding: React.FC = () => {
         return (
           <textarea
             value={fieldValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => handleFieldChange(key, e.target.value)}
             placeholder="Enter your response..."
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
             required
@@ -229,7 +240,7 @@ const Onboarding: React.FC = () => {
           <input
             type="date"
             value={fieldValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => handleFieldChange(key, e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             required
           />
@@ -243,15 +254,15 @@ const Onboarding: React.FC = () => {
                 <span>1 (Easy)</span>
                 <span>10 (Very Hard)</span>
               </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={fieldValue || 5}
-                onChange={(e) => handleInputChange(e.target.value)}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                required
-              />
+                             <input
+                 type="range"
+                 min="1"
+                 max="10"
+                 value={fieldValue || 5}
+                 onChange={(e) => handleFieldChange(key, e.target.value)}
+                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                 required
+               />
               <div className="text-center text-lg font-semibold text-purple-600">
                 {fieldValue || 5}
               </div>
@@ -262,7 +273,7 @@ const Onboarding: React.FC = () => {
           <input
             type="number"
             value={fieldValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => handleFieldChange(key, e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             required
           />
@@ -275,14 +286,14 @@ const Onboarding: React.FC = () => {
               type="text"
               placeholder={key === 'knownObstacles' ? 'e.g., Lack of time, Fear of failure' : 'e.g., Learn Python, Hire a designer'}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault();
-                  const value = e.currentTarget.value.trim();
-                  if (value) {
-                    handleTagsChange([...tags, value]);
-                    e.currentTarget.value = '';
-                  }
-                }
+                                 if (e.key === 'Enter' || e.key === ',') {
+                   e.preventDefault();
+                   const value = e.currentTarget.value.trim();
+                   if (value) {
+                     handleTagsChange(key, [...tags, value]);
+                     e.currentTarget.value = '';
+                   }
+                 }
               }}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
@@ -293,11 +304,11 @@ const Onboarding: React.FC = () => {
                   className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                 >
                   {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleTagsChange(tags.filter((_, i) => i !== index))}
-                    className="text-purple-600 hover:text-purple-800"
-                  >
+                                     <button
+                     type="button"
+                     onClick={() => handleTagsChange(key, tags.filter((_, i) => i !== index))}
+                     className="text-purple-600 hover:text-purple-800"
+                   >
                     ×
                   </button>
                 </span>
