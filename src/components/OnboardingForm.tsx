@@ -22,13 +22,13 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
     switch (type) {
       case 'select':
         return (
-                                <select
-                        key={key}
-                        value={formData[key] || ''}
-                        onChange={(e) => handleInputChange(key, e.target.value)}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        required
-                      >
+                                                        <select
+                          key={key}
+                          value={formData[key] || ''}
+                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        >
             <option value="">Select an option...</option>
             {key === 'energyLevel' && (
               <>
@@ -78,7 +78,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
                           placeholder="e.g., Web Development, Marketing Campaign"
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
                         />
           );
@@ -90,7 +90,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
                           placeholder="Describe what you want to achieve in as much detail as possible..."
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[80px] resize-none"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px] resize-none"
                           required
                         />
           );
@@ -102,7 +102,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
                           placeholder="Why do you want to complete this project?"
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px] resize-none"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[40px] resize-none"
                           required
                         />
           );
@@ -113,7 +113,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
             value={formData[key] || ''}
             onChange={(e) => handleInputChange(key, e.target.value)}
             placeholder="Enter your response..."
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px] resize-none"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[40px] resize-none"
             required
           />
         );
@@ -125,7 +125,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                           type="date"
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
                         />
         );
@@ -159,7 +159,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                           type="number"
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, parseInt(e.target.value))}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
                         />
         );
@@ -181,7 +181,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
                   }
                 }
               }}
-              className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <div className="flex flex-wrap gap-1.5">
               {(formData[key] as string[])?.map((tag, index) => (
@@ -213,11 +213,11 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 h-full flex flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto">
+    <form onSubmit={handleSubmit} className="space-y-2 h-full flex flex-col">
+      <div className="flex-1 space-y-2">
         {Object.entries(slide.dataCollection).map(([key, type]) => (
-          <div key={key} className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 capitalize">
+          <div key={key} className="space-y-0.5">
+            <label className="block text-xs font-medium text-gray-700 capitalize">
               {key.replace(/([A-Z])/g, ' $1').trim()}
             </label>
             {renderField(key, type)}
@@ -227,7 +227,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
       
       <button
         type="submit"
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0"
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0"
       >
         {slide.callToAction}
       </button>

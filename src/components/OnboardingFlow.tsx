@@ -115,48 +115,48 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   const renderVisual = (slide: OnboardingSlide) => {
-    // Smaller visual representations to save space
+    // Minimal visual representations to maximize content space
     switch (slide.type) {
       case 'welcome':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">🚀</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">🚀</span>
           </div>
         );
       case 'information':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">🧠</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">🧠</span>
           </div>
         );
       case 'dataCollection':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">📝</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">📝</span>
           </div>
         );
       case 'taskCreation':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-yellow-500 to-red-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">⚡</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-yellow-500 to-red-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">⚡</span>
           </div>
         );
       case 'mindset':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-red-500 to-purple-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">🌱</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-red-500 to-purple-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">🌱</span>
           </div>
         );
       case 'summary':
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">🎯</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">🎯</span>
           </div>
         );
       default:
         return (
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-xl md:text-2xl">✨</span>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-white text-sm md:text-base">✨</span>
           </div>
         );
     }
@@ -174,20 +174,20 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-3 md:p-4 text-white text-center relative">
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-2 md:p-3 text-white text-center relative">
           {canGoBack && (
             <button
               onClick={handleBack}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white hover:text-purple-200 transition-colors p-1.5 rounded-full hover:bg-white/10"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white hover:text-purple-200 transition-colors p-1 rounded-full hover:bg-white/10"
               aria-label="Go back to previous slide"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           )}
           
-          <h1 className="text-lg md:text-xl font-bold mb-1">{currentSlide.title}</h1>
+          <h1 className="text-base md:text-lg font-bold mb-0.5">{currentSlide.title}</h1>
           <p className="text-purple-100 text-xs">
             Step {currentSlide.slideNumber} of {onboardingFlow.onboardingFlow.length}
           </p>
@@ -195,29 +195,29 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
         {/* Content */}
         <div className="p-3 md:p-4 flex flex-col h-full">
-          {/* Visual - Reduced size and margin */}
-          <div className="flex-shrink-0 mb-2">
+          {/* Visual - Minimal size */}
+          <div className="flex-shrink-0 mb-1">
             {renderVisual(currentSlide)}
           </div>
 
-          {/* Description - Reduced margin and optimized text size */}
-          <div className="text-center mb-3 flex-shrink-0">
-            <p className="text-gray-700 text-sm md:text-base leading-relaxed px-2">
+          {/* Description - Compact and optimized */}
+          <div className="text-center mb-2 flex-shrink-0">
+            <p className="text-gray-700 text-xs md:text-sm leading-tight px-1">
               {currentSlide.description}
             </p>
           </div>
 
-          {/* Interactive Content - This will push the button to the bottom */}
-          <div className="flex-1 flex flex-col">
+          {/* Interactive Content - Takes remaining space and pushes button down */}
+          <div className="flex-1 flex flex-col justify-end">
             {renderSlideContent(currentSlide)}
           </div>
 
-          {/* Slide Navigation - Reduced margin */}
-          <div className="flex justify-center mt-2 space-x-2 flex-shrink-0">
+          {/* Slide Navigation - Minimal margin */}
+          <div className="flex justify-center mt-1 space-x-1 flex-shrink-0">
             {onboardingFlow.onboardingFlow.map((_, index) => (
               <div
                 key={index}
-                className={`w-2 md:w-3 h-2 md:h-3 rounded-full transition-colors ${
+                className={`w-1.5 md:w-2 h-1.5 md:h-2 rounded-full transition-colors ${
                   index === currentSlideIndex
                     ? 'bg-purple-500'
                     : index < currentSlideIndex
