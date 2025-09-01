@@ -117,36 +117,33 @@ const Dashboard: React.FC<DashboardProps> = ({
       return;
     }
 
+    // Start loading immediately
     setIsGeneratingTasks(true);
     setGenerationProgress(0);
     setTipIndex(0);
     setCurrentTip(neuroscienceTips[0]);
 
-    // 18-second total duration with 3 tips of 6 seconds each
-    const totalDuration = 18000; // 18 seconds
-    const tipDuration = 6000; // 6 seconds per tip
-    const progressIncrement = 100 / (totalDuration / 100); // Progress per 100ms
-
+    // Start progress animation (will be completed when API call finishes)
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
+        if (prev >= 90) { // Stop at 90% until API completes
+          return 90;
         }
-        return prev + progressIncrement;
+        return prev + 0.5; // Slower progress to feel more natural
       });
-        }, 100);
+    }, 100);
 
-    // Rotate tips every 6 seconds
+    // Rotate tips every 4 seconds
     const tipInterval = setInterval(() => {
       setTipIndex(prev => {
         const nextIndex = (prev + 1) % 3; // Show only 3 tips
         setCurrentTip(neuroscienceTips[nextIndex]);
         return nextIndex;
       });
-    }, tipDuration);
+    }, 4000);
 
     try {
+      // Make the API call immediately
       const result = await generateMicrotasksWithMabot({
         projectId: currentProject.id,
         projectTitle: currentProject.title,
@@ -154,9 +151,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         existingTasks: tasks.length
       });
 
-      // Wait for the full 18 seconds to complete
-      await new Promise(resolve => setTimeout(resolve, totalDuration));
+      // Complete the progress when API call finishes
       setGenerationProgress(100);
+      
+      // Small delay to show completion
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (onRefresh) {
         onRefresh();
