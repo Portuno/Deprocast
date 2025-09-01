@@ -36,7 +36,10 @@ export const useOnboarding = () => {
         setProfile(userProfile);
         const requiresOnboarding = !userProfile.onboarding_completed;
         setIsOnboardingRequired(requiresOnboarding);
-        console.log('🔍 useOnboarding: Onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
+        // Only log when status changes
+        if (requiresOnboarding !== isOnboardingRequired) {
+          console.log('🔍 useOnboarding: Onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
+        }
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);

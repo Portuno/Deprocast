@@ -43,12 +43,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error('❌ AuthProvider: Error getting initial session:', error);
           setLoading(false);
         } else if (currentSession) {
-          console.log('✅ AuthProvider: Session found:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
           setLoading(false);
         } else {
-          console.log('ℹ️ AuthProvider: No session found');
           // Check if we're in an OAuth redirect
           const urlParams = new URLSearchParams(window.location.search);
           const code = urlParams.get('code');
@@ -76,9 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!mounted) return;
         
         // Only log significant events, not every token refresh
-        if (event === 'SIGNED_IN') {
-          console.log('✅ AuthProvider: User signed in:', newSession?.user?.email);
-        } else if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT') {
           console.log('🚪 AuthProvider: User signed out');
         }
         

@@ -328,10 +328,7 @@ function App() {
 
   // Redirect to onboarding if required
   useEffect(() => {
-    console.log('🔄 App: useEffect for onboarding redirect triggered', { isOnboardingRequired, currentPath: window.location.pathname, isRedirecting });
-    
     if (isOnboardingRequired === true && !isRedirecting) {
-      console.log('🔄 App: Redirecting to onboarding...');
       setIsRedirecting(true);
       navigate('/onboarding', { replace: true });
     }
@@ -344,7 +341,6 @@ function App() {
 
   // Show loading while onboarding status is being determined
   if (isOnboardingLoading) {
-    console.log('⏳ App: Loading onboarding status...');
     return (
       <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -356,7 +352,7 @@ function App() {
     );
   }
 
-  console.log('🔍 App: Onboarding status:', { isOnboardingRequired, isOnboardingLoading });
+
 
   // Safety check to ensure navigationItems is available
   if (!navigationItems || navigationItems.length === 0) {

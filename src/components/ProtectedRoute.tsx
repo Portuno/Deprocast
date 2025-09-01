@@ -29,7 +29,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, [loading]);
 
   if (loading) {
-    console.log('⏳ ProtectedRoute: Loading auth state...');
     return (
       <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -62,11 +61,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    console.log('🚫 ProtectedRoute: No user, redirecting to login', { currentPath: window.location.pathname });
     return <Navigate to="/login" replace />;
   }
 
-  console.log('✅ ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
 };
 
