@@ -316,6 +316,7 @@ const Projects: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
           </ModalPortal>
         )}
 
