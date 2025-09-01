@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import Navigation from './components/Navigation';
 import MobileNavigation from './components/MobileNavigation';
@@ -8,7 +9,6 @@ import Journal from './pages/Journal';
 import Calendar from './pages/Calendar';
 import Protocols from './pages/Protocols';
 import Profile from './pages/Profile';
-import OnboardingFlow from './components/OnboardingFlow';
 import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
 import { 
   listTasksByProject, 
@@ -33,6 +33,7 @@ interface TaskCompletionData {
 }
 
 function App() {
+  const navigate = useNavigate();
   const { isOnboardingRequired, isLoading: isOnboardingLoading, completeOnboarding } = useOnboarding();
   const [projects, setProjects] = useState<DbProject[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -322,9 +323,16 @@ function App() {
     }
   };
 
-  // Show onboarding if required
+  // Redirect to onboarding if required
+  useEffect(() => {
+    if (isOnboardingRequired) {
+      navigate('/onboarding');
+    }
+  }, [isOnboardingRequired, navigate]);
+
+  // Don't render anything if onboarding is required (will redirect)
   if (isOnboardingRequired) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+    return null;
   }
 
   // Show loading while onboarding status is being determined
