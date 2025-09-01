@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, LogOut, FolderOpen } from 'lucide-react';
 import { DbProject } from '../integrations/supabase/projects';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TopBarProps {
   currentProject: DbProject | null;

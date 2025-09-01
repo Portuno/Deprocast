@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { useOAuthRedirect } from '../hooks/useOAuthRedirect';
 
 interface ProtectedRouteProps {
@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading, session } = useAuth();
+  const { user, loading } = useAuth();
   const [fallbackLoading, setFallbackLoading] = useState(false);
 
   // Use the simplified OAuth redirect hook

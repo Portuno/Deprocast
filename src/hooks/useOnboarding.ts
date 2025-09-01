@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { getOrCreateProfile, updateProfile } from '../integrations/supabase/profiles';
 import { OnboardingFormData } from '../types/onboarding';
 import { saveOnboardingData } from '../integrations/supabase/onboarding';

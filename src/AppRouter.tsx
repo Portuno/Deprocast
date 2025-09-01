@@ -12,38 +12,41 @@ import Onboarding from './pages/Onboarding';
 import OnboardingFinish from './pages/OnboardingFinish';
 import ProtectedRoute from './components/ProtectedRoute';
 import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
 
 const AppRouter: React.FC = () => {
 	return (
-		<BrowserRouter>
-			<Routes>
-				<Route path="/" element={<Landing />} />
-				<Route path="/about" element={<About />} />
-				<Route path="/blog" element={<Blog />} />
-				<Route path="/pricing" element={<Pricing />} />
-				<Route path="/login" element={<Login />} />
-				<Route path="/signup" element={<Signup />} />
-				<Route path="/forgot-password" element={<ForgotPassword />} />
-				<Route path="/reset-password" element={<ResetPassword />} />
-				<Route
-					path="/onboarding"
-					element={<Onboarding />}
-				/>
-				<Route
-					path="/onboarding-finish"
-					element={<OnboardingFinish />}
-				/>
-				<Route
-					path="/app/*"
-					element={
-						<ProtectedRoute>
-							<App />
-						</ProtectedRoute>
-					}
-				/>
-				<Route path="*" element={<Navigate to="/" replace />} />
-			</Routes>
-		</BrowserRouter>
+		<AuthProvider>
+			<BrowserRouter>
+				<Routes>
+					<Route path="/" element={<Landing />} />
+					<Route path="/about" element={<About />} />
+					<Route path="/blog" element={<Blog />} />
+					<Route path="/pricing" element={<Pricing />} />
+					<Route path="/login" element={<Login />} />
+					<Route path="/signup" element={<Signup />} />
+					<Route path="/forgot-password" element={<ForgotPassword />} />
+					<Route path="/reset-password" element={<ResetPassword />} />
+					<Route
+						path="/onboarding"
+						element={<Onboarding />}
+					/>
+					<Route
+						path="/onboarding-finish"
+						element={<OnboardingFinish />}
+					/>
+					<Route
+						path="/app/*"
+						element={
+							<ProtectedRoute>
+								<App />
+							</ProtectedRoute>
+						}
+					/>
+					<Route path="*" element={<Navigate to="/" replace />} />
+				</Routes>
+			</BrowserRouter>
+		</AuthProvider>
 	);
 };
 

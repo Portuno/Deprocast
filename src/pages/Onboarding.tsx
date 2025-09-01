@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onboardingFlow } from '../data/onboardingData';
 import { OnboardingSlide, OnboardingFormData } from '../types/onboarding';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const Onboarding: React.FC = () => {
