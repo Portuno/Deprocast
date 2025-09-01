@@ -179,6 +179,14 @@ function App() {
   const handleOnboardingComplete = async (data?: any) => {
     try {
       await completeOnboarding(data);
+      // Refresh projects and tasks after onboarding completion
+      if (data) {
+        const refreshedProjects = await listProjects().catch(() => [] as DbProject[]);
+        setProjects(refreshedProjects);
+        if (refreshedProjects.length > 0) {
+          setCurrentProjectId(refreshedProjects[0].id);
+        }
+      }
     } catch (error) {
       console.error('Error completing onboarding:', error);
     }

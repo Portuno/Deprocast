@@ -19,7 +19,21 @@ export interface OnboardingData {
   energyLevel?: string;
   distractionSusceptibility?: string;
   imposterSyndrome?: string;
-  mainProject?: string;
+}
+
+export interface ProjectData {
+  title: string;
+  description: string;
+  targetCompletionDate?: string;
+  projectType?: string;
+  perceivedDifficulty: number;
+  motivation: string;
+  knownObstacles: string[];
+  skillsNeeded: string[];
+}
+
+export interface OnboardingFormData {
+  [key: string]: string | number | string[];
 }
 
 export interface OnboardingFormData {

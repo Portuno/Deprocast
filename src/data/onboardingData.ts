@@ -44,24 +44,39 @@ export const onboardingFlow: OnboardingFlow = {
     },
     {
       slideNumber: 4,
-      title: "What Big Project Do You Want to Conquer?",
-      description: "Every journey starts with a single step. Tell us about the one major project that feels most overwhelming or that you've been putting off the longest. Describe it in a sentence.",
+      title: "Project Title",
+      description: "Information about dividing a big project into microtasks. What's the name of your project?",
       type: "dataCollection",
       callToAction: "Continue",
-      visuals: "A large, open text input field over an inspiring background image.",
+      visuals: "A form field for project title.",
       interaction: {
         type: "formSubmission"
       },
       dataCollection: {
-        mainProject: "text"
+        projectTitle: "text"
       }
     },
     {
       slideNumber: 5,
-      title: "The Power of Micro-Tasks",
+      title: "Project Description & Timeline",
+      description: "Make a description of the project, and a target completion date. We invite you to make something achievable by the next 3 days.",
+      type: "dataCollection",
+      callToAction: "Continue",
+      visuals: "Form fields for description and date picker.",
+      interaction: {
+        type: "formSubmission"
+      },
+      dataCollection: {
+        projectDescription: "text",
+        targetCompletionDate: "date"
+      }
+    },
+    {
+      slideNumber: 6,
+      title: "More About Neuroscience",
       description: "Your brain gets overwhelmed by too many information chunks, leading to analysis paralysis. Our first step is to turn your big project into small, manageable micro-tasks that are scientifically designed to feel less intimidating.",
       type: "information",
-      callToAction: "Generate Micro-Tasks",
+      callToAction: "Got It",
       visuals: "An animation of a complex, abstract idea breaking into smaller, organized pieces.",
       interaction: {
         type: "buttonClick"
@@ -69,19 +84,50 @@ export const onboardingFlow: OnboardingFlow = {
       dataCollection: {}
     },
     {
-      slideNumber: 6,
-      title: "Your Micro-Tasks Are Ready!",
-      description: "Our bot has generated your initial task list. Each one is a 'quick win' designed to give you a momentum-building dopamine boost. Don't worry about the order—just pick one and start.",
+      slideNumber: 7,
+      title: "Project Details",
+      description: "Optional (Recommended) - Project Type/Category and Perceived Difficulty (1-10)",
+      type: "dataCollection",
+      callToAction: "Continue",
+      visuals: "Form fields for project type and difficulty slider.",
+      interaction: {
+        type: "formSubmission"
+      },
+      dataCollection: {
+        projectType: "select",
+        perceivedDifficulty: "number"
+      }
+    },
+    {
+      slideNumber: 8,
+      title: "Motivation & Challenges",
+      description: "Why do you want to complete this project? What obstacles do you foresee? What skills or resources do you need?",
+      type: "dataCollection",
+      callToAction: "Continue",
+      visuals: "Form fields for motivation, obstacles, and skills needed.",
+      interaction: {
+        type: "formSubmission"
+      },
+      dataCollection: {
+        motivation: "text",
+        knownObstacles: "tags",
+        skillsNeeded: "tags"
+      }
+    },
+    {
+      slideNumber: 9,
+      title: "Generate Micro-Tasks",
+      description: "Now let's break down your project into manageable micro-tasks. Our AI will analyze your project and create a personalized task list.",
       type: "taskCreation",
-      callToAction: "Start My First Task",
-      visuals: "A preview of the AI-generated task list, with the first task highlighted.",
+      callToAction: "Generate Micro-Tasks",
+      visuals: "A button to generate tasks with AI processing animation.",
       interaction: {
         type: "buttonClick"
       },
       dataCollection: {}
     },
     {
-      slideNumber: 7,
+      slideNumber: 10,
       title: "The Pomodoro+ Protocol in Action",
       description: "We'll guide you through 25-minute sessions of total focus, followed by 5-minute breaks. This protocol re-wires your brain by separating work from rest, allowing your Prefrontal Cortex to fully recover.",
       type: "information",
@@ -93,7 +139,7 @@ export const onboardingFlow: OnboardingFlow = {
       dataCollection: {}
     },
     {
-      slideNumber: 8,
+      slideNumber: 11,
       title: "The Art of Celebration",
       description: "When you complete a task, you must celebrate it! This isn't just for fun—it's a critical step to strengthen your brain's reward circuits and train it to associate hard work with pleasure.",
       type: "information",
@@ -105,7 +151,7 @@ export const onboardingFlow: OnboardingFlow = {
       dataCollection: {}
     },
     {
-      slideNumber: 9,
+      slideNumber: 12,
       title: "Your Growth Journal",
       description: "After each task, we'll ask you to log how you felt and the obstacles you faced. This data is the 'context' that makes our AI so powerful.",
       type: "information",
@@ -117,36 +163,36 @@ export const onboardingFlow: OnboardingFlow = {
       dataCollection: {}
     },
     {
-      slideNumber: 10,
-      title: "Your Personal AI Coach Awaits",
-      description: "With the data you provide, our AI will learn your unique patterns. It will anticipate your needs, suggest personalized strategies, and help you overcome plateaus. Your personalized productivity coach is ready to help you.",
+      slideNumber: 13,
+      title: "Context Blueprint Generator",
+      description: "Learn about the Context Blueprint generator - what it is and where to find it in your dashboard.",
       type: "information",
-      callToAction: "Awesome, I want my coach",
-      visuals: "An AI icon lighting up with data streams, symbolizing its learning process.",
+      callToAction: "Tell Me More",
+      visuals: "An icon representing the context blueprint generator.",
       interaction: {
         type: "buttonClick"
       },
       dataCollection: {}
     },
     {
-      slideNumber: 11,
-      title: "Patience and Persistence",
-      description: "Rewiring your brain takes time. Don't give up if you fall back into old habits. Every focused session and every data point is a step towards a permanent change. Be kind to yourself.",
-      type: "mindset",
-      callToAction: "I Will Be Persistent",
-      visuals: "An illustration of a plant growing from a small seed, symbolizing gradual progress.",
+      slideNumber: 14,
+      title: "Understanding Context Blueprint",
+      description: "The Context Blueprint is a JSON file that contains information about your work patterns, preferences, and progress. This data helps our AI provide personalized recommendations.",
+      type: "information",
+      callToAction: "Got It",
+      visuals: "A visual representation of a JSON file with data fields.",
       interaction: {
         type: "buttonClick"
       },
       dataCollection: {}
     },
     {
-      slideNumber: 12,
-      title: "You're Ready to Start Building!",
-      description: "The protocol is activated. Your first micro-task is waiting. It's time to stop planning and start doing. Let's make this your most productive chapter yet.",
+      slideNumber: 15,
+      title: "Activate Your User Persona",
+      description: "This is all experimental and in beta. Ready to activate your personalized user persona and see your generated micro-tasks?",
       type: "summary",
-      callToAction: "Initiate My First Task",
-      visuals: "The main app interface with the Pomodoro timer visible and the first micro-task highlighted and ready to begin.",
+      callToAction: "Activate User Persona",
+      visuals: "A button to activate with loading animation.",
       interaction: {
         type: "buttonClick"
       },

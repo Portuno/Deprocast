@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { getOrCreateProfile, updateProfile } from '../integrations/supabase/profiles';
 import { OnboardingFormData } from '../types/onboarding';
 import { saveOnboardingData } from '../integrations/supabase/onboarding';
+import { processOnboardingData } from '../services/onboardingService';
 
 export const useOnboarding = () => {
   const { user, isAuthenticated } = useAuth();
@@ -45,6 +46,9 @@ export const useOnboarding = () => {
         if (data) {
           setOnboardingData(data);
           await saveOnboardingData(data);
+          
+          // Process onboarding data to create project, tasks, and journal entry
+          await processOnboardingData(data);
         }
         
         await updateProfile({ onboarding_completed: true });
