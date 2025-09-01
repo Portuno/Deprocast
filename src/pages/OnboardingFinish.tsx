@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { MicroTask } from '../types/microtasks';
+import { supabase } from '../integrations/supabase/client';
 
 const OnboardingFinish: React.FC = () => {
   const [microTasks, setMicroTasks] = useState<MicroTask[]>([]);
@@ -9,57 +10,34 @@ const OnboardingFinish: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Mock microtasks data - in real app, this would come from the onboarding process
+  // Fetch real microtasks from Supabase
   useEffect(() => {
-    const mockTasks: MicroTask[] = [
-      {
-        id: '1',
-        title: 'Set up your workspace',
-        description: 'Organize your physical and digital workspace for maximum productivity',
-        estimated_time: 15,
-        priority: 'high',
-        status: 'pending'
-      },
-      {
-        id: '2',
-        title: 'Break down your first goal',
-        description: 'Take your main project and break it into 3 smaller, actionable steps',
-        estimated_time: 20,
-        priority: 'high',
-        status: 'pending'
-      },
-      {
-        id: '3',
-        title: 'Schedule your first Pomodoro session',
-        description: 'Block 25 minutes in your calendar for focused work on your first task',
-        estimated_time: 5,
-        priority: 'medium',
-        status: 'pending'
-      },
-      {
-        id: '4',
-        title: 'Create your first journal entry',
-        description: 'Reflect on what you accomplished and how you felt during your first session',
-        estimated_time: 10,
-        priority: 'medium',
-        status: 'pending'
-      },
-      {
-        id: '5',
-        title: 'Set up your reward system',
-        description: 'Define 3 small rewards you\'ll give yourself after completing tasks',
-        estimated_time: 15,
-        priority: 'low',
-        status: 'pending'
-      }
-    ];
+    const fetchMicroTasks = async () => {
+      if (!user) return;
 
-    // Simulate loading
-    setTimeout(() => {
-      setMicroTasks(mockTasks);
-      setIsLoading(false);
-    }, 1500);
-  }, []);
+      try {
+        const { data, error } = await supabase
+          .from('micro_tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching microtasks:', error);
+          return;
+        }
+
+        console.log('🎯 OnboardingFinish: Fetched microtasks:', data);
+        setMicroTasks(data || []);
+      } catch (error) {
+        console.error('Error fetching microtasks:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMicroTasks();
+  }, [user]);
 
   const handleGoToDashboard = () => {
     navigate('/dashboard', { replace: true });
@@ -112,10 +90,10 @@ const OnboardingFinish: React.FC = () => {
             <span className="text-4xl">🎉</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            ¡Onboarding Completado!
+            🎉 Onboarding Complete!
           </h1>
           <p className="text-xl text-purple-100 max-w-2xl mx-auto">
-            Has superado el primer paso más importante. Ahora tienes las herramientas y el conocimiento para transformar tu productividad.
+            You've completed the most important first step. Now you have the tools and knowledge to transform your productivity.
           </p>
         </div>
       </div>
@@ -128,11 +106,11 @@ const OnboardingFinish: React.FC = () => {
             <span className="text-2xl">✅</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            Tu Persona de Usuario Está Activada
+            Your User Persona is Activated
           </h2>
           <p className="text-gray-600 text-lg">
-            Nuestro sistema ha analizado tus respuestas y ha creado un plan personalizado de microtareas. 
-            Cada una está diseñada para darte pequeños éxitos que construyan tu confianza y momentum.
+            Our system has analyzed your responses and created a personalized microtask plan. 
+            Each one is designed to give you small wins that build your confidence and momentum.
           </p>
         </div>
 
@@ -140,17 +118,25 @@ const OnboardingFinish: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800">
-              🎯 Tus Microtareas Generadas
+              🎯 Your Generated Microtasks
             </h2>
             <span className="text-sm text-gray-500">
-              {microTasks.length} tareas listas para empezar
+              {microTasks.length} tasks ready to start
             </span>
           </div>
 
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">Generando tus microtareas personalizadas...</p>
+              <p className="text-gray-600">Loading your personalized microtasks...</p>
+            </div>
+          ) : microTasks.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📝</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">No microtasks found</h3>
+              <p className="text-gray-500">Your microtasks will appear here once they're generated.</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -191,16 +177,16 @@ const OnboardingFinish: React.FC = () => {
         {/* Next Steps */}
         <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-            🚀 Próximos Pasos
+            🚀 Next Steps
           </h2>
           <div className="grid md:grid-cols-3 gap-6 text-center">
             <div className="space-y-3">
               <div className="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">🎯</span>
               </div>
-              <h3 className="font-semibold text-gray-800">Elige tu primera tarea</h3>
+              <h3 className="font-semibold text-gray-800">Choose your first task</h3>
               <p className="text-sm text-gray-600">
-                Comienza con la tarea que te parezca más fácil o motivante
+                Start with the task that seems easiest or most motivating
               </p>
             </div>
             
@@ -208,9 +194,9 @@ const OnboardingFinish: React.FC = () => {
               <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">⏰</span>
               </div>
-              <h3 className="font-semibold text-gray-800">Configura tu timer</h3>
+              <h3 className="font-semibold text-gray-800">Set up your timer</h3>
               <p className="text-sm text-gray-600">
-                Usa el Pomodoro para mantenerte enfocado y productivo
+                Use Pomodoro to stay focused and productive
               </p>
             </div>
             
@@ -218,9 +204,9 @@ const OnboardingFinish: React.FC = () => {
               <div className="w-16 h-16 bg-green-200 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">📝</span>
               </div>
-              <h3 className="font-semibold text-gray-800">Documenta tu progreso</h3>
+              <h3 className="font-semibold text-gray-800">Document your progress</h3>
               <p className="text-sm text-gray-600">
-                Registra cada logro en tu diario de crecimiento
+                Record each achievement in your growth journal
               </p>
             </div>
           </div>
@@ -232,10 +218,10 @@ const OnboardingFinish: React.FC = () => {
             onClick={handleGoToDashboard}
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg"
           >
-            🚀 Ir al Dashboard
+            🚀 Go to Dashboard
           </button>
           <p className="text-gray-500 mt-3 text-sm">
-            Comienza tu viaje hacia la productividad sin límites
+            Start your journey to unlimited productivity
           </p>
         </div>
       </div>
