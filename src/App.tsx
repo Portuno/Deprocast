@@ -8,6 +8,7 @@ import Journal from './pages/Journal';
 import Calendar from './pages/Calendar';
 import Protocols from './pages/Protocols';
 import Profile from './pages/Profile';
+import OnboardingModal from './components/OnboardingModal';
 import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
 import { 
   listTasksByProject, 
@@ -17,6 +18,7 @@ import {
   updateTaskCompletionData
 } from './integrations/supabase/tasks';
 import { listProjects, type DbProject } from './integrations/supabase/projects';
+import { useOnboarding } from './hooks/useOnboarding';
 
 interface TaskCompletionData {
   taskTitle: string;
@@ -31,6 +33,7 @@ interface TaskCompletionData {
 }
 
 function App() {
+  const { isOnboardingRequired, isLoading: isOnboardingLoading, completeOnboarding } = useOnboarding();
   const [projects, setProjects] = useState<DbProject[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState('dashboard');
@@ -173,6 +176,14 @@ function App() {
     }
   };
 
+  const handleOnboardingComplete = async () => {
+    try {
+      await completeOnboarding();
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    }
+  };
+
   const handleTaskComplete = async (completionData: TaskCompletionData) => {
     try {
       // Determine the DB UUID of the task being completed
@@ -302,6 +313,24 @@ function App() {
         );
     }
   };
+
+  // Show onboarding if required
+  if (isOnboardingRequired) {
+    return <OnboardingModal onComplete={handleOnboardingComplete} />;
+  }
+
+  // Show loading while onboarding status is being determined
+  if (isOnboardingLoading) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-4">Setting up your experience...</h1>
+          <p className="text-gray-400">Please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Safety check to ensure navigationItems is available
   if (!navigationItems || navigationItems.length === 0) {
