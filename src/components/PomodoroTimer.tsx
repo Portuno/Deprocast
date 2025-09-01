@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, X, Brain, Target, AlertTriangle, Trophy, Zap, Clock, BarChart3 } from 'lucide-react';
 import MicroWinCelebration from './MicroWinCelebration';
+import { insertTaskObstacle, calculateTimeSpent } from '../integrations/supabase/obstacles';
 
 interface PomodoroTimerProps {
   isActive: boolean;
   onComplete: (data: TaskCompletionData) => void;
   onCancel: () => void;
   taskTitle: string;
+  taskId: string;
+  projectId: string | null;
   estimatedTimeMinutes?: number;
 }
 
@@ -45,6 +48,8 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   onComplete, 
   onCancel, 
   taskTitle,
+  taskId,
+  projectId,
   estimatedTimeMinutes
 }) => {
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
@@ -181,7 +186,7 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     onComplete
   ]);
 
-  const handleObstacleSubmit = useCallback(() => {
+  const handleObstacleSubmit = useCallback(async () => {
     if (obstacleInput.trim() && emotionalState.trim()) {
       const obstacleData: ObstacleData = {
         description: obstacleInput,
@@ -192,13 +197,43 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         aiSolution: getAISolution(obstacleInput, emotionalState, frustrationLevel, timeLeft)
       };
 
+      // Save obstacle to database
+      try {
+        const timeSpentMinutes = calculateTimeSpent(sessionStartTime);
+        const timeRemainingSeconds = timeLeft;
+        
+        await insertTaskObstacle(
+          projectId,
+          taskId,
+          obstacleInput.trim(),
+          emotionalState,
+          frustrationLevel,
+          timeSpentMinutes,
+          timeRemainingSeconds
+        );
+
+        console.log('Obstacle saved to database:', {
+          taskId,
+          projectId,
+          description: obstacleInput.trim(),
+          emotionalState,
+          frustrationLevel,
+          timeSpentMinutes,
+          timeRemainingSeconds
+        });
+      } catch (error) {
+        console.error('Error saving obstacle to database:', error);
+        // Continue with local storage even if DB save fails
+      }
+
+      // Keep local state for immediate UI feedback
       setObstaclesEncountered(prev => [...prev, obstacleData]);
       setObstacleInput('');
       setEmotionalState('');
       setFrustrationLevel(5);
       setShowObstacleResolver(false);
     }
-  }, [obstacleInput, emotionalState, frustrationLevel, timeLeft]);
+  }, [obstacleInput, emotionalState, frustrationLevel, timeLeft, sessionStartTime, taskId, projectId]);
 
   const getAISolution = (obstacle: string, emotion: string, frustration: number, timeLeft: number): string => {
     // AI-powered solutions based on neuroscience

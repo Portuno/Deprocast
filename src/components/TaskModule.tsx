@@ -169,6 +169,8 @@ const TaskModule: React.FC<TaskModuleProps> = ({
           onComplete={handlePomodoroComplete}
           onCancel={handlePomodoroCancel}
           taskTitle={nextTask.title}
+          taskId={nextTask.id}
+          projectId={nextTask.projectId || null}
           estimatedTimeMinutes={nextTask.estimatedTimeMinutes}
         />
       )}
