@@ -16,16 +16,17 @@ const Login: React.FC = () => {
 			const { data: { session } } = await supabase.auth.getSession();
 			if (!mounted) return;
 			if (session) {
-				console.log('Session found in Login, redirecting to /app');
-				navigate('/app', { replace: true });
+				console.log('Session found in Login, checking onboarding status...');
+				// Don't redirect automatically - let the routing system handle it
+				// This prevents the infinite loop between /app and /onboarding
 			}
 		})();
 		const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
 			if (!mounted) return;
 			console.log('Auth state change in Login:', event, session?.user?.email);
 			if (session) {
-				console.log('Session established in Login, redirecting to /app');
-				navigate('/app', { replace: true });
+				console.log('Session established in Login, checking onboarding status...');
+				// Don't redirect automatically - let the routing system handle it
 			}
 		});
 		return () => { subscription.subscription?.unsubscribe(); mounted = false; };
@@ -44,7 +45,8 @@ const Login: React.FC = () => {
 			setError(signInError.message);
 			return;
 		}
-		navigate('/app');
+		// Don't navigate automatically - let the auth state change handle routing
+		console.log('Login successful, auth state will handle routing');
 	};
 
 	const handleGoogleLogin = async () => {

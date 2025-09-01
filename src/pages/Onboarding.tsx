@@ -25,6 +25,19 @@ const Onboarding: React.FC = () => {
     }
   }, [user, navigate]);
 
+  // Prevent going back to /app while onboarding is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (currentSlideIndex > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentSlideIndex]);
+
   const handleNext = () => {
     if (isLastSlide) {
       return; // Don't auto-complete on last slide
@@ -43,13 +56,18 @@ const Onboarding: React.FC = () => {
 
   const handleActivatePersona = async () => {
     setIsActivatingPersona(true);
+    console.log('🎯 Starting persona activation...');
+    
     // Simulate 12-second loading
     await new Promise(resolve => setTimeout(resolve, 12000));
     setIsActivatingPersona(false);
     
+    console.log('✅ Persona activation complete, completing onboarding...');
     // Complete onboarding with collected data
     await completeOnboarding(collectedData);
-    navigate('/dashboard');
+    
+    console.log('🚀 Onboarding complete, navigating to dashboard...');
+    navigate('/dashboard', { replace: true });
   };
 
   const handleFormSubmit = (data: OnboardingFormData) => {
@@ -390,6 +408,8 @@ const Onboarding: React.FC = () => {
   if (!user) {
     return null; // Will redirect
   }
+
+  console.log('🎯 Onboarding page rendered, current slide:', currentSlideIndex + 1);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">

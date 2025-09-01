@@ -327,7 +327,7 @@ function App() {
   useEffect(() => {
     if (isOnboardingRequired === true) {
       console.log('🔄 Redirecting to onboarding...');
-      navigate('/onboarding');
+      navigate('/onboarding', { replace: true });
     }
   }, [isOnboardingRequired, navigate]);
 
