@@ -325,8 +325,10 @@ function App() {
 
   // Redirect to onboarding if required
   useEffect(() => {
+    console.log('🔄 App: useEffect for onboarding redirect triggered', { isOnboardingRequired, currentPath: window.location.pathname });
+    
     if (isOnboardingRequired === true) {
-      console.log('🔄 Redirecting to onboarding...');
+      console.log('🔄 App: Redirecting to onboarding...');
       navigate('/onboarding', { replace: true });
     }
   }, [isOnboardingRequired, navigate]);

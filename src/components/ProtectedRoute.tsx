@@ -62,7 +62,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    console.log('🚫 ProtectedRoute: No user, redirecting to login');
+    console.log('🚫 ProtectedRoute: No user, redirecting to login', { currentPath: window.location.pathname });
     return <Navigate to="/login" replace />;
   }
 

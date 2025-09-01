@@ -53,6 +53,8 @@ export const useAuth = () => {
       async (event, newSession) => {
         if (!mounted) return;
         
+        console.log('🔄 useAuth: Auth state change event:', event, 'User:', newSession?.user?.email);
+        
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           console.log('✅ useAuth: User signed in:', newSession?.user?.email);
           setSession(newSession);
@@ -66,6 +68,13 @@ export const useAuth = () => {
           
           // Redirect to login page after sign out
           window.location.href = '/login';
+        } else if (event === 'INITIAL_SESSION') {
+          console.log('🔄 useAuth: Initial session event:', newSession?.user?.email);
+          if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+            setLoading(false);
+          }
         }
       }
     );

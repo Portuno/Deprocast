@@ -12,13 +12,17 @@ export const useOnboarding = () => {
   const [profile, setProfile] = useState<any>(null);
 
   const checkOnboardingStatus = useCallback(async () => {
+    console.log('🔍 useOnboarding: checkOnboardingStatus called', { isAuthenticated, user: user?.email });
+    
     if (!isAuthenticated || !user) {
+      console.log('🔍 useOnboarding: No auth or user, setting loading false');
       setIsLoading(false);
       setIsOnboardingRequired(null);
       return;
     }
 
     try {
+      console.log('🔍 useOnboarding: Starting profile check...');
       setIsLoading(true);
       const userProfile = await getOrCreateProfile();
       
@@ -26,7 +30,9 @@ export const useOnboarding = () => {
         setProfile(userProfile);
         const requiresOnboarding = !userProfile.onboarding_completed;
         setIsOnboardingRequired(requiresOnboarding);
-        console.log('🔍 Onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
+        console.log('🔍 useOnboarding: Profile loaded, onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
+      } else {
+        console.log('🔍 useOnboarding: No profile returned');
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);

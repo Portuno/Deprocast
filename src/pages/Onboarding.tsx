@@ -12,7 +12,7 @@ const Onboarding: React.FC = () => {
   const [isActivatingPersona, setIsActivatingPersona] = useState(false);
   
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { completeOnboarding } = useOnboarding();
 
   const currentSlide = onboardingFlow.onboardingFlow[currentSlideIndex];
@@ -20,8 +20,13 @@ const Onboarding: React.FC = () => {
 
   // Redirect if user is not authenticated
   useEffect(() => {
+    console.log('🎯 Onboarding: useEffect for auth check', { user: user?.email, currentPath: window.location.pathname });
+    
     if (!user) {
-      navigate('/login');
+      console.log('🎯 Onboarding: No user, redirecting to login');
+      navigate('/login', { replace: true });
+    } else {
+      console.log('🎯 Onboarding: User authenticated, staying on onboarding');
     }
   }, [user, navigate]);
 
@@ -404,6 +409,19 @@ const Onboarding: React.FC = () => {
         );
     }
   };
+
+  // Show loading while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-4 text-gray-700">Setting up your onboarding...</h1>
+          <p className="text-gray-500">Please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null; // Will redirect

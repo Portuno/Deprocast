@@ -26,11 +26,7 @@ const AppRouter: React.FC = () => {
 				<Route path="/reset-password" element={<ResetPassword />} />
 				<Route
 					path="/onboarding"
-					element={
-						<ProtectedRoute>
-							<Onboarding />
-						</ProtectedRoute>
-					}
+					element={<Onboarding />}
 				/>
 				<Route
 					path="/app/*"
