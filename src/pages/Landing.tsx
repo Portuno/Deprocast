@@ -135,18 +135,6 @@ const Landing: React.FC = () => {
 						The neuroscience-based protocol to rewire your brain for action.
 					</p>
 					
-					{/* User Testimonial */}
-					<div className="mt-8 max-w-2xl mx-auto">
-						<div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8">
-							<blockquote className="text-lg md:text-xl text-gray-100 italic">
-								"Finally, a system that works with my brain!"
-							</blockquote>
-							<cite className="mt-3 block text-sm md:text-base text-teal-400 font-medium">
-								— Sarah Chen, Developer
-							</cite>
-						</div>
-					</div>
-					
 					{/* CTA Button */}
 					<div className="mt-12 flex items-center justify-center">
 						<Link
