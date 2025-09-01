@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Pause, RotateCcw, X, Brain, Target, AlertTriangle, Trophy, Zap, Clock, BarChart3 } from 'lucide-react';
+import { Play, Pause, RotateCcw, X, Brain, Target, AlertTriangle, Trophy, Zap, Clock, BarChart3, Search, Globe, MessageSquare, Coffee, Focus } from 'lucide-react';
 import MicroWinCelebration from './MicroWinCelebration';
 import { insertTaskObstacle, calculateTimeSpent } from '../integrations/supabase/obstacles';
 
@@ -101,6 +101,70 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       completed: false
     }
   ];
+
+  // Progress Ring Component
+  const ProgressRing = ({ timeLeft, totalTime, phase }: { timeLeft: number; totalTime: number; phase: string }) => {
+    const progress = ((totalTime - timeLeft) / totalTime) * 100;
+    const strokeWidth = 8;
+    const radius = 120;
+    const normalizedRadius = radius - strokeWidth * 2;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    const getColor = () => {
+      switch (phase) {
+        case 'work': return '#60A5FA'; // blue-400
+        case 'break': return '#34D399'; // green-400
+        case 'longBreak': return '#A78BFA'; // purple-400
+        default: return '#60A5FA';
+      }
+    };
+
+    return (
+      <div className="relative">
+        <svg
+          height={radius * 2}
+          width={radius * 2}
+          className="transform -rotate-90"
+        >
+          {/* Background circle */}
+          <circle
+            stroke="#374151"
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+          {/* Progress circle */}
+          <circle
+            stroke={getColor()}
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference + ' ' + circumference}
+            style={{ strokeDashoffset }}
+            strokeLinecap="round"
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        
+        {/* Timer text in center */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className={`text-7xl font-bold tracking-tight ${
+              phase === 'work' ? 'text-blue-400' : 
+              phase === 'break' ? 'text-green-400' : 'text-purple-400'
+            }`}>
+              {formatTime(timeLeft)}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -467,160 +531,202 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900/95 border border-gray-700/50 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">🚀 Pomodoro+ Protocol</h2>
-          <p className="text-gray-400">Neuroscience-backed focus session for: <span className="text-blue-400 font-medium">{taskTitle}</span></p>
-          {estimatedTimeMinutes && (
-            <div className="text-sm text-gray-500 mt-2">
-              Estimated: {estimatedTimeMinutes} minutes
-            </div>
-          )}
-        </div>
-
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900/98 border border-gray-700/50 rounded-3xl p-12 max-w-4xl w-full max-h-[95vh] overflow-y-auto">
         {/* Dopamine Priming Prompt */}
         {showDopaminePrompt && (
-          <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-xl p-6 mb-6 text-center">
-            <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-3">🎯 Dopamine Priming</h3>
-            <p className="text-gray-300 mb-4">
-              Close your eyes for 10 seconds and visualize yourself completing this task successfully. 
-              Feel the satisfaction and pride of accomplishment.
-            </p>
+          <div className="text-center mb-12">
+            <div className="mb-8">
+              <Brain className="w-16 h-16 text-purple-400 mx-auto mb-6" />
+              <h2 className="text-3xl font-bold text-white mb-4">🎯 Ready to Focus?</h2>
+              <p className="text-xl text-gray-300 mb-2 max-w-2xl mx-auto leading-relaxed">
+                {taskTitle}
+              </p>
+              <p className="text-gray-400 mb-8">
+                Close your eyes, visualize success, then let's begin.
+              </p>
+            </div>
             <button
               onClick={startTimer}
-              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
+              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white px-12 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 shadow-2xl"
             >
-              <Zap className="w-5 h-5 inline mr-2" />
-              Let's Go!
+              <Zap className="w-6 h-6 inline mr-3" />
+              Start Focus Session
             </button>
           </div>
         )}
 
-        {/* Timer Display */}
-        <div className="text-center mb-6">
-          <div className={`text-6xl font-bold mb-2 ${
-            currentPhase === 'work' ? 'text-blue-400' : 
-            currentPhase === 'break' ? 'text-green-400' : 'text-purple-400'
-          }`}>
-            {formatTime(timeLeft)}
-          </div>
-          <div className="text-lg text-gray-400 mb-4">
-            {currentPhase === 'work' ? 'Focus Session' : 
-             currentPhase === 'break' ? 'Dopamine Celebration Break' : 'Long Break'}
-          </div>
-          
-          {/* Timer Controls */}
-          <div className="flex items-center justify-center gap-4">
-            {!isRunning ? (
+        {/* Main Timer Section - The Heart of the Interface */}
+        {!showDopaminePrompt && (
+          <div className="text-center mb-12">
+            {/* Huge Timer with Progress Ring */}
+            <div className="flex justify-center mb-8">
+              <ProgressRing 
+                timeLeft={timeLeft} 
+                totalTime={currentPhase === 'work' ? 25 * 60 : currentPhase === 'break' ? 5 * 60 : 15 * 60} 
+                phase={currentPhase} 
+              />
+            </div>
+
+            {/* Clear Session Label */}
+            <div className="mb-8">
+              <h2 className={`text-3xl font-bold mb-2 ${
+                currentPhase === 'work' ? 'text-blue-400' : 
+                currentPhase === 'break' ? 'text-green-400' : 'text-purple-400'
+              }`}>
+                {currentPhase === 'work' ? 'Focus Session' : 
+                 currentPhase === 'break' ? 'Break Time' : 'Long Break'}
+              </h2>
+              <p className="text-gray-400 text-lg">
+                {currentPhase === 'work' ? taskTitle : 'Recharge your mind'}
+              </p>
+            </div>
+
+            {/* Large, Intuitive Timer Controls */}
+            <div className="flex items-center justify-center gap-6 mb-8">
+              {!isRunning ? (
+                <button
+                  onClick={startTimer}
+                  className="bg-green-600 hover:bg-green-500 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
+                >
+                  <Play className="w-6 h-6 mr-3" />
+                  Resume
+                </button>
+              ) : (
+                <button
+                  onClick={pauseTimer}
+                  className="bg-yellow-600 hover:bg-yellow-500 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
+                >
+                  <Pause className="w-6 h-6 mr-3" />
+                  Pause
+                </button>
+              )}
               <button
-                onClick={startTimer}
-                className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+                onClick={resetTimer}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
               >
-                <Play className="w-5 h-5 inline mr-2" />
-                Resume
+                <RotateCcw className="w-6 h-6 mr-3" />
+                Reset
               </button>
-            ) : (
-              <button
-                onClick={pauseTimer}
-                className="bg-yellow-600 hover:bg-yellow-500 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                <Pause className="w-5 h-5 inline mr-2" />
-                Pause
-              </button>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* Subtle Execution Rules - Icon Cards */}
+        {!showDopaminePrompt && (
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-4">
+              {executionRules.map((rule) => (
+                <div
+                  key={rule.id}
+                  className="group relative"
+                  title={rule.description}
+                >
+                  <div className={`p-3 rounded-full border-2 transition-all duration-200 cursor-help ${
+                    rule.completed 
+                      ? 'bg-green-500/20 border-green-500/50 text-green-400' 
+                      : 'bg-gray-800/40 border-gray-600/40 text-gray-400 hover:border-gray-500/60 hover:text-gray-300'
+                  }`}>
+                    {rule.icon}
+                  </div>
+                  
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                    <div className="font-medium mb-1">{rule.title}</div>
+                    <div className="text-xs text-gray-400">{rule.description}</div>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Minimized Obstacle Management */}
+        {!showDopaminePrompt && (
+          <div className="fixed bottom-8 right-8">
             <button
-              onClick={resetTimer}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+              onClick={() => setShowObstacleResolver(!showObstacleResolver)}
+              className={`bg-orange-500 hover:bg-orange-400 text-white p-4 rounded-full shadow-2xl transition-all duration-200 hover:scale-110 ${
+                showObstacleResolver ? 'ring-4 ring-orange-400/50' : ''
+              }`}
+              title="Stuck? Get help overcoming obstacles"
             >
-              <RotateCcw className="w-5 h-5 inline mr-2" />
-              Reset
+              <AlertTriangle className="w-6 h-6" />
             </button>
           </div>
-        </div>
+        )}
 
-        {/* Execution Rules */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">📋 Execution Rules</h3>
-          <div className="space-y-3">
-            {executionRules.map((rule) => (
-              <div
-                key={rule.id}
-                className={`flex items-start space-x-3 p-3 rounded-lg border transition-all duration-200 ${
-                  rule.completed 
-                    ? 'bg-green-500/10 border-green-500/30' 
-                    : 'bg-gray-800/30 border-gray-600/30'
-                }`}
-              >
-                {rule.icon}
-                <div className="flex-1">
-                  <h4 className={`font-medium ${
-                    rule.completed ? 'text-green-400' : 'text-white'
-                  }`}>
-                    {rule.title}
-                  </h4>
-                  <p className={`text-sm ${
-                    rule.completed ? 'text-green-300' : 'text-gray-400'
-                  }`}>
-                    {rule.description}
-                  </p>
-                </div>
-                {rule.completed && (
-                  <div className="text-green-400">
-                    <Trophy className="w-5 h-5" />
-                  </div>
-                )}
-              </div>
-            ))}
+        {/* Bottom Action Buttons with Clear Hierarchy */}
+        {!showDopaminePrompt && (
+          <div className="flex justify-center gap-6">
+            {/* Primary Action - Task Completed (Largest, Most Prominent) */}
+            <button
+              onClick={completePomodoro}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white px-12 py-4 rounded-xl font-bold text-xl transition-all duration-200 hover:scale-105 shadow-2xl flex items-center"
+            >
+              <Trophy className="w-7 h-7 mr-3" />
+              Task Completed
+            </button>
+            
+            {/* Secondary Action - Cancel (Smaller, Less Prominent) */}
+            <button
+              onClick={onCancel}
+              className="bg-gray-600 hover:bg-gray-500 text-white px-8 py-4 rounded-xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
+            >
+              <X className="w-5 h-5 mr-2" />
+              Cancel
+            </button>
           </div>
-        </div>
+        )}
 
-        {/* Real-Time Obstacle Resolution */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowObstacleResolver(!showObstacleResolver)}
-            className="w-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-400/30 rounded-lg p-4 text-left hover:from-orange-400/30 hover:to-red-400/30 transition-all duration-200"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <AlertTriangle className="w-6 h-6 text-orange-400" />
-                <div>
-                  <h4 className="font-medium text-white">🚨 Real-Time Obstacle Resolution</h4>
-                  <p className="text-sm text-gray-400">Stuck? Get immediate AI-powered solutions</p>
-                </div>
-              </div>
-              <div className={`transform transition-transform duration-200 ${
-                showObstacleResolver ? 'rotate-180' : ''
-              }`}>
-                ▼
-              </div>
+        {/* Progress Indicator */}
+        {!showDopaminePrompt && (
+          <div className="mt-12 text-center">
+            <div className="text-sm text-gray-400 mb-3">
+              Session Progress: {completedPomodoros} completed
             </div>
-          </button>
+            <div className="w-48 bg-gray-700 rounded-full h-2 mx-auto">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(completedPomodoros % 4) * 25}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
 
-          {showObstacleResolver && (
-            <div className="mt-4 space-y-4">
+      {/* Obstacle Resolution Modal */}
+      {showObstacleResolver && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-orange-500/50 rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <AlertTriangle className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">Need Help?</h3>
+              <p className="text-gray-400">Let's get you unstuck and back on track</p>
+            </div>
+
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">What's blocking you?</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">What's blocking you?</label>
                 <textarea
                   value={obstacleInput}
                   onChange={(e) => setObstacleInput(e.target.value)}
-                  placeholder="Describe the obstacle you're facing..."
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none"
-                  rows={3}
+                  placeholder="Describe what's stopping you from moving forward..."
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  rows={4}
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">How are you feeling?</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
                   <select
                     value={emotionalState}
                     onChange={(e) => setEmotionalState(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value="">Select emotional state...</option>
+                    <option value="">Select state...</option>
                     <option value="frustrated">😤 Frustrated</option>
                     <option value="overwhelmed">😰 Overwhelmed</option>
                     <option value="bored">😐 Bored</option>
@@ -630,11 +736,11 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Frustration Level (1-10)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Frustration (1-10)</label>
                   <select
                     value={frustrationLevel}
                     onChange={(e) => setFrustrationLevel(Number(e.target.value))}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                       <option key={num} value={num}>{num}</option>
@@ -642,48 +748,26 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                   </select>
                 </div>
               </div>
-              <button
-                onClick={handleObstacleSubmit}
-                disabled={!obstacleInput.trim() || !emotionalState}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
-              >
-                Get AI Solution
-              </button>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleObstacleSubmit}
+                  disabled={!obstacleInput.trim() || !emotionalState}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+                >
+                  Get AI Solution
+                </button>
+                <button
+                  onClick={() => setShowObstacleResolver(false)}
+                  className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <button
-            onClick={completePomodoro}
-            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105"
-          >
-            <Trophy className="w-5 h-5 inline mr-2" />
-            Complete Session
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-colors duration-200"
-          >
-            <X className="w-5 h-5 inline mr-2" />
-            Cancel
-          </button>
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="mt-6 text-center">
-          <div className="text-sm text-gray-400 mb-2">
-            Completed Pomodoros: {completedPomodoros}
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(completedPomodoros % 4) * 25}%` }}
-            ></div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
