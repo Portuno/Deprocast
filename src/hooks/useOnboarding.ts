@@ -36,8 +36,8 @@ export const useOnboarding = () => {
         setProfile(userProfile);
         const requiresOnboarding = !userProfile.onboarding_completed;
         setIsOnboardingRequired(requiresOnboarding);
-        // Only log when status changes
-        if (requiresOnboarding !== isOnboardingRequired) {
+        // Only log when status changes and it's not the initial load
+        if (requiresOnboarding !== isOnboardingRequired && isOnboardingRequired !== null) {
           console.log('🔍 useOnboarding: Onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
         }
       }
