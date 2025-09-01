@@ -214,7 +214,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 h-full flex flex-col">
-      <div className="flex-1 space-y-3">
+      <div className="flex-1 space-y-3 overflow-y-auto">
         {Object.entries(slide.dataCollection).map(([key, type]) => (
           <div key={key} className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 capitalize">
@@ -227,7 +227,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ slide, onSubmit }) => {
       
       <button
         type="submit"
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0"
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0 mt-auto"
       >
         {slide.callToAction}
       </button>

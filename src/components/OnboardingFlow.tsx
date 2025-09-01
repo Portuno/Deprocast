@@ -62,49 +62,55 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
     if (slide.type === 'taskCreation' && slide.slideNumber === 9) {
       return (
-        <button
-          onClick={handleGenerateTasks}
-          disabled={isGeneratingTasks}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isGeneratingTasks ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Generating Micro-Tasks...</span>
-            </div>
-          ) : (
-            slide.callToAction
-          )}
-        </button>
+        <div className="w-full flex flex-col justify-end h-full">
+          <button
+            onClick={handleGenerateTasks}
+            disabled={isGeneratingTasks}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingTasks ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Generating Micro-Tasks...</span>
+              </div>
+            ) : (
+              slide.callToAction
+            )}
+          </button>
+        </div>
       );
     }
 
     if (slide.type === 'summary' && slide.slideNumber === 15) {
       return (
-        <button
-          onClick={handleActivatePersona}
-          disabled={isActivatingPersona}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isActivatingPersona ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Activating User Persona...</span>
-            </div>
-          ) : (
-            slide.callToAction
-          )}
-        </button>
+        <div className="w-full flex flex-col justify-end h-full">
+          <button
+            onClick={handleActivatePersona}
+            disabled={isActivatingPersona}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isActivatingPersona ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Activating User Persona...</span>
+              </div>
+            ) : (
+              slide.callToAction
+            )}
+          </button>
+        </div>
       );
     }
 
     return (
-      <button
-        onClick={handleNext}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-      >
-        {slide.callToAction}
-      </button>
+      <div className="w-full flex flex-col justify-end h-full">
+        <button
+          onClick={handleNext}
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        >
+          {slide.callToAction}
+        </button>
+      </div>
     );
   };
 
@@ -201,8 +207,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </p>
           </div>
 
-          {/* Interactive Content - Better space utilization */}
-          <div className="flex-1 flex flex-col justify-center min-h-0">
+          {/* Interactive Content - Fixed height to ensure consistent layout */}
+          <div className="flex-1 flex flex-col justify-start min-h-0">
             <div className="space-y-2 md:space-y-3">
               {renderSlideContent(currentSlide)}
             </div>
