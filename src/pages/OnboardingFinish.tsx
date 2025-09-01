@@ -40,7 +40,7 @@ const OnboardingFinish: React.FC = () => {
   }, [user]);
 
   const handleGoToDashboard = () => {
-    navigate('/dashboard', { replace: true });
+    navigate('/app', { replace: true });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -218,10 +218,10 @@ const OnboardingFinish: React.FC = () => {
             onClick={handleGoToDashboard}
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg"
           >
-            🚀 Go to Dashboard
+                         🚀 Go to App
           </button>
           <p className="text-gray-500 mt-3 text-sm">
-            Start your journey to unlimited productivity
+            Access your personalized productivity workspace
           </p>
         </div>
       </div>
