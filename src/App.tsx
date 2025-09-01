@@ -43,6 +43,7 @@ function App() {
   const [nextTaskId, setNextTaskId] = useState<string | null>(null);
   const [activePomodoroTaskId, setActivePomodoroTaskId] = useState<string | null>(null);
   const [completionHistory, setCompletionHistory] = useState<TaskCompletionData[]>([]);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -180,6 +181,8 @@ function App() {
   const handleOnboardingComplete = async (data?: any) => {
     try {
       await completeOnboarding(data);
+      // Reset redirecting state
+      setIsRedirecting(false);
       // Refresh projects and tasks after onboarding completion
       if (data) {
         const refreshedProjects = await listProjects().catch(() => [] as DbProject[]);
@@ -325,13 +328,14 @@ function App() {
 
   // Redirect to onboarding if required
   useEffect(() => {
-    console.log('🔄 App: useEffect for onboarding redirect triggered', { isOnboardingRequired, currentPath: window.location.pathname });
+    console.log('🔄 App: useEffect for onboarding redirect triggered', { isOnboardingRequired, currentPath: window.location.pathname, isRedirecting });
     
-    if (isOnboardingRequired === true) {
+    if (isOnboardingRequired === true && !isRedirecting) {
       console.log('🔄 App: Redirecting to onboarding...');
+      setIsRedirecting(true);
       navigate('/onboarding', { replace: true });
     }
-  }, [isOnboardingRequired, navigate]);
+  }, [isOnboardingRequired, navigate, isRedirecting]);
 
   // Don't render anything if onboarding is required (will redirect)
   if (isOnboardingRequired === true) {

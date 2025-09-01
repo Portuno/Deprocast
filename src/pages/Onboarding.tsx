@@ -20,15 +20,24 @@ const Onboarding: React.FC = () => {
 
   // Redirect if user is not authenticated
   useEffect(() => {
-    console.log('🎯 Onboarding: useEffect for auth check', { user: user?.email, currentPath: window.location.pathname });
+    console.log('🎯 Onboarding: useEffect for auth check', { user: user?.email, currentPath: window.location.pathname, authLoading });
+    
+    // Don't redirect immediately if auth is still loading
+    if (authLoading) {
+      console.log('🎯 Onboarding: Auth still loading, waiting...');
+      return;
+    }
     
     if (!user) {
       console.log('🎯 Onboarding: No user, redirecting to login');
-      navigate('/login', { replace: true });
+      // Add a small delay to allow state to sync
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 100);
     } else {
       console.log('🎯 Onboarding: User authenticated, staying on onboarding');
     }
-  }, [user, navigate]);
+  }, [user, navigate, authLoading]);
 
   // Prevent going back to /app while onboarding is in progress
   useEffect(() => {
@@ -418,13 +427,23 @@ const Onboarding: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
           <h1 className="text-2xl font-bold mb-4 text-gray-700">Setting up your onboarding...</h1>
           <p className="text-gray-500">Please wait...</p>
+          <p className="text-sm text-gray-400 mt-2">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return null; // Will redirect
+    console.log('🎯 Onboarding: No user, showing loading...');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-4 text-gray-700">Redirecting...</h1>
+          <p className="text-gray-500">Please wait...</p>
+        </div>
+      </div>
+    );
   }
 
   console.log('🎯 Onboarding page rendered, current slide:', currentSlideIndex + 1);

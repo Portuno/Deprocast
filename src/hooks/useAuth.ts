@@ -70,7 +70,7 @@ export const useAuth = () => {
           window.location.href = '/login';
         } else if (event === 'INITIAL_SESSION') {
           console.log('🔄 useAuth: Initial session event:', newSession?.user?.email);
-          if (newSession) {
+          if (newSession && !session) { // Only update if we don't already have a session
             setSession(newSession);
             setUser(newSession.user);
             setLoading(false);
