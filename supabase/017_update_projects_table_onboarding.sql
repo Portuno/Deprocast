@@ -16,15 +16,22 @@ SET
   target_completion_date = COALESCE(target_completion_date, (CURRENT_DATE + INTERVAL '30 days')::DATE),
   project_type = COALESCE(project_type, 'other'),
   perceived_difficulty = COALESCE(perceived_difficulty, 5),
-  motivation = COALESCE(motivation, 'Project created during onboarding'),
-  known_obstacles = COALESCE(known_obstacles, ARRAY['Time management', 'Focus']),
-  skills_needed = COALESCE(skills_needed, ARRAY['Planning', 'Execution'])
+  motivation = COALESCE(motivation, 'Project created during onboarding')
 WHERE target_completion_date IS NULL 
    OR project_type IS NULL 
    OR perceived_difficulty IS NULL 
-   OR motivation IS NULL 
-   OR known_obstacles IS NULL 
-   OR skills_needed IS NULL;
+   OR motivation IS NULL;
+
+-- Update array fields separately to avoid type conflicts
+UPDATE public.projects 
+SET 
+  known_obstacles = ARRAY['Time management', 'Focus']
+WHERE known_obstacles IS NULL;
+
+UPDATE public.projects 
+SET 
+  skills_needed = ARRAY['Planning', 'Execution']
+WHERE skills_needed IS NULL;
 
 -- Add indexes for better performance
 CREATE INDEX IF NOT EXISTS projects_type_idx ON public.projects(project_type);
