@@ -35,7 +35,7 @@ export type NewProjectPayload = {
   project_type?: string | null;
   perceived_difficulty?: number | null;
   motivation?: string | null;
-  known_obstacles?: string[] | null;
+  known_obstacles?: string | string[] | null;
   skills_needed?: string[] | null;
 };
 
@@ -52,7 +52,11 @@ export const createProject = async (payload: NewProjectPayload): Promise<DbProje
     category: payload.project_type || 'other',
     motivation: payload.motivation || 'Project created during onboarding',
     perceived_difficulty: payload.perceived_difficulty || 5,
-    known_obstacles: payload.known_obstacles ? payload.known_obstacles.join(', ') : 'Time management, Focus',
+    known_obstacles: payload.known_obstacles 
+      ? (Array.isArray(payload.known_obstacles) 
+          ? payload.known_obstacles.join(', ') 
+          : payload.known_obstacles)
+      : 'Time management, Focus',
     skills_resources_needed: payload.skills_needed || ['Planning', 'Execution'],
   };
   

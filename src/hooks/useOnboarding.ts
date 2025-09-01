@@ -20,10 +20,7 @@ export const useOnboarding = () => {
       return;
     }
 
-    console.log('🔍 useOnboarding: checkOnboardingStatus called', { isAuthenticated, user: user?.email });
-    
     if (!isAuthenticated || !user) {
-      console.log('🔍 useOnboarding: No auth or user, setting loading false');
       setIsLoading(false);
       setIsOnboardingRequired(null);
       hasCheckedOnboarding.current = false;
@@ -32,7 +29,6 @@ export const useOnboarding = () => {
     }
 
     try {
-      console.log('🔍 useOnboarding: Starting profile check...');
       setIsLoading(true);
       const userProfile = await getOrCreateProfile();
       
@@ -40,9 +36,7 @@ export const useOnboarding = () => {
         setProfile(userProfile);
         const requiresOnboarding = !userProfile.onboarding_completed;
         setIsOnboardingRequired(requiresOnboarding);
-        console.log('🔍 useOnboarding: Profile loaded, onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
-      } else {
-        console.log('🔍 useOnboarding: No profile returned');
+        console.log('🔍 useOnboarding: Onboarding status:', requiresOnboarding ? 'Required' : 'Completed');
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);

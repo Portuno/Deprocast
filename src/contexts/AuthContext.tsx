@@ -75,15 +75,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, newSession) => {
         if (!mounted) return;
         
-        console.log('🔄 AuthProvider: Auth state change event:', event, 'User:', newSession?.user?.email);
+        // Only log significant events, not every token refresh
+        if (event === 'SIGNED_IN') {
+          console.log('✅ AuthProvider: User signed in:', newSession?.user?.email);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚪 AuthProvider: User signed out');
+        }
         
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('✅ AuthProvider: User signed in:', newSession?.user?.email);
           setSession(newSession);
           setUser(newSession?.user ?? null);
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 AuthProvider: User signed out');
           setSession(null);
           setUser(null);
           setLoading(false);
@@ -91,7 +94,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Redirect to login page after sign out
           window.location.href = '/login';
         } else if (event === 'INITIAL_SESSION') {
-          console.log('🔄 AuthProvider: Initial session event:', newSession?.user?.email);
           if (newSession && !session) { // Only update if we don't already have a session
             setSession(newSession);
             setUser(newSession.user);
