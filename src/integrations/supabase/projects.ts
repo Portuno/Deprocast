@@ -31,20 +31,34 @@ export const listProjects = async (): Promise<DbProject[]> => {
 export type NewProjectPayload = {
   title: string;
   description: string;
-  target_completion_date: string;
-  category?: string | null;
-  motivation?: string | null;
+  target_completion_date?: string;
+  project_type?: string | null;
   perceived_difficulty?: number | null;
-  known_obstacles?: string | null;
-  skills_resources_needed?: string[] | null;
+  motivation?: string | null;
+  known_obstacles?: string[] | null;
+  skills_needed?: string[] | null;
 };
 
 export const createProject = async (payload: NewProjectPayload): Promise<DbProject> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+  
+  // Map the new payload structure to the database structure
+  const dbPayload = {
+    user_id: user.id,
+    title: payload.title,
+    description: payload.description,
+    target_completion_date: payload.target_completion_date || (new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10), // Default to 30 days from now
+    category: payload.project_type || 'other',
+    motivation: payload.motivation || 'Project created during onboarding',
+    perceived_difficulty: payload.perceived_difficulty || 5,
+    known_obstacles: payload.known_obstacles ? payload.known_obstacles.join(', ') : 'Time management, Focus',
+    skills_resources_needed: payload.skills_needed || ['Planning', 'Execution'],
+  };
+  
   const { data, error } = await supabase
     .from('projects')
-    .insert({ ...payload, user_id: user.id })
+    .insert(dbPayload)
     .select('*')
     .single();
   if (error) throw error;

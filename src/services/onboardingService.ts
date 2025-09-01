@@ -42,7 +42,7 @@ export const processOnboardingData = async (onboardingData: OnboardingFormData):
     const journalEntry = await createJournalEntry({
       title: `Onboarding Complete - ${projectData.title}`,
       content: `Successfully completed onboarding and created project: ${projectData.title}. 
-      
+       
 Project Details:
 - Description: ${projectData.description}
 - Target Date: ${projectData.target_completion_date}
@@ -56,8 +56,7 @@ Distraction Susceptibility: ${onboardingData.distractionSusceptibility}
 Imposter Syndrome Level: ${onboardingData.imposterSyndrome}
 
 Ready to begin the productivity journey! 🚀`,
-      mood_rating: 8,
-      energy_level: onboardingData.energyLevel as string,
+      mood: 'great' as const,
       tags: ['onboarding', 'project-creation', 'new-start'],
     });
 
@@ -132,7 +131,7 @@ const generateMicroTasks = (projectData: ProjectData) => {
     });
   }
 
-  if (projectData.skills_needed.length > 0) {
+  if (projectData.skills_needed && projectData.skills_needed.length > 0) {
     baseTasks.push({
       title: 'Skill Development Planning',
       description: `Create a learning plan for: ${projectData.skills_needed.slice(0, 3).join(', ')}`,

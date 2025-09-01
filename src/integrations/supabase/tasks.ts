@@ -168,4 +168,50 @@ export async function refreshProjectTasks(projectId: string): Promise<Task[]> {
   }));
 }
 
+// Function to create a single task for onboarding
+export async function createTask(payload: {
+  title: string;
+  description: string;
+  project_id: string;
+  estimated_time_minutes: number;
+  priority: 'high' | 'medium' | 'low';
+  status: 'pending' | 'in-progress' | 'completed';
+}): Promise<Task> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('micro_tasks')
+    .insert({
+      user_id: user.id,
+      project_id: payload.project_id,
+      title: payload.title,
+      description: payload.description,
+      status: payload.status,
+      priority: payload.priority,
+      estimated_minutes: payload.estimated_time_minutes,
+      task_id_external: crypto.randomUUID(), // Generate a unique external ID
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description ?? undefined,
+    status: data.status,
+    priority: data.priority,
+    projectId: payload.project_id,
+    estimatedTimeMinutes: data.estimated_minutes ?? undefined,
+    actualTimeMinutes: data.actual_minutes ?? undefined,
+    completionDate: data.completion_date ?? undefined,
+    dopamineScore: data.dopamine_score ?? undefined,
+    taskType: data.task_type ?? undefined,
+    resistanceLevel: data.resistance_level ?? undefined,
+    dependencyTaskId: data.dependency_task_external_id ?? undefined,
+  };
+}
+
 

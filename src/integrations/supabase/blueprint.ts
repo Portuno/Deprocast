@@ -205,7 +205,8 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      profileData = minimalProfile;
+      // profileData is const, so we need to create a new object
+      Object.assign(profileData, minimalProfile);
     }
 
     console.log('Data fetched successfully:', {
