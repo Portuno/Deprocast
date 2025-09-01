@@ -8,7 +8,7 @@ import Journal from './pages/Journal';
 import Calendar from './pages/Calendar';
 import Protocols from './pages/Protocols';
 import Profile from './pages/Profile';
-import OnboardingModal from './components/OnboardingModal';
+import OnboardingFlow from './components/OnboardingFlow';
 import { tasks as initialTasks, navigationItems, Task } from './data/mockData';
 import { 
   listTasksByProject, 
@@ -176,9 +176,9 @@ function App() {
     }
   };
 
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = async (data?: any) => {
     try {
-      await completeOnboarding();
+      await completeOnboarding(data);
     } catch (error) {
       console.error('Error completing onboarding:', error);
     }
@@ -316,7 +316,7 @@ function App() {
 
   // Show onboarding if required
   if (isOnboardingRequired) {
-    return <OnboardingModal onComplete={handleOnboardingComplete} />;
+    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
 
   // Show loading while onboarding status is being determined
