@@ -151,34 +151,78 @@ export interface UserBlueprint {
 }
 
 export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
 
-  // Get all user data in parallel
-  const [
-    profile,
-    projects,
-    tasks,
-    journalEntries,
-    obstacles,
-    calendarEvents
-  ] = await Promise.all([
-    getOrCreateProfile(),
-    fetchAllProjects(),
-    fetchAllTasks(),
-    fetchAllJournalEntries(),
-    fetchAllObstacles(),
-    fetchRecentCalendarEvents()
-  ]);
+    console.log('Generating blueprint for user:', user.id);
 
-  if (!profile) throw new Error('Profile not found');
+    // Get all user data in parallel with error handling
+    const [
+      profile,
+      projects,
+      tasks,
+      journalEntries,
+      obstacles,
+      calendarEvents
+    ] = await Promise.allSettled([
+      getOrCreateProfile(),
+      fetchAllProjects(),
+      fetchAllTasks(),
+      fetchAllJournalEntries(),
+      fetchAllObstacles(),
+      fetchRecentCalendarEvents()
+    ]);
+
+    // Handle individual failures gracefully
+    const profileData = profile.status === 'fulfilled' ? profile.value : null;
+    const projectsData = projects.status === 'fulfilled' ? projects.value : [];
+    const tasksData = tasks.status === 'fulfilled' ? tasks.value : [];
+    const journalData = journalEntries.status === 'fulfilled' ? journalEntries.value : [];
+    const obstaclesData = obstacles.status === 'fulfilled' ? obstacles.value : [];
+    const calendarData = calendarEvents.status === 'fulfilled' ? calendarEvents.value : [];
+
+    if (!profileData) {
+      console.warn('Profile not found, using default values');
+      // Create a minimal profile structure
+      const minimalProfile = {
+        personalInfo: {
+          name: 'User',
+          email: user.email || 'user@example.com',
+          timezone: 'UTC',
+          workingHours: { start: '09:00', end: '17:00' }
+        },
+        preferences: {
+          theme: 'dark',
+          notifications: true,
+          focusMode: true
+        },
+        goals: {
+          dailyFocusHours: 4,
+          weeklyTasks: 10,
+          monthlyProjects: 2
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      profileData = minimalProfile;
+    }
+
+    console.log('Data fetched successfully:', {
+      profile: !!profileData,
+      projects: projectsData.length,
+      tasks: tasksData.length,
+      journal: journalData.length,
+      obstacles: obstaclesData.length,
+      calendar: calendarData.length
+    });
 
   // Calculate insights and metrics
-  const taskMetrics = calculateTaskMetrics(tasks);
-  const journalMetrics = calculateJournalMetrics(journalEntries);
-  const obstacleMetrics = calculateObstacleMetrics(obstacles);
-  const calendarMetrics = calculateCalendarMetrics(calendarEvents);
-  const behavioralInsights = calculateBehavioralInsights(tasks, journalEntries, obstacles, profile);
+  const taskMetrics = calculateTaskMetrics(tasksData);
+  const journalMetrics = calculateJournalMetrics(journalData);
+  const obstacleMetrics = calculateObstacleMetrics(obstaclesData);
+  const calendarMetrics = calculateCalendarMetrics(calendarData);
+  const behavioralInsights = calculateBehavioralInsights(tasksData, journalData, obstaclesData, profileData);
 
   const blueprint: UserBlueprint = {
     generatedAt: new Date().toISOString(),
@@ -186,24 +230,24 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
     
     profile: {
       personalInfo: {
-        name: profile.full_name || 'Anonymous',
-        email: profile.email,
-        timezone: profile.timezone || 'UTC',
-        workingHours: profile.working_hours || '9:00 AM - 6:00 PM',
-        focusGoal: profile.focus_goal || '4 hours',
-        theme: profile.theme || 'dark',
-        isPremium: profile.is_premium,
-        onboardingCompleted: profile.onboarding_completed,
-        accountAge: Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+        name: profileData.full_name || 'Anonymous',
+        email: profileData.email,
+        timezone: profileData.timezone || 'UTC',
+        workingHours: profileData.working_hours || '9:00 AM - 6:00 PM',
+        focusGoal: profileData.focus_goal || '4 hours',
+        theme: profileData.theme || 'dark',
+        isPremium: profileData.is_premium,
+        onboardingCompleted: profileData.onboarding_completed,
+        accountAge: Math.floor((Date.now() - new Date(profileData.created_at).getTime()) / (1000 * 60 * 60 * 24))
       }
     },
     
     projects: {
-      total: projects.length,
-      active: projects.filter(p => new Date(p.target_completion_date) > new Date()).length,
-      categories: groupBy(projects, 'category'),
-      difficultyDistribution: groupByDifficulty(projects),
-      projects: projects.map(p => ({
+      total: projectsData.length,
+      active: projectsData.filter(p => new Date(p.target_completion_date) > new Date()).length,
+      categories: groupBy(projectsData, 'category'),
+      difficultyDistribution: groupByDifficulty(projectsData),
+      projects: projectsData.map(p => ({
         id: p.id,
         title: p.title,
         description: p.description,
@@ -220,7 +264,7 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
     
     tasks: {
       ...taskMetrics,
-      tasks: tasks.map(t => ({
+      tasks: tasksData.map(t => ({
         id: t.id,
         title: t.title,
         description: t.description,
@@ -242,7 +286,7 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
     
     journal: {
       ...journalMetrics,
-      entries: journalEntries.map(j => ({
+      entries: journalData.map(j => ({
         id: j.id,
         title: j.title,
         content: j.content,
@@ -259,7 +303,7 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
     
     obstacles: {
       ...obstacleMetrics,
-      patterns: obstacles.map(o => ({
+      patterns: obstaclesData.map(o => ({
         id: o.id,
         description: o.description,
         emotionalState: o.emotionalState,
@@ -271,7 +315,7 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
     
     calendar: {
       ...calendarMetrics,
-      recentEvents: calendarEvents.map(e => ({
+      recentEvents: calendarData.map(e => ({
         id: e.id,
         title: e.title,
         type: e.type,
@@ -285,6 +329,84 @@ export const generateUserBlueprint = async (): Promise<UserBlueprint> => {
   };
 
   return blueprint;
+  } catch (error) {
+    console.error('Error generating user blueprint:', error);
+    
+    // Return a minimal blueprint with error information
+    const errorBlueprint: UserBlueprint = {
+      generatedAt: new Date().toISOString(),
+      userId: 'error',
+      profile: {
+        personalInfo: {
+          name: 'Error',
+          email: 'error@example.com',
+          timezone: 'UTC',
+          workingHours: 'N/A',
+          focusGoal: 'N/A',
+          theme: 'dark',
+          isPremium: false,
+          onboardingCompleted: false,
+          accountAge: 0
+        }
+      },
+      projects: {
+        total: 0,
+        active: 0,
+        categories: {},
+        difficultyDistribution: {},
+        projects: []
+      },
+      tasks: {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+        completionRate: 0,
+        averageEstimatedTime: 0,
+        averageActualTime: 0,
+        timeEstimationAccuracy: 0,
+        taskTypes: {},
+        resistanceLevels: {},
+        dopamineScoreAverage: 0,
+        tasks: []
+      },
+      journal: {
+        totalEntries: 0,
+        averageEnergy: 0,
+        averageFocus: 0,
+        moodDistribution: {},
+        commonEmotions: {},
+        keyEvents: { wins: 0, losses: 0 },
+        entries: []
+      },
+      obstacles: {
+        total: 0,
+        averageFrustrationLevel: 0,
+        commonEmotionalStates: {},
+        patterns: []
+      },
+      calendar: {
+        totalEvents: 0,
+        eventTypeDistribution: {},
+        averageDuration: 0,
+        recentEvents: []
+      },
+      insights: {
+        productivityScore: 0,
+        consistencyScore: 0,
+        timeManagementScore: 0,
+        emotionalWellbeingScore: 0,
+        procrastinationRisk: 'high' as const,
+        preferredWorkingHours: 'N/A',
+        mostProductiveDays: [],
+        commonBlockers: ['Error occurred during generation'],
+        strengths: [],
+        areasForImprovement: ['Fix blueprint generation errors']
+      }
+    };
+    
+    throw new Error(`Failed to generate blueprint: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 // Helper functions for data fetching

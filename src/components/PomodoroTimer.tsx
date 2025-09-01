@@ -612,72 +612,73 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           </div>
         )}
 
-        {/* Subtle Execution Rules - Icon Cards */}
+        {/* External UI Elements - Outside the main card */}
         {!showDopaminePrompt && (
-          <div className="flex justify-center mb-8">
-            <div className="flex items-center gap-4">
-              {executionRules.map((rule) => (
-                <div
-                  key={rule.id}
-                  className="group relative"
-                  title={rule.description}
-                >
-                  <div className={`p-3 rounded-full border-2 transition-all duration-200 cursor-help ${
-                    rule.completed 
-                      ? 'bg-green-500/20 border-green-500/50 text-green-400' 
-                      : 'bg-gray-800/40 border-gray-600/40 text-gray-400 hover:border-gray-500/60 hover:text-gray-300'
-                  }`}>
-                    {rule.icon}
+          <>
+            {/* Left Side - Execution Rules Icons (2x2 Grid) */}
+            <div className="fixed left-8 bottom-8">
+              <div className="grid grid-cols-2 gap-3">
+                {executionRules.map((rule) => (
+                  <div
+                    key={rule.id}
+                    className="group relative"
+                    title={rule.description}
+                  >
+                    <div className={`p-4 rounded-full border-2 transition-all duration-200 cursor-help ${
+                      rule.completed 
+                        ? 'bg-green-500/20 border-green-500/50 text-green-400' 
+                        : 'bg-gray-800/40 border-gray-600/40 text-gray-400 hover:border-gray-500/60 hover:text-gray-300'
+                    }`}>
+                      <div className="w-6 h-6">
+                        {rule.icon}
+                      </div>
+                    </div>
+                    
+                    {/* Tooltip on hover - Left side */}
+                    <div className="absolute bottom-1/2 right-full transform translate-y-1/2 mr-3 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                      <div className="font-medium mb-1">{rule.title}</div>
+                      <div className="text-xs text-gray-400">{rule.description}</div>
+                      <div className="absolute top-1/2 left-full transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
+                    </div>
                   </div>
-                  
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                    <div className="font-medium mb-1">{rule.title}</div>
-                    <div className="text-xs text-gray-400">{rule.description}</div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Minimized Obstacle Management */}
-        {!showDopaminePrompt && (
-          <div className="fixed bottom-8 right-8">
-            <button
-              onClick={() => setShowObstacleResolver(!showObstacleResolver)}
-              className={`bg-orange-500 hover:bg-orange-400 text-white p-4 rounded-full shadow-2xl transition-all duration-200 hover:scale-110 ${
-                showObstacleResolver ? 'ring-4 ring-orange-400/50' : ''
-              }`}
-              title="Stuck? Get help overcoming obstacles"
-            >
-              <AlertTriangle className="w-6 h-6" />
-            </button>
-          </div>
-        )}
+            {/* Right Side - Top Controls */}
+            <div className="fixed right-8 top-8 flex items-center gap-4">
+              {/* Cancel Button */}
+              <button
+                onClick={onCancel}
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white px-6 py-3 rounded-xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
+              >
+                <X className="w-5 h-5 mr-2" />
+                Cancel
+              </button>
+              
+              {/* Stuck Button */}
+              <button
+                onClick={() => setShowObstacleResolver(!showObstacleResolver)}
+                className={`bg-orange-500 hover:bg-orange-400 text-white p-4 rounded-full shadow-2xl transition-all duration-200 hover:scale-110 ${
+                  showObstacleResolver ? 'ring-4 ring-orange-400/50' : ''
+                }`}
+                title="Stuck? Get help overcoming obstacles"
+              >
+                <AlertTriangle className="w-6 h-6" />
+              </button>
+            </div>
 
-        {/* Bottom Action Buttons with Clear Hierarchy */}
-        {!showDopaminePrompt && (
-          <div className="flex justify-center gap-6">
-            {/* Primary Action - Task Completed (Largest, Most Prominent) */}
-            <button
-              onClick={completePomodoro}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white px-12 py-4 rounded-xl font-bold text-xl transition-all duration-200 hover:scale-105 shadow-2xl flex items-center"
-            >
-              <Trophy className="w-7 h-7 mr-3" />
-              Task Completed
-            </button>
-            
-            {/* Secondary Action - Cancel (Smaller, Less Prominent) */}
-            <button
-              onClick={onCancel}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-8 py-4 rounded-xl font-medium text-lg transition-all duration-200 hover:scale-105 shadow-lg flex items-center"
-            >
-              <X className="w-5 h-5 mr-2" />
-              Cancel
-            </button>
-          </div>
+            {/* Right Side - Bottom - Complete Task Button */}
+            <div className="fixed right-8 bottom-8">
+              <button
+                onClick={completePomodoro}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all duration-200 hover:scale-105 shadow-2xl flex items-center"
+              >
+                <Trophy className="w-8 h-8 mr-3" />
+                Task Completed
+              </button>
+            </div>
+          </>
         )}
 
         {/* Progress Indicator */}

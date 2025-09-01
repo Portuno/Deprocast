@@ -86,29 +86,55 @@ export const getAllUserObstacles = async (): Promise<TaskObstacle[]> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase
-    .from('task_obstacles')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+  try {
+    // First try to use the RPC function if it exists
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_user_obstacles');
+    
+    if (!rpcError && rpcData) {
+      return (rpcData || []).map((row: any) => ({
+        id: row.id,
+        taskId: row.task_id,
+        projectId: row.project_id,
+        description: row.description,
+        emotionalState: row.emotional_state,
+        frustrationLevel: row.frustration_level,
+        timeSpentMinutes: row.time_spent_minutes,
+        timeRemainingSeconds: row.time_remaining_seconds,
+        aiSolution: row.ai_solution,
+        createdAt: row.created_at
+      }));
+    }
 
-  if (error) {
-    console.error('Error fetching user obstacles:', error);
-    throw error;
+    // Fallback: try direct table access
+    const { data, error } = await supabase
+      .from('task_obstacles')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching user obstacles:', error);
+      // Return empty array instead of throwing error to prevent blueprint generation failure
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      taskId: row.task_id,
+      projectId: row.project_id,
+      description: row.description,
+      emotionalState: row.emotional_state,
+      frustrationLevel: row.frustration_level,
+      timeSpentMinutes: row.time_spent_minutes,
+      timeRemainingSeconds: row.time_remaining_seconds,
+      aiSolution: row.ai_solution,
+      createdAt: row.created_at
+    }));
+  } catch (error) {
+    console.error('Error in getAllUserObstacles:', error);
+    // Return empty array instead of throwing error to prevent blueprint generation failure
+    return [];
   }
-
-  return (data || []).map((row: any) => ({
-    id: row.id,
-    taskId: row.task_id,
-    projectId: row.project_id,
-    description: row.description,
-    emotionalState: row.emotional_state,
-    frustrationLevel: row.frustration_level,
-    timeSpentMinutes: row.time_spent_minutes,
-    timeRemainingSeconds: row.time_remaining_seconds,
-    aiSolution: row.ai_solution,
-    createdAt: row.created_at
-  }));
 };
 
 /**
