@@ -162,12 +162,7 @@ const OnboardingFinish: React.FC = () => {
                     {task.description}
                   </p>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>⏱️ {task.estimated_time} min</span>
-                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                      {task.status}
-                    </span>
-                  </div>
+                  {/* Intentionally hiding estimated time and status on onboarding finish */}
                 </div>
               ))}
             </div>
