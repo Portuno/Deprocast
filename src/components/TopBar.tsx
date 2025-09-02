@@ -126,8 +126,8 @@ const TopBar: React.FC<TopBarProps> = ({
           <span className="text-xl font-bold text-white">Deprocast</span>
         </div>
 
-        {/* Center - Tip (compact) */}
-        <div className="flex-1 max-w-2xl mx-6">
+        {/* Center - Tip (compact) - hidden on small screens to save space */}
+        <div className="hidden md:block flex-1 max-w-2xl mx-6">
           <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700/30 rounded-lg px-4 py-2">
             <div className="flex items-center space-x-2">
               <span className="text-purple-300 text-sm">💡</span>
