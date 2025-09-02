@@ -84,7 +84,7 @@ const DENO_ENV = Deno.env.get("DENO_ENV") || "production";
 const MABOT_USERNAME = Deno.env.get("MABOT_USERNAME") || "";
 const MABOT_PASSWORD = Deno.env.get("MABOT_PASSWORD") || "";
 const MABOT_API_URL = Deno.env.get("MABOT_API_URL") || "https://back.mabot.app";
-const DEFAULT_BOT_USERNAME = Deno.env.get("MABOT_DEFAULT_BOT_USERNAME") || "mabot";
+const DEFAULT_BOT_USERNAME = Deno.env.get("MABOT_DEFAULT_BOT_USERNAME") || "depropd";
 
 // Types
 type JsonRecord = Record<string, unknown>;

@@ -141,7 +141,7 @@ export const generateMicrotasksWithMabot = async (request: GenerateTasksRequest)
         access_token: session.access_token,
         chat_id: null,
         platform_chat_id: null,
-        bot_name: 'mabot'
+        bot_name: 'depropd'
       })
     });
 
