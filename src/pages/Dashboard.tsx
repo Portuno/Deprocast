@@ -253,12 +253,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 </div>
               </div>
-              <div className="text-lg text-white font-semibold mb-2">
-                {Math.round(generationProgress)}% Complete
-              </div>
-              <div className="text-sm text-gray-400">
-                Estimated time: {Math.max(0, Math.ceil((100 - generationProgress) * 0.18))}s remaining
-              </div>
+              {/* Intentionally hide percentage and ETA during generation */}
             </div>
 
             {/* Enhanced Tip Display */}

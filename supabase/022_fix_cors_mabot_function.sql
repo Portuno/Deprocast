@@ -1,15 +1,33 @@
-// Supabase Edge Function: Mabot Integration
+-- Fix CORS Issue for Mabot Integration Edge Function
+-- This file contains the updated Edge Function code with improved CORS handling
+
+-- IMPORTANT: This is a deployment instruction file, not executable SQL
+-- The actual Edge Function code needs to be updated in: supabase/functions/mabot-integration/index.ts
+
+-- Key CORS fixes implemented:
+-- 1. Explicit origin validation for https://deprocast.vercel.app
+-- 2. Proper preflight OPTIONS handling
+-- 3. Consistent CORS headers across all responses
+-- 4. Added Access-Control-Allow-Credentials for authenticated requests
+
+-- To deploy this fix, you have two options:
+
+-- OPTION 1: Using Supabase CLI (Recommended)
+-- 1. Make sure you're in the project root directory
+-- 2. Run: supabase functions deploy mabot-integration
+
+-- OPTION 2: Using Supabase Dashboard
+-- 1. Go to your Supabase project dashboard
+-- 2. Navigate to Edge Functions
+-- 3. Find the mabot-integration function
+-- 4. Click "Edit" or "Update"
+-- 5. Replace the entire function code with the updated version below
+
+-- UPDATED FUNCTION CODE (copy this to your Edge Function):
+/*
+// Supabase Edge Function: Mabot Integration - CORS Fixed Version
 // deno-lint-ignore-file no-explicit-any
 declare const Deno: any;
-// Endpoints:
-// - POST /login
-// - POST /generate-microtasks
-// - POST /obstacle-coaching
-// - POST /generate-reward-schedule
-// - POST /send-message
-
-// This function bridges Deprocast's frontend with Mabot while keeping secrets server-side.
-// Implements basic rate limiting (IP-based), token reuse, and optional dev mocking.
 
 // CORS Configuration - Fixed for production
 const ALLOWED_ORIGINS = [
@@ -78,7 +96,7 @@ function checkRateLimit(req: Request): { allowed: true } | { allowed: false; res
   return { allowed: false, resetMs: state.resetAt - now };
 }
 
-// Env
+// Environment variables
 const DEBUG = Deno.env.get("DEBUG") === "true";
 const DENO_ENV = Deno.env.get("DENO_ENV") || "production";
 const MABOT_USERNAME = Deno.env.get("MABOT_USERNAME") || "";
@@ -102,7 +120,10 @@ function json<TData extends JsonRecord>(status: number, body: ApiResponse<TData>
   const origin = req.headers.get("origin");
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...corsHeaders(origin, req) },
+    headers: { 
+      "Content-Type": "application/json", 
+      ...corsHeaders(origin, req) 
+    },
   });
 }
 
@@ -147,7 +168,6 @@ async function mabotLogin(): Promise<{ access_token: string; refresh_token?: str
 async function validateToken(accessToken: string): Promise<boolean> {
   if (isDev()) return true;
   try {
-    // Use an authenticated endpoint
     const resp = await fetch(`${MABOT_API_URL}/client/`, { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } });
     return resp.ok;
   } catch {
@@ -272,7 +292,64 @@ async function handleGenerateMicrotasks(req: Request): Promise<Response> {
   const blocks = Array.isArray(available_time_blocks) ? available_time_blocks : [];
   const targetIso = (target_completion_date as string) || "";
 
-  const prompt = `You are a planning assistant. Break the project into twelve atomic, actionable microtasks that directly lead to the outcome goal. Prioritize clarity, concrete deliverables, and verifiable results. Avoid vague verbs.\n\nProject:\n- Title: "${projTitle}"\n- Description: "${projDesc}"\n- Category: "${projCategory}"\n- Motivation: "${projMotivation}"\n- Perceived difficulty (1-10): ${projDiff}\n- Known obstacles: "${projObstacles}"\n- Skills/resources needed: ${JSON.stringify(projSkills)}\n- Target completion date (ISO): "${targetIso}"\n- Outcome goal: "${(outcome_goal as string) || projDesc}"\n\nAvailable time blocks (if any): ${JSON.stringify(blocks)}\n- Expected format: [{ "start": "YYYY-MM-DDTHH:mm", "end": "YYYY-MM-DDTHH:mm" }, ...]\n- If none are provided, plan anyway and note assumptions in the summary.\n\nRules for microtasks:\n- Quantity: You MUST return exactly twelve (12) microtasks.\n- Granularity: Prefer 10–30 minutes per microtask (maximum 60 minutes if strictly necessary).\n- Each microtask must be concrete and verifiable with clear acceptance criteria.\n- Tie microtasks to skills/resources and known obstacles where relevant.\n- If time blocks are provided, suggest one suitable block per microtask when appropriate (do not invent dates outside the target window).\n- Avoid vague phrasing like “research” or “analyze” without a specific output artifact.\n\nRequired output format:\nRespond with ONE valid JSON object ONLY (no extra text, no code fences). Structure:\n{\n  "tasks": [\n    {\n      "id": "unique-kebab-case",\n      "micro_task": "Short, actionable description",\n      "why": "Why this microtask is necessary for the outcome",\n      "estimate_minutes": 25,\n      "required_context": ["skill-or-resource"],\n      "acceptance_criteria": ["criterion 1", "criterion 2"],\n      "suggested_time_block": {\n        "date": "YYYY-MM-DD",\n        "start": "HH:mm",\n        "end": "HH:mm"\n      },\n      "tags": ["${projCategory || ""}", "Planning"],\n      "risk": "low"\n    }\n  ],\n  "summary": {\n    "goal": "${projTitle} — ${projDesc}",\n    "total_estimated_minutes": 0,\n    "critical_path_ids": ["id-1","id-2","id-3"],\n    "first_three_tasks": ["id-1","id-2","id-3"],\n    "assumptions": ["list assumptions if info/time blocks were missing"]\n  }\n}\n\nValidation:\n- The "tasks" array MUST contain exactly twelve items.\n- "estimate_minutes" must sum to "total_estimated_minutes".\n- Do NOT include any text outside the JSON object. Output in English.`;
+  const prompt = `You are a planning assistant. Break the project into twelve atomic, actionable microtasks that directly lead to the outcome goal. Prioritize clarity, concrete deliverables, and verifiable results. Avoid vague verbs.
+
+Project:
+- Title: "${projTitle}"
+- Description: "${projDesc}"
+- Category: "${projCategory}"
+- Motivation: "${projMotivation}"
+- Perceived difficulty (1-10): ${projDiff}
+- Known obstacles: "${projObstacles}"
+- Skills/resources needed: ${JSON.stringify(projSkills)}
+- Target completion date (ISO): "${targetIso}"
+- Outcome goal: "${(outcome_goal as string) || projDesc}"
+
+Available time blocks (if any): ${JSON.stringify(blocks)}
+- Expected format: [{ "start": "YYYY-MM-DDTHH:mm", "end": "YYYY-MM-DDTHH:mm" }, ...]
+- If none are provided, plan anyway and note assumptions in the summary.
+
+Rules for microtasks:
+- Quantity: You MUST return exactly twelve (12) microtasks.
+- Granularity: Prefer 10–30 minutes per microtask (maximum 60 minutes if strictly necessary).
+- Each microtask must be concrete and verifiable with clear acceptance criteria.
+- Tie microtasks to skills/resources and known obstacles where relevant.
+- If time blocks are provided, suggest one suitable block per microtask when appropriate (do not invent dates outside the target window).
+- Avoid vague phrasing like "research" or "analyze" without a specific output artifact.
+
+Required output format:
+Respond with ONE valid JSON object ONLY (no extra text, no code fences). Structure:
+{
+  "tasks": [
+    {
+      "id": "unique-kebab-case",
+      "micro_task": "Short, actionable description",
+      "why": "Why this microtask is necessary for the outcome",
+      "estimate_minutes": 25,
+      "required_context": ["skill-or-resource"],
+      "acceptance_criteria": ["criterion 1", "criterion 2"],
+      "suggested_time_block": {
+        "date": "YYYY-MM-DD",
+        "start": "HH:mm",
+        "end": "HH:mm"
+      },
+      "tags": ["${projCategory || ""}", "Planning"],
+      "risk": "low"
+    }
+  ],
+  "summary": {
+    "goal": "${projTitle} — ${projDesc}",
+    "total_estimated_minutes": 0,
+    "critical_path_ids": ["id-1","id-2","id-3"],
+    "first_three_tasks": ["id-1","id-2","id-3"],
+    "assumptions": ["list assumptions if info/time blocks were missing"]
+  }
+}
+
+Validation:
+- The "tasks" array MUST contain exactly twelve items.
+- "estimate_minutes" must sum to "total_estimated_minutes".
+- Do NOT include any text outside the JSON object. Output in English.`;
   const payload: JsonRecord = {
     platform: "web",
     chat_id: ensuredChatId,
@@ -364,7 +441,14 @@ async function handleObstacleCoaching(req: Request): Promise<Response> {
   const tokenRes = await ensureTokenOrFail(req, access_token);
   if (!tokenRes.ok) return tokenRes.resp;
   const ensuredChatId = ensureUuidChatId(chat_id);
-  const prompt = `You are a coaching assistant. The user is blocked. Provide practical advice to unblock.\n\nMicro-task: ${micro_task}\nOutcome goal: ${outcome_goal}\nBlocker: ${blocker}\nCurrent state: ${current_state}\nEmotional state: ${emotional_state}\nTime left: ${time_left}.`;
+  const prompt = `You are a coaching assistant. The user is blocked. Provide practical advice to unblock.
+
+Micro-task: ${micro_task}
+Outcome goal: ${outcome_goal}
+Blocker: ${blocker}
+Current state: ${current_state}
+Emotional state: ${emotional_state}
+Time left: ${time_left}.`;
   const payload: JsonRecord = {
     platform: "web",
     chat_id: ensuredChatId,
@@ -388,7 +472,9 @@ async function handleGenerateRewardSchedule(req: Request): Promise<Response> {
   const tokenRes = await ensureTokenOrFail(req, access_token);
   if (!tokenRes.ok) return tokenRes.resp;
   const ensuredChatId = ensureUuidChatId(chat_id);
-  const prompt = `You are a motivation assistant. Propose a reward schedule consistent with the user's preferences and habits.\n\nUser context: ${JSON.stringify(user_context)}`;
+  const prompt = `You are a motivation assistant. Propose a reward schedule consistent with the user's preferences and habits.
+
+User context: ${JSON.stringify(user_context)}`;
   const payload: JsonRecord = {
     platform: "web",
     chat_id: ensuredChatId,
@@ -453,20 +539,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   
   // Handle preflight OPTIONS requests
   if (req.method === "OPTIONS") {
-    // Some gateways strip ACAO if it's not '*'. To ensure browsers proceed,
-    // reply with permissive headers on preflight.
-    const requested = req.headers.get("access-control-request-headers") || "";
-    const allowHeaders = requested ? requested : DEFAULT_ALLOWED_HEADERS.join(", ");
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": allowHeaders,
-        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-        "Access-Control-Max-Age": "86400",
-        "Vary": "Origin, Access-Control-Request-Headers",
-        "Access-Control-Allow-Credentials": "true",
-      },
+    return new Response(null, { 
+      status: 204, 
+      headers: { ...corsHeaders(origin, req) } 
     });
   }
   
@@ -486,5 +561,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
   
   return notFound(req);
 });
+*/
 
+-- After deploying this updated function:
+-- 1. Test the CORS fix by creating a new project and clicking "Generate Microtasks"
+-- 2. Check browser console to ensure no CORS errors
+-- 3. Verify that tasks are generated successfully
 
+-- If you still experience CORS issues after deployment:
+-- 1. Clear your browser cache and cookies
+-- 2. Try in an incognito/private window
+-- 3. Check that your Supabase project URL matches the one in ALLOWED_ORIGINS
+-- 4. Verify the function is deployed to the correct project
+
+-- Environment variables needed in Supabase Dashboard:
+-- MABOT_USERNAME: Your Mabot username
+-- MABOT_PASSWORD: Your Mabot password
+-- MABOT_API_URL: https://back.mabot.app (default)
+-- MABOT_DEFAULT_BOT_USERNAME: mabot (default)
+-- DEBUG: false (for production)
+-- DENO_ENV: production
