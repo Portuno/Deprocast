@@ -453,20 +453,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   
   // Handle preflight OPTIONS requests
   if (req.method === "OPTIONS") {
-    // Some gateways strip ACAO if it's not '*'. To ensure browsers proceed,
-    // reply with permissive headers on preflight.
-    const requested = req.headers.get("access-control-request-headers") || "";
-    const allowHeaders = requested ? requested : DEFAULT_ALLOWED_HEADERS.join(", ");
+    // Echo specific origin and headers (no wildcard) to satisfy browsers
     return new Response(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": allowHeaders,
-        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-        "Access-Control-Max-Age": "86400",
-        "Vary": "Origin, Access-Control-Request-Headers",
-        "Access-Control-Allow-Credentials": "true",
-      },
+      headers: { ...corsHeaders(origin, req) },
     });
   }
   

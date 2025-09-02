@@ -16,7 +16,7 @@ export interface GeneratedTask {
 }
 
 // Fallback tasks when Mabot API is unavailable
-const generateFallbackTasks = (request: GenerateTasksRequest): GeneratedTask[] => {
+const generateFallbackTasks = (_request: GenerateTasksRequest): GeneratedTask[] => {
   return [
     {
       title: "Set up project structure and organization",
