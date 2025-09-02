@@ -12,7 +12,7 @@
 --      DEBUG=false
 --      DENO_ENV=production
 --      MABOT_API_URL=https://back.mabot.app
---      MABOT_DEFAULT_BOT_USERNAME=mabot
+--      MABOT_DEFAULT_BOT_USERNAME=depropd
 --      MABOT_USERNAME=your-user (optional if using fallback/dev)
 --      MABOT_PASSWORD=your-pass (optional if using fallback/dev)
 -- 4) Test from https://deprocast.vercel.app creating a project and generating microtasks.

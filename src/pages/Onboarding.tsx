@@ -4,11 +4,14 @@ import { onboardingFlow } from '../data/onboardingData';
 import { OnboardingSlide, OnboardingFormData } from '../types/onboarding';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { createProject } from '../integrations/supabase/projects';
+import { generateMicrotasksWithMabot } from '../integrations/mabot/generateTasks';
 
 const Onboarding: React.FC = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [collectedData, setCollectedData] = useState<OnboardingFormData>({});
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [isActivatingPersona, setIsActivatingPersona] = useState(false);
   
   // Field values state - moved to component level
@@ -72,11 +75,61 @@ const Onboarding: React.FC = () => {
   };
 
   const handleGenerateTasks = async () => {
-    setIsGeneratingTasks(true);
-    // Simulate AI task generation
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsGeneratingTasks(false);
-    handleNext();
+    try {
+      setIsGeneratingTasks(true);
+      // Ensure authenticated
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+
+      // Ensure we have minimum project data
+      const projectTitle = String(collectedData.projectTitle || '').trim();
+      const projectDescription = String(collectedData.projectDescription || '').trim();
+      const perceivedDifficulty = Number(collectedData.perceivedDifficulty || 5);
+      const motivation = String(collectedData.motivation || 'High');
+      const projectType = String(collectedData.projectType || 'other');
+      const targetDate = String(collectedData.targetCompletionDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0,10));
+      const knownObstacles = (collectedData.knownObstacles as string[] | undefined) || [];
+      const skillsNeeded = (collectedData.skillsNeeded as string[] | undefined) || [];
+
+      if (!projectTitle || !projectDescription) {
+        throw new Error('Please provide a project title and description before generating microtasks.');
+      }
+
+      // Create project if not already created
+      let projectId = createdProjectId;
+      if (!projectId) {
+        const project = await createProject({
+          title: projectTitle,
+          description: projectDescription,
+          target_completion_date: targetDate,
+          project_type: projectType,
+          perceived_difficulty: perceivedDifficulty,
+          motivation,
+          known_obstacles: knownObstacles,
+          // @ts-ignore include if supported by payload
+          skills_needed: skillsNeeded,
+        } as any);
+        projectId = project.id;
+        setCreatedProjectId(projectId);
+      }
+
+      // Generate microtasks via Mabot (same as Dashboard)
+      await generateMicrotasksWithMabot({
+        projectId: projectId!,
+        projectTitle,
+        projectDescription,
+        existingTasks: 0,
+      });
+
+      handleNext();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to generate microtasks during onboarding:', err);
+      alert('Failed to generate microtasks. Please check your inputs and try again.');
+    } finally {
+      setIsGeneratingTasks(false);
+    }
   };
 
   const handleActivatePersona = async () => {
