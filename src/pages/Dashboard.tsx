@@ -229,65 +229,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Enhanced Generation Progress */}
-      {isGeneratingTasks && (
-        <div className="mb-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/30 shadow-2xl">
-          <div className="text-center">
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">🧠 AI Task Generation in Progress</h3>
-              <p className="text-gray-300">Mabot is analyzing your project and creating intelligent microtasks...</p>
-            </div>
-
-            {/* Enhanced Progress Bar */}
-            <div className="mb-6">
-              <div className="w-full bg-gray-700/50 rounded-full h-4 mb-4 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-purple-500 via-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300 ease-out relative"
-                  style={{ width: `${generationProgress}%` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                </div>
-              </div>
-              {/* Intentionally hide percentage and ETA during generation */}
-            </div>
-
-            {/* Enhanced Tip Display */}
-            <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-700/30 rounded-xl p-6 backdrop-blur-sm">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-300 text-lg">💡</span>
-                </div>
-                <div className="text-purple-300 text-lg font-semibold">Neuroscience Insight</div>
-                <div className="ml-3 text-purple-400 text-sm font-medium">
-                  Tip {tipIndex + 1} of 3
-                </div>
-              </div>
-              <div className="text-white text-lg leading-relaxed font-medium">
-                {currentTip}
-              </div>
-              <div className="mt-4 flex justify-center">
-                <div className="flex space-x-2">
-                  {[0, 1, 2].map((index) => (
-                    <div
-                      key={index}
-                      className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                        index === tipIndex
-                          ? 'bg-purple-400 scale-125'
-                          : 'bg-gray-600'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Loading screen removed per request */}
 
       {/* Main Content Grid - Adjusted for wider task management */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
