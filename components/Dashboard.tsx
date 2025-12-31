@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AppData, Project, ProjectState, UrgencyLevel, Contact, FocusSession, Atmosphere, Task, VictoryNote } from '../types';
-import { decomposeProject, suggestNextTask } from '../services/gemini';
+import { decomposeProject } from '../services/gemini';
 import FocusSessionModule from './FocusSession';
 
 interface Props {
@@ -9,15 +9,12 @@ interface Props {
   setData: React.Dispatch<React.SetStateAction<AppData>>;
   setFocusMode: (projectId: string | null) => void;
   focusMode: string | null;
-  // Fix: Added optional VictoryNote parameter to match FocusSessionModule's onComplete callback and App.tsx's handler.
   onFocusComplete: (session: FocusSession, note?: VictoryNote) => void;
 }
 
 const Dashboard: React.FC<Props> = ({ data, setData, setFocusMode, focusMode, onFocusComplete }) => {
   const [loading, setLoading] = useState(false);
   const [showInitiationModal, setShowInitiationModal] = useState(false);
-  const [protocolSuggestion, setProtocolSuggestion] = useState<{projectId: string, task: Task} | null>(null);
-  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -26,20 +23,6 @@ const Dashboard: React.FC<Props> = ({ data, setData, setFocusMode, focusMode, on
     state: 'Idea' as ProjectState,
     selectedStakeholders: [] as string[]
   });
-
-  const handleActivateProtocol = async () => {
-    setIsSuggesting(true);
-    const suggestion = await suggestNextTask(data.projects);
-    setProtocolSuggestion(suggestion);
-    setIsSuggesting(false);
-  };
-
-  const startSuggestedProtocol = () => {
-    if (protocolSuggestion) {
-      setFocusMode(protocolSuggestion.projectId);
-      setProtocolSuggestion(null);
-    }
-  };
 
   const handleDecompose = async () => {
     if (!form.name.trim()) return;
@@ -113,36 +96,12 @@ const Dashboard: React.FC<Props> = ({ data, setData, setFocusMode, focusMode, on
         <div className="flex gap-4">
           <button 
             onClick={() => setShowInitiationModal(true)}
-            className="px-6 py-3 border-2 border-accent text-accent font-black text-xs uppercase tracking-widest hover:bg-accent hover:text-bg transition-all"
+            className="px-8 py-4 border-2 border-accent text-accent font-black text-xs uppercase tracking-widest hover:bg-accent hover:text-bg transition-all"
           >
-            New Initiation
-          </button>
-          <button 
-            onClick={handleActivateProtocol}
-            disabled={isSuggesting}
-            className="group relative px-10 py-3 bg-[#4A0404] border-2 border-[#D4AF37] text-[#D4AF37] font-black text-xs uppercase tracking-[0.3em] shadow-[0_0_20px_rgba(74,4,4,0.3)] hover:scale-105 active:scale-95 transition-all animate-protocol-pulse"
-          >
-            {isSuggesting ? 'SYNCING...' : 'ACTIVATE PROTOCOL'}
+            New Initiation Protocol
           </button>
         </div>
       </header>
-
-      {/* PROTOCOL SUGGESTION MODAL */}
-      {protocolSuggestion && (
-        <div className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="w-full max-w-xl bg-surface border-4 p-12 flex flex-col gap-8" style={{ borderColor: 'var(--accent)' }}>
-            <div className="flex flex-col gap-3 text-center">
-              <span className="text-[11px] font-black tracking-[0.5em] text-accent uppercase">Tactical Suggestion</span>
-              <h2 className="text-4xl font-black uppercase tracking-widest leading-tight">{protocolSuggestion.task.title}</h2>
-              <p className="opacity-70 text-sm font-bold uppercase tracking-wider">Target: {data.projects.find(p => p.id === protocolSuggestion.projectId)?.name}</p>
-            </div>
-            <div className="flex gap-6">
-              <button onClick={() => setProtocolSuggestion(null)} className="flex-1 py-4 border-2 border-accent text-accent font-black text-sm uppercase tracking-widest">Decline</button>
-              <button onClick={startSuggestedProtocol} className="flex-1 py-4 bg-accent text-bg font-black text-sm uppercase tracking-widest shadow-2xl">Execute Now</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* INITIATION MODAL */}
       {showInitiationModal && (
@@ -287,14 +246,6 @@ const Dashboard: React.FC<Props> = ({ data, setData, setFocusMode, focusMode, on
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes protocol-pulse {
-          0%, 100% { box-shadow: 0 0 10px rgba(74,4,4,0.3); }
-          50% { box-shadow: 0 0 30px rgba(212,175,55,0.4); }
-        }
-        .animate-protocol-pulse { animation: protocol-pulse 2s ease-in-out infinite; }
-      `}</style>
     </div>
   );
 };

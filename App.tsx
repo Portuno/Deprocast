@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Atmosphere, AppData, Project, Contact, VictoryNote, CalendarEvent, FocusSession, User } from './types';
+import { Atmosphere, AppData, Project, Contact, VictoryNote, CalendarEvent, FocusSession, User, Task } from './types';
 import { THEMES, RANKS } from './constants';
 import { db } from './services/db';
 import { isCloudEnabled } from './services/supabase';
+import { suggestNextTask } from './services/gemini';
 import Dashboard from './components/Dashboard';
 import NeuralMatrix from './components/NeuralMatrix';
 import Chronos from './components/Chronos';
@@ -24,6 +25,10 @@ const App: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [notes, setNotes] = useState<VictoryNote[]>([]);
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>([]);
+
+  // Protocol Suggestion State
+  const [protocolSuggestion, setProtocolSuggestion] = useState<{projectId: string, task: Task} | null>(null);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const handleLogin = useCallback(async (user: User) => {
     setCurrentUser(user);
@@ -75,6 +80,21 @@ const App: React.FC = () => {
     };
     boot();
   }, [handleLogin]);
+
+  const handleActivateProtocol = async () => {
+    if (isSuggesting) return;
+    setIsSuggesting(true);
+    const suggestion = await suggestNextTask(projects);
+    setProtocolSuggestion(suggestion);
+    setIsSuggesting(false);
+  };
+
+  const startSuggestedProtocol = () => {
+    if (protocolSuggestion) {
+      setFocusMode(protocolSuggestion.projectId);
+      setProtocolSuggestion(null);
+    }
+  };
 
   const handleResetSystem = async () => {
     if (confirm("PROTOCOL WARNING: This will purge all local matrix data. Proceed?")) {
@@ -145,8 +165,25 @@ const App: React.FC = () => {
     <div className={`h-screen flex flex-col md:flex-row relative overflow-hidden ${currentTheme.flicker ? 'crt-flicker' : ''}`}>
       {currentTheme.showScanlines && <div className="scanline" />}
       
+      {/* PROTOCOL SUGGESTION MODAL */}
+      {protocolSuggestion && (
+        <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
+          <div className="w-full max-w-xl bg-surface border-4 p-12 flex flex-col gap-8 shadow-[0_0_100px_rgba(212,175,55,0.2)]" style={{ borderColor: 'var(--accent)' }}>
+            <div className="flex flex-col gap-3 text-center">
+              <span className="text-[11px] font-black tracking-[0.5em] text-accent uppercase">Strategic Recommendation</span>
+              <h2 className="text-4xl font-black uppercase tracking-widest leading-tight" style={{ fontFamily: 'var(--font-display)' }}>{protocolSuggestion.task.title}</h2>
+              <p className="opacity-70 text-sm font-bold uppercase tracking-wider">Target Objective: {projects.find(p => p.id === protocolSuggestion.projectId)?.name}</p>
+            </div>
+            <div className="flex gap-6">
+              <button onClick={() => setProtocolSuggestion(null)} className="flex-1 py-4 border-2 border-accent text-accent font-black text-sm uppercase tracking-widest hover:bg-accent/5">Dismiss</button>
+              <button onClick={startSuggestedProtocol} className="flex-1 py-4 bg-accent text-bg font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Initiate Execution</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!focusMode && (
-        <nav className="w-full md:w-72 border-b md:border-b-0 md:border-r p-6 flex flex-col gap-6 sticky top-0 bg-opacity-95 backdrop-blur-md z-50 shrink-0 shadow-2xl" 
+        <nav className="w-full md:w-80 border-b md:border-b-0 md:border-r p-6 flex flex-col gap-6 sticky top-0 bg-opacity-95 backdrop-blur-md z-50 shrink-0 shadow-2xl" 
              style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg)' }}>
           <div className="flex flex-col gap-2 items-center">
             <div className="text-3xl font-black tracking-[0.2em] text-center" style={{ fontFamily: 'var(--font-display)', textShadow: 'var(--text-glow)', color: 'var(--accent)' }}>
@@ -174,6 +211,39 @@ const App: React.FC = () => {
                 {tab.replace('matrix', 'NEURAL MATRIX').replace('vault', 'THE VAULT').replace('chronos', 'CHRONOS').replace('profile', 'IDENTITY PROFILE').toUpperCase()}
               </button>
             ))}
+
+            {/* ENHANCED ACTIVATE PROTOCOL BUTTON */}
+            <div className="mt-8 px-2">
+              <button 
+                onClick={handleActivateProtocol}
+                disabled={isSuggesting}
+                className="w-full group relative py-8 bg-[#2A0202] border-4 border-[#D4AF37] text-[#D4AF37] font-black text-[14px] uppercase tracking-[0.5em] shadow-[0_0_40px_rgba(212,175,55,0.2)] hover:shadow-[0_0_60px_rgba(212,175,55,0.4)] hover:scale-[1.03] active:scale-95 transition-all animate-protocol-pulse disabled:opacity-50 flex flex-col items-center justify-center gap-2 overflow-hidden"
+              >
+                {/* Visual Glow Layer */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                
+                {isSuggesting ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-[#D4AF37] animate-ping rounded-full"></div>
+                    <span className="animate-pulse">SYNCHRONIZING...</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-[9px] opacity-80 tracking-[0.6em] mb-1 font-black">AI COGNITIVE LINK</span>
+                    <span className="relative z-10 text-shadow-gold">ACTIVATE PROTOCOL</span>
+                  </>
+                )}
+                
+                {/* Tactical Corner Accents */}
+                <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
+                <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
+                <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
+                <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
+                
+                {/* Scanline overlay for button */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20"></div>
+              </button>
+            </div>
           </div>
 
           <div className="mt-auto flex flex-col gap-4">
@@ -247,6 +317,15 @@ const App: React.FC = () => {
           )}
         </div>
       </main>
+
+      <style>{`
+        @keyframes protocol-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(74,4,4,0.4); }
+          50% { box-shadow: 0 0 50px rgba(212,175,55,0.7); }
+        }
+        .animate-protocol-pulse { animation: protocol-pulse 2.5s ease-in-out infinite; }
+        .text-shadow-gold { text-shadow: 0 0 10px rgba(212,175,55,0.8); }
+      `}</style>
     </div>
   );
 };
