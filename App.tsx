@@ -10,13 +10,14 @@ import NeuralMatrix from './components/NeuralMatrix';
 import Chronos from './components/Chronos';
 import TheVault from './components/TheVault';
 import Profile from './components/Profile';
+import Journal from './components/Journal';
 
 const SESSION_KEY = 'deprocast_active_session';
 const DEFAULT_USER_ID = 'local-operative-id';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'matrix' | 'chronos' | 'vault' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'matrix' | 'journal' | 'chronos' | 'vault' | 'profile'>('dashboard');
   const [focusMode, setFocusMode] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<'LOCAL' | 'CLOUD' | 'SYNCING'>('LOCAL');
   
@@ -26,7 +27,6 @@ const App: React.FC = () => {
   const [notes, setNotes] = useState<VictoryNote[]>([]);
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>([]);
 
-  // Protocol Suggestion State
   const [protocolSuggestion, setProtocolSuggestion] = useState<{projectId: string, task: Task} | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
@@ -66,16 +66,10 @@ const App: React.FC = () => {
           username: 'LOCAL_OPERATIVE',
           theme: Atmosphere.SOVEREIGN,
           createdAt: new Date().toISOString(),
-          stats: { 
-            xp: 0, 
-            level: 1, 
-            rank: 'NOVICE', 
-            bio: 'Direct hardware access. System bypass active.' 
-          }
+          stats: { xp: 0, level: 1, rank: 'OPERATIVE', bio: 'Direct hardware access.' }
         };
         await db.save('users', user);
       }
-      
       handleLogin(user);
     };
     boot();
@@ -87,20 +81,6 @@ const App: React.FC = () => {
     const suggestion = await suggestNextTask(projects);
     setProtocolSuggestion(suggestion);
     setIsSuggesting(false);
-  };
-
-  const startSuggestedProtocol = () => {
-    if (protocolSuggestion) {
-      setFocusMode(protocolSuggestion.projectId);
-      setProtocolSuggestion(null);
-    }
-  };
-
-  const handleResetSystem = async () => {
-    if (confirm("PROTOCOL WARNING: This will purge all local matrix data. Proceed?")) {
-      localStorage.removeItem(SESSION_KEY);
-      window.location.reload();
-    }
   };
 
   const currentTheme = useMemo(() => {
@@ -126,143 +106,112 @@ const App: React.FC = () => {
     const newXP = currentUser.stats.xp + amount;
     let newRank = currentUser.stats.rank;
     for (const r of [...RANKS].reverse()) {
-      if (newXP >= r.minXp) {
-        newRank = r.title;
-        break;
-      }
+      if (newXP >= r.minXp) { newRank = r.title; break; }
     }
-    const updatedUser = {
-      ...currentUser,
-      stats: { ...currentUser.stats, xp: newXP, rank: newRank }
-    };
+    const updatedUser = { ...currentUser, stats: { ...currentUser.stats, xp: newXP, rank: newRank } };
     setCurrentUser(updatedUser);
     await db.save('users', updatedUser);
   }, [currentUser]);
 
   const appDataState: AppData = {
-    currentUser,
-    projects,
-    contacts,
-    events,
-    focusHistory,
-    notes,
-    stats: currentUser?.stats || { xp: 0, level: 1, rank: 'NOVICE' }
+    currentUser, projects, contacts, events, focusHistory, notes,
+    stats: currentUser?.stats || { xp: 0, level: 1, rank: 'OPERATIVE' }
   };
 
-  if (!currentUser) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#050505] text-white">
-        <div className="text-sm font-black tracking-[0.4em] mb-6 animate-pulse uppercase">Synchronizing Neural Interface...</div>
-        <div className="w-64 h-1 bg-white/5 relative overflow-hidden rounded-full">
-          <div className="absolute inset-0 bg-white/40 animate-[loading_1.5s_infinite]"></div>
-        </div>
-        <style>{`@keyframes loading { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }`}</style>
-      </div>
-    );
-  }
+  if (!currentUser) return <div className="h-screen bg-black" />;
+
+  const NavItems = () => (
+    <>
+      {['dashboard', 'matrix', 'journal', 'chronos', 'vault', 'profile'].map(tab => (
+        <button 
+          key={tab}
+          onClick={() => setActiveTab(tab as any)}
+          className={`px-3 md:px-5 py-3 md:py-4 text-[10px] md:text-sm text-center md:text-left border-2 transition-all truncate tracking-widest ${activeTab === tab ? 'opacity-100 md:scale-[1.05] shadow-xl' : 'opacity-40 hover:opacity-100'}`}
+          style={{ 
+            borderColor: activeTab === tab ? 'var(--accent)' : 'transparent',
+            backgroundColor: activeTab === tab ? 'var(--surface)' : 'transparent',
+            color: activeTab === tab ? 'var(--accent)' : 'var(--text)',
+            textShadow: activeTab === tab ? 'var(--text-glow)' : 'none'
+          }}
+        >
+          <span className="md:hidden">
+            {tab === 'dashboard' ? '🏠' : tab === 'matrix' ? '🧠' : tab === 'journal' ? '📓' : tab === 'chronos' ? '⏳' : tab === 'vault' ? '🔒' : '👤'}
+          </span>
+          <span className="hidden md:inline">
+            {tab === 'matrix' ? 'NEURAL MATRIX' : tab === 'vault' ? 'THE VAULT' : tab.toUpperCase()}
+          </span>
+        </button>
+      ))}
+    </>
+  );
 
   return (
     <div className={`h-screen flex flex-col md:flex-row relative overflow-hidden ${currentTheme.flicker ? 'crt-flicker' : ''}`}>
       {currentTheme.showScanlines && <div className="scanline" />}
       
-      {/* PROTOCOL SUGGESTION MODAL */}
       {protocolSuggestion && (
-        <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="w-full max-w-xl bg-surface border-4 p-12 flex flex-col gap-8 shadow-[0_0_100px_rgba(212,175,55,0.2)]" style={{ borderColor: 'var(--accent)' }}>
+        <div className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-surface border-4 p-8 md:p-12 flex flex-col gap-8 shadow-[0_0_100px_rgba(212,175,55,0.2)]" style={{ borderColor: 'var(--accent)' }}>
             <div className="flex flex-col gap-3 text-center">
-              <span className="text-[11px] font-black tracking-[0.5em] text-accent uppercase">Strategic Recommendation</span>
-              <h2 className="text-4xl font-black uppercase tracking-widest leading-tight" style={{ fontFamily: 'var(--font-display)' }}>{protocolSuggestion.task.title}</h2>
-              <p className="opacity-70 text-sm font-bold uppercase tracking-wider">Target Objective: {projects.find(p => p.id === protocolSuggestion.projectId)?.name}</p>
+              <span className="text-[10px] font-black tracking-[0.5em] text-accent uppercase">Strategic Recommendation</span>
+              <h2 className="text-2xl md:text-4xl font-black uppercase tracking-widest leading-tight" style={{ fontFamily: 'var(--font-display)' }}>{protocolSuggestion.task.title}</h2>
+              <p className="opacity-70 text-xs md:text-sm font-bold uppercase tracking-wider">Target Objective: {projects.find(p => p.id === protocolSuggestion.projectId)?.name}</p>
             </div>
-            <div className="flex gap-6">
-              <button onClick={() => setProtocolSuggestion(null)} className="flex-1 py-4 border-2 border-accent text-accent font-black text-sm uppercase tracking-widest hover:bg-accent/5">Dismiss</button>
-              <button onClick={startSuggestedProtocol} className="flex-1 py-4 bg-accent text-bg font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Initiate Execution</button>
+            <div className="flex flex-col md:flex-row gap-4">
+              <button onClick={() => setProtocolSuggestion(null)} className="flex-1 py-4 border-2 border-accent text-accent font-black text-xs uppercase tracking-widest hover:bg-accent/5">Dismiss</button>
+              <button onClick={() => { setFocusMode(protocolSuggestion.projectId); setProtocolSuggestion(null); }} className="flex-1 py-4 bg-accent text-bg font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Initiate Execution</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* DESKTOP SIDEBAR */}
       {!focusMode && (
-        <nav className="w-full md:w-80 border-b md:border-b-0 md:border-r p-6 flex flex-col gap-6 sticky top-0 bg-opacity-95 backdrop-blur-md z-50 shrink-0 shadow-2xl" 
+        <nav className="hidden md:flex w-80 border-r p-6 flex-col gap-6 sticky top-0 bg-opacity-95 backdrop-blur-md z-50 shrink-0 shadow-2xl" 
              style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg)' }}>
-          <div className="flex flex-col gap-2 items-center">
+          <div className="flex flex-col gap-2 items-center mb-4">
             <div className="text-3xl font-black tracking-[0.2em] text-center" style={{ fontFamily: 'var(--font-display)', textShadow: 'var(--text-glow)', color: 'var(--accent)' }}>
               DEPROCAST
             </div>
-            <div className={`text-[9px] font-black tracking-[0.3em] px-3 py-1 rounded flex items-center gap-2 ${syncStatus === 'CLOUD' ? 'bg-green-500/20 text-green-500' : 'bg-white/10 text-white/40'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${syncStatus === 'CLOUD' ? 'bg-green-500 animate-pulse' : 'bg-white/20'}`}></div>
-              {syncStatus} STORAGE MODE
-            </div>
           </div>
-          
-          <div className="flex flex-col gap-3 text-sm font-bold flex-1 mt-6">
-            {['dashboard', 'matrix', 'chronos', 'vault', 'profile'].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
-                className={`px-5 py-4 text-left border-2 transition-all truncate tracking-widest ${activeTab === tab ? 'opacity-100 scale-[1.05] shadow-xl' : 'opacity-40 hover:opacity-100'}`}
-                style={{ 
-                  borderColor: activeTab === tab ? 'var(--accent)' : 'transparent',
-                  backgroundColor: activeTab === tab ? 'var(--surface)' : 'transparent',
-                  color: activeTab === tab ? 'var(--accent)' : 'var(--text)',
-                  textShadow: activeTab === tab ? 'var(--text-glow)' : 'none'
-                }}
-              >
-                {tab.replace('matrix', 'NEURAL MATRIX').replace('vault', 'THE VAULT').replace('chronos', 'CHRONOS').replace('profile', 'IDENTITY PROFILE').toUpperCase()}
-              </button>
-            ))}
-
-            {/* ENHANCED ACTIVATE PROTOCOL BUTTON */}
+          <div className="flex flex-col gap-3 text-sm font-bold flex-1">
+            <NavItems />
             <div className="mt-8 px-2">
               <button 
                 onClick={handleActivateProtocol}
                 disabled={isSuggesting}
                 className="w-full group relative py-8 bg-[#2A0202] border-4 border-[#D4AF37] text-[#D4AF37] font-black text-[14px] uppercase tracking-[0.5em] shadow-[0_0_40px_rgba(212,175,55,0.2)] hover:shadow-[0_0_60px_rgba(212,175,55,0.4)] hover:scale-[1.03] active:scale-95 transition-all animate-protocol-pulse disabled:opacity-50 flex flex-col items-center justify-center gap-2 overflow-hidden"
               >
-                {/* Visual Glow Layer */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                
-                {isSuggesting ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-[#D4AF37] animate-ping rounded-full"></div>
-                    <span className="animate-pulse">SYNCHRONIZING...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-[9px] opacity-80 tracking-[0.6em] mb-1 font-black">AI COGNITIVE LINK</span>
-                    <span className="relative z-10 text-shadow-gold">ACTIVATE PROTOCOL</span>
-                  </>
-                )}
-                
-                {/* Tactical Corner Accents */}
-                <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
-                <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
-                <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
-                <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#D4AF37] group-hover:scale-110 transition-transform"></div>
-                
-                {/* Scanline overlay for button */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20"></div>
+                {isSuggesting ? <span className="animate-pulse">SYNCHRONIZING...</span> : <span>ACTIVATE PROTOCOL</span>}
+                <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-[#D4AF37]"></div>
+                <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-[#D4AF37]"></div>
+                <div className="absolute bottom-2 left-2 w-2 h-2 border-b-2 border-l-2 border-[#D4AF37]"></div>
+                <div className="absolute bottom-2 right-2 w-2 h-2 border-b-2 border-r-2 border-[#D4AF37]"></div>
               </button>
             </div>
           </div>
-
-          <div className="mt-auto flex flex-col gap-4">
-            <div className="p-6 border-2 text-center bg-surface/50" style={{ borderColor: 'var(--accent)' }}>
-              <div className="text-[12px] font-black opacity-90 uppercase tracking-[0.3em]">{currentUser.username}</div>
-              <div className="text-[11px] font-bold opacity-60 mt-2 italic">{currentUser.stats.rank} // XP {currentUser.stats.xp}</div>
-            </div>
+          <div className="mt-auto pt-6 border-t border-border/10">
+            <div className="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] text-center">SYSTEM_ACTIVE // {syncStatus}</div>
           </div>
         </nav>
       )}
 
+      {/* MOBILE TOP HEADER */}
+      {!focusMode && (
+        <header className="md:hidden flex items-center justify-between p-4 border-b z-50 bg-bg/95 backdrop-blur-sm" style={{ borderColor: 'var(--border)' }}>
+          <div className="text-xl font-black tracking-[0.2em]" style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>DEPROCAST</div>
+          <div className="text-[8px] font-black opacity-40 tracking-widest">{syncStatus}</div>
+        </header>
+      )}
+
       <main className="flex-1 relative h-full overflow-hidden bg-transparent">
-        <div className="absolute inset-0 scroll-container p-8 md:p-12 flex flex-col gap-10">
+        <div className="absolute inset-0 scroll-container p-4 md:p-12 pb-32 md:pb-12 flex flex-col gap-6 md:gap-10">
           {activeTab === 'dashboard' && (
             <Dashboard 
               data={appDataState} 
               setData={async (updater: any) => {
-                const newData = updater(appDataState);
-                if (newData.projects.length > projects.length) await db.save('projects', newData.projects[0]);
+                const newData = typeof updater === 'function' ? updater(appDataState) : updater;
+                if (newData.projects.length > projects.length) await db.save('projects', newData.projects[newData.projects.length-1]);
                 handleLogin(currentUser);
               }} 
               setFocusMode={setFocusMode} 
@@ -276,55 +225,85 @@ const App: React.FC = () => {
               }} 
             />
           )}
+          {activeTab === 'journal' && <Journal data={appDataState} setData={async (updater: any) => {
+            const newData = typeof updater === 'function' ? updater(appDataState) : updater;
+            if (newData.notes.length > notes.length) await db.save('notes', newData.notes[0]);
+            handleLogin(currentUser);
+          }} />}
           {activeTab === 'matrix' && <NeuralMatrix data={appDataState} addXP={addXP} setData={async (updater: any) => {
-            const newData = updater(appDataState);
+            const newData = typeof updater === 'function' ? updater(appDataState) : updater;
             for (const p of newData.projects) await db.save('projects', p);
             handleLogin(currentUser);
           }} />}
           {activeTab === 'chronos' && <Chronos data={appDataState} setData={async (updater: any) => {
-            const newData = updater(appDataState);
-            if (newData.events.length !== events.length) {
-              const deleted = events.find(e => !newData.events.find(ne => ne.id === e.id));
-              if (deleted) await db.delete('events', deleted.id);
-              else await db.save('events', newData.events[newData.events.length-1]);
-            }
+            const newData = typeof updater === 'function' ? updater(appDataState) : updater;
             handleLogin(currentUser);
           }} />}
           {activeTab === 'vault' && <TheVault data={appDataState} setData={async (updater: any) => {
-            const newData = updater(appDataState);
-            if (newData.contacts.length !== contacts.length) await db.save('contacts', newData.contacts[newData.contacts.length-1]);
-            if (newData.notes.length !== notes.length) await db.save('notes', newData.notes[0]);
+            const newData = typeof updater === 'function' ? updater(appDataState) : updater;
             handleLogin(currentUser);
           }} />}
-          {activeTab === 'profile' && (
-            <div className="flex flex-col gap-12">
-               <Profile data={appDataState} setData={async (updater: any) => {
-                 const newData = updater(appDataState);
-                 await db.save('users', newData.currentUser);
-                 handleLogin(newData.currentUser);
-               }} />
-               
-               <section className="p-10 border-4 border-dashed opacity-50 bg-white/5 shadow-inner" style={{ borderColor: 'var(--border)' }}>
-                 <h3 className="text-sm font-black uppercase tracking-[0.5em] mb-6">Tactical Node Intelligence</h3>
-                 <p className="text-xs mb-8 opacity-80 leading-relaxed font-bold tracking-widest">
-                   Operando en modo: <span className="text-accent">{syncStatus}</span>. {syncStatus === 'LOCAL' ? 'Hardware bypass activo. Persistencia en IndexedDB local.' : 'Sincronización Cloud habilitada.'}
-                 </p>
-                 <div className="flex gap-6">
-                   <button onClick={handleResetSystem} className="px-8 py-3 bg-red-600/20 text-red-600 border border-red-600/30 text-[11px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">De-Initialize Matrix Hardware</button>
-                 </div>
-               </section>
-            </div>
-          )}
+          {activeTab === 'profile' && <Profile data={appDataState} setData={async (updater: any) => {
+            const newData = typeof updater === 'function' ? updater(appDataState) : updater;
+            await db.save('users', newData.currentUser);
+            handleLogin(newData.currentUser);
+          }} />}
         </div>
       </main>
 
+      {/* MOBILE BOTTOM NAVIGATION */}
+      {!focusMode && (
+        <nav className="md:hidden fixed bottom-0 left-0 w-full z-[100] border-t bg-bg/95 backdrop-blur-xl flex flex-col" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between px-2 pt-1">
+             <div className="flex-1 grid grid-cols-3 gap-1">
+               <button onClick={() => setActiveTab('dashboard')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'dashboard' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">🏠</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Gateway</span>
+               </button>
+               <button onClick={() => setActiveTab('matrix')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'matrix' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">🧠</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Matrix</span>
+               </button>
+               <button onClick={() => setActiveTab('journal')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'journal' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">📓</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Journal</span>
+               </button>
+             </div>
+             
+             {/* Mobile Protocol Button - Centered/Primary */}
+             <div className="px-2 -mt-6">
+                <button 
+                  onClick={handleActivateProtocol}
+                  disabled={isSuggesting}
+                  className="w-16 h-16 rounded-full bg-[#2A0202] border-4 border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.4)] flex items-center justify-center animate-protocol-pulse active:scale-90 transition-transform disabled:opacity-50"
+                >
+                  {isSuggesting ? <span className="animate-spin text-xl text-[#D4AF37]">🌀</span> : <span className="text-2xl">⚡</span>}
+                </button>
+             </div>
+
+             <div className="flex-1 grid grid-cols-3 gap-1">
+               <button onClick={() => setActiveTab('chronos')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'chronos' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">⏳</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Chronos</span>
+               </button>
+               <button onClick={() => setActiveTab('vault')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'vault' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">🔒</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Vault</span>
+               </button>
+               <button onClick={() => setActiveTab('profile')} className={`py-3 flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-accent' : 'opacity-40'}`}>
+                 <span className="text-xl">👤</span>
+                 <span className="text-[8px] font-black uppercase tracking-tighter">ID</span>
+               </button>
+             </div>
+          </div>
+          <div className="h-safe-bottom pb-2"></div>
+        </nav>
+      )}
+
       <style>{`
-        @keyframes protocol-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(74,4,4,0.4); }
-          50% { box-shadow: 0 0 50px rgba(212,175,55,0.7); }
-        }
+        @keyframes protocol-pulse { 0%, 100% { box-shadow: 0 0 10px rgba(74,4,4,0.4); } 50% { box-shadow: 0 0 30px rgba(212,175,55,0.6); } }
         .animate-protocol-pulse { animation: protocol-pulse 2.5s ease-in-out infinite; }
-        .text-shadow-gold { text-shadow: 0 0 10px rgba(212,175,55,0.8); }
+        .h-safe-bottom { height: env(safe-area-inset-bottom, 0px); }
       `}</style>
     </div>
   );

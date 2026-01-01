@@ -43,7 +43,6 @@ const Profile: React.FC<Props> = ({ data, setData }) => {
     }
   };
 
-  // SVG Graph Matrix Generation: Mapping connections between projects, people, and tasks
   const graphContent = useMemo(() => {
     const width = 1000;
     const height = 700;
@@ -56,10 +55,8 @@ const Profile: React.FC<Props> = ({ data, setData }) => {
     const nodes: any[] = [];
     const links: any[] = [];
 
-    // Core Node: User
-    nodes.push({ id: 'user', x: centerX, y: centerY, label: 'CORE_OPERATIVE', type: 'user', size: 45 });
+    nodes.push({ id: 'user', x: centerX, y: centerY, label: 'CORE', type: 'user', size: 45 });
 
-    // Project Nodes (Ring 1)
     projects.forEach((p, i) => {
       const angle = (i / projects.length) * Math.PI * 2;
       const radius = 180;
@@ -68,10 +65,9 @@ const Profile: React.FC<Props> = ({ data, setData }) => {
       nodes.push({ id: p.id, x: px, y: py, label: p.name.toUpperCase(), type: 'project', size: 30 });
       links.push({ x1: centerX, y1: centerY, x2: px, y2: py, type: 'user-project' });
 
-      // Task Nodes (Ring 2 - orbiting their respective projects)
       const pendingTasks = p.tasks.filter(t => !t.completed).slice(0, 3);
       pendingTasks.forEach((t, j) => {
-        const tAngle = angle + ((j - 1) * 0.4); // Offset from project angle
+        const tAngle = angle + ((j - 1) * 0.4);
         const tRadius = 280;
         const tx = centerX + Math.cos(tAngle) * tRadius;
         const ty = centerY + Math.sin(tAngle) * tRadius;
@@ -80,183 +76,90 @@ const Profile: React.FC<Props> = ({ data, setData }) => {
       });
     });
 
-    // Contact Nodes (Ring 3 - Outer ring, connected to projects they participate in)
     contacts.forEach((c, i) => {
-      const angle = (i / contacts.length) * Math.PI * 2 + 0.2;
+      const angle = (i / (contacts.length || 1)) * Math.PI * 2 + 0.2;
       const radius = 420;
       const cx = centerX + Math.cos(angle) * radius;
       const cy = centerY + Math.sin(angle) * radius;
       nodes.push({ id: c.id, x: cx, y: cy, label: c.name.toUpperCase(), type: 'contact', size: 25 });
-      
-      // Explicit links from contact to projects
       c.linkedProjectIds.forEach(pid => {
         const pNode = nodes.find(n => n.id === pid);
-        if (pNode) {
-          links.push({ x1: cx, y1: cy, x2: pNode.x, y2: pNode.y, type: 'contact-project' });
-        }
+        if (pNode) links.push({ x1: cx, y1: cy, x2: pNode.x, y2: pNode.y, type: 'contact-project' });
       });
-
-      // Visual connection back to user if isolated
-      if (c.linkedProjectIds.length === 0) {
-        links.push({ x1: cx, y1: cy, x2: centerX, y2: centerY, type: 'contact-user-isolated' });
-      }
+      if (c.linkedProjectIds.length === 0) links.push({ x1: cx, y1: cy, x2: centerX, y2: centerY, type: 'contact-user-isolated' });
     });
 
     return { nodes, links, width, height };
   }, [data.projects, data.contacts]);
 
   return (
-    <div className="flex flex-col gap-10 animate-fade-in pb-20">
+    <div className="flex flex-col gap-8 md:gap-10 animate-fade-in pb-32">
       <header className="border-b-4 pb-6" style={{ borderColor: 'var(--border)' }}>
-        <h1 className="text-5xl font-black mb-3 tracking-tighter uppercase italic" style={{ fontFamily: 'var(--font-display)', textShadow: 'var(--text-glow)' }}>IDENTITY ARCHITECTURE</h1>
-        <p className="opacity-80 text-lg font-bold uppercase tracking-[0.2em] leading-relaxed">Operative Status: <span className="text-accent">{data.stats.rank}</span> // Synchronization complete.</p>
+        <h1 className="text-3xl md:text-5xl font-black mb-3 tracking-tighter uppercase italic" style={{ fontFamily: 'var(--font-display)', textShadow: 'var(--text-glow)' }}>ID ARCHITECTURE</h1>
+        <p className="opacity-80 text-xs md:text-lg font-bold uppercase tracking-[0.1em] md:tracking-[0.2em]">OPERATIVE: <span className="text-accent">{data.stats.rank}</span></p>
       </header>
 
       {/* Stats Overview */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="md:col-span-1 p-8 border-4 bg-surface flex flex-col items-center justify-center gap-4 text-center" style={{ borderColor: 'var(--border)', borderRadius: 'var(--radius)' }}>
-          <div className="w-24 h-24 border-4 flex items-center justify-center rounded-full bg-accent/5" style={{ borderColor: 'var(--accent)' }}>
-            <span className="text-5xl font-black" style={{ color: 'var(--accent)' }}>{data.stats.rank[0]}</span>
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
+        <div className="md:col-span-1 p-6 md:p-8 border-4 bg-surface flex flex-row md:flex-col items-center justify-center gap-4 text-center" style={{ borderColor: 'var(--border)' }}>
+          <div className="w-16 h-16 md:w-24 md:h-24 border-4 flex items-center justify-center rounded-full bg-accent/5 shrink-0" style={{ borderColor: 'var(--accent)' }}>
+            <span className="text-3xl md:text-5xl font-black" style={{ color: 'var(--accent)' }}>{data.stats.rank[0]}</span>
           </div>
-          <div>
-            <h2 className="text-2xl font-black tracking-widest uppercase leading-none">{data.stats.rank}</h2>
-            <span className="text-[10px] opacity-60 font-black uppercase tracking-widest mt-2 block">TIER RATING</span>
+          <div className="text-left md:text-center">
+            <h2 className="text-xl md:text-2xl font-black tracking-widest uppercase leading-none">{data.stats.rank}</h2>
+            <span className="text-[8px] md:text-[10px] opacity-60 font-black uppercase tracking-widest mt-2 block">TIER RATING</span>
           </div>
         </div>
         
-        <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           {[
             { label: 'Cumulative XP', val: data.stats.xp, color: 'var(--accent)' },
-            { label: 'Active Matrix Operations', val: data.projects.filter(p => p.status === 'active').length, color: 'var(--text)' },
-            { label: 'Network Reach', val: data.contacts.length, color: 'var(--text)' }
+            { label: 'Active Ops', val: data.projects.filter(p => p.status === 'active').length, color: 'var(--text)' },
+            { label: 'Network', val: data.contacts.length, color: 'var(--text)', mobileHidden: true }
           ].map((stat, i) => (
-            <div key={i} className="p-6 border-2 bg-surface flex flex-col justify-center" style={{ borderColor: 'var(--border)', borderRadius: 'var(--radius)' }}>
-              <span className="text-[10px] font-black opacity-60 uppercase block mb-1 tracking-widest">{stat.label}</span>
-              <span className="text-4xl font-black" style={{ color: stat.color }}>{stat.val}</span>
+            <div key={i} className={`p-4 md:p-6 border-2 bg-surface flex flex-col justify-center ${stat.mobileHidden ? 'hidden md:flex' : ''}`} style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[8px] md:text-[10px] font-black opacity-60 uppercase block mb-1 tracking-widest truncate">{stat.label}</span>
+              <span className="text-2xl md:text-4xl font-black truncate" style={{ color: stat.color }}>{stat.val}</span>
             </div>
           ))}
-          <div className="md:col-span-3 p-6 border-2 italic text-base leading-relaxed" style={{ borderColor: 'var(--border)', borderRadius: 'var(--radius)' }}>
-            <span className="text-[10px] font-black opacity-60 uppercase block mb-2 not-italic tracking-widest">Cognitive Blueprint</span>
-            "{data.stats.bio || 'Initial profile calibration in progress... System waiting for performance baseline.'}"
+          <div className="col-span-2 md:col-span-3 p-4 md:p-6 border-2 italic text-xs md:text-base leading-relaxed" style={{ borderColor: 'var(--border)' }}>
+            <span className="text-[8px] md:text-[10px] font-black opacity-60 uppercase block mb-2 not-italic tracking-widest">Cognitive Blueprint</span>
+            "{data.stats.bio || 'Calibration required.'}"
           </div>
         </div>
       </section>
 
-      {/* Strategic Intelligence Matrix (Graph Visualization) */}
+      {/* Strategic Intelligence Matrix */}
       <section className="flex flex-col gap-6">
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-black tracking-[0.4em] uppercase opacity-80">STRATEGIC INTELLIGENCE MATRIX</h3>
-            <p className="text-[10px] opacity-40 uppercase font-bold tracking-widest">Relational Mapping: Projects, Tasks, & Human Assets</p>
-          </div>
-        </div>
-        
-        <div className="w-full h-[700px] border-4 bg-black/95 relative overflow-hidden shadow-inner group" style={{ borderColor: 'var(--border)', borderRadius: 'var(--radius)' }}>
-           {/* Static Scanline Overlay for effect */}
-           <div className="absolute inset-0 pointer-events-none opacity-5 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
-           
-           <svg 
-            viewBox={`0 0 ${graphContent.width} ${graphContent.height}`} 
-            className="w-full h-full transition-transform duration-700 cursor-crosshair"
-           >
-             <defs>
-               <filter id="glow">
-                 <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                 <feMerge>
-                   <feMergeNode in="coloredBlur"/>
-                   <feMergeNode in="SourceGraphic"/>
-                 </feMerge>
-               </filter>
-             </defs>
-
-             {/* Links Layer */}
+        <h3 className="text-[10px] md:text-sm font-black tracking-[0.4em] uppercase opacity-80">INTELLIGENCE MATRIX</h3>
+        <div className="w-full h-[300px] md:h-[600px] border-4 bg-black/95 relative overflow-hidden shadow-inner" style={{ borderColor: 'var(--border)' }}>
+           <svg viewBox={`0 0 ${graphContent.width} ${graphContent.height}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
              {graphContent.links.map((link, i) => (
-               <line 
-                key={i} 
-                x1={link.x1} y1={link.y1} x2={link.x2} y2={link.y2} 
-                stroke={
-                  link.type === 'user-project' ? 'var(--accent)' : 
-                  link.type === 'project-task' ? 'rgba(255,255,255,0.15)' : 
-                  'rgba(0, 242, 255, 0.2)'
-                } 
-                strokeWidth={link.type === 'user-project' ? 2 : 1}
-                strokeDasharray={link.type === 'contact-user-isolated' ? "4,4" : "0"}
-                className="transition-opacity duration-300 opacity-60"
-               />
+               <line key={i} x1={link.x1} y1={link.y1} x2={link.x2} y2={link.y2} stroke={link.type === 'user-project' ? 'var(--accent)' : 'rgba(255,255,255,0.1)'} strokeWidth={link.type === 'user-project' ? 2 : 1} className="opacity-60" />
              ))}
-             
-             {/* Nodes Layer */}
              {graphContent.nodes.map((node, i) => (
-               <g key={i} className="hover:opacity-100 transition-opacity">
-                 <circle 
-                  cx={node.x} cy={node.y} r={node.size} 
-                  fill={
-                    node.type === 'user' ? 'var(--accent)' : 
-                    node.type === 'project' ? 'rgba(255,255,255,0.05)' : 
-                    node.type === 'task' ? 'var(--text)' :
-                    'transparent'
-                  } 
-                  stroke={
-                    node.type === 'contact' ? 'var(--accent)' : 
-                    node.type === 'task' ? 'var(--border)' :
-                    'var(--border)'
-                  }
-                  strokeWidth={node.type === 'user' ? 4 : 2}
-                  filter="url(#glow)"
-                 />
-                 <text 
-                  x={node.x} y={node.y + node.size + 15} 
-                  textAnchor="middle" 
-                  fill="white" 
-                  fontSize={node.type === 'user' ? '12' : '9'} 
-                  fontWeight="black" 
-                  className="uppercase tracking-widest pointer-events-none opacity-70"
-                  style={{ textShadow: '0 2px 8px black', fontFamily: 'var(--font-main)' }}
-                 >
-                   {node.label}
-                 </text>
+               <g key={i}>
+                 <circle cx={node.x} cy={node.y} r={node.size} fill={node.type === 'user' ? 'var(--accent)' : 'rgba(255,255,255,0.05)'} stroke="var(--border)" strokeWidth="2" />
+                 <text x={node.x} y={node.y + node.size + 15} textAnchor="middle" fill="white" fontSize="12" fontWeight="black" className="uppercase pointer-events-none opacity-40">{node.label.substr(0, 10)}</text>
                </g>
              ))}
            </svg>
-           
-           {/* Visual Legend */}
-           <div className="absolute top-6 left-6 flex flex-col gap-3 p-5 bg-black/80 border-2 border-white/10 text-[9px] font-black tracking-[0.3em] uppercase text-white/70">
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></div> CORE_IDENTITY</div>
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full border-2 border-white/40"></div> STRATEGIC_OBJECTIVE</div>
-              <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'white' }}></div> MICRO_TASK</div>
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full border-2 border-accent"></div> HUMAN_ASSET</div>
-           </div>
-
-           <div className="absolute bottom-6 right-6 text-[10px] font-black uppercase tracking-[0.4em] opacity-40 animate-pulse">
-             System Real-time Monitoring Active
-           </div>
         </div>
       </section>
 
       {/* Strategic AI Analysis */}
       <section className="flex flex-col gap-6">
-        <div className="flex justify-between items-center border-b-2 pb-2" style={{ borderColor: 'var(--border)' }}>
-          <h3 className="text-sm font-black tracking-[0.4em] uppercase opacity-80">EXECUTIVE STRATEGIC SUMMARY</h3>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 pb-2 gap-4" style={{ borderColor: 'var(--border)' }}>
+          <h3 className="text-[10px] md:text-sm font-black tracking-[0.4em] uppercase opacity-80">STRATEGIC SUMMARY</h3>
           <button 
             onClick={performStrategicAnalysis}
-            disabled={analyzing}
-            className={`px-8 py-3 text-[11px] font-black uppercase tracking-[0.3em] transition-all border-2 ${analyzing ? 'opacity-50' : 'hover:bg-accent hover:text-bg'}`}
-            style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+            className="w-full md:w-auto px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] border-2 border-accent text-accent hover:bg-accent hover:text-bg transition-all"
           >
-            {analyzing ? 'SYNTHESIZING...' : 'INITIATE ANALYSIS'}
+            {analyzing ? 'SYNTHESIZING...' : 'ANALYZE'}
           </button>
         </div>
-        
-        <div className="p-10 border-4 bg-accent/5 leading-relaxed min-h-[200px] shadow-sm flex flex-col justify-center" style={{ borderColor: 'var(--accent)', borderRadius: 'var(--radius)' }}>
-          {data.stats.lastAnalysis ? (
-            <div className="text-xl font-bold italic opacity-95 whitespace-pre-wrap tracking-wide">
-               "{data.stats.lastAnalysis}"
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center opacity-40 italic font-black uppercase tracking-widest text-sm text-center">
-              Awaiting Strategic Intelligence Link Synchronization...
-            </div>
-          )}
+        <div className="p-6 md:p-10 border-4 bg-accent/5 leading-relaxed min-h-[150px] flex items-center justify-center text-center" style={{ borderColor: 'var(--accent)' }}>
+          {data.stats.lastAnalysis ? <div className="text-sm md:text-xl font-bold italic">"{data.stats.lastAnalysis}"</div> : <div className="opacity-30 uppercase font-black text-[10px]">Awaiting Link...</div>}
         </div>
       </section>
     </div>

@@ -37,93 +37,79 @@ const NeuralMatrix: React.FC<Props> = ({ data, setData, addXP }) => {
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-fade-in h-full overflow-hidden">
+    <div className="flex flex-col gap-6 md:gap-8 animate-fade-in h-full overflow-hidden">
       <header>
-        <h1 className="text-4xl md:text-5xl font-black mb-1 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>NEURAL MATRIX</h1>
-        <p className="opacity-80 text-sm font-bold uppercase tracking-widest">Operation Hierarchy & Execution</p>
+        <h1 className="text-3xl md:text-5xl font-black mb-1 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>NEURAL MATRIX</h1>
+        <p className="opacity-80 text-[10px] md:text-sm font-bold uppercase tracking-widest">Operation Hierarchy</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 flex-1 overflow-hidden">
-        <aside className="md:col-span-1 border-r-2 pr-6 flex flex-col gap-3 overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
-          <h3 className="text-xs font-black tracking-[0.2em] opacity-80 mb-4 uppercase">ACTIVE OPERATIONS</h3>
+      <div className="flex flex-col md:grid md:grid-cols-4 gap-6 md:gap-8 flex-1 overflow-hidden">
+        {/* Project Selector - Horizontal on Mobile, Vertical on Desktop */}
+        <aside className="flex md:flex-col md:col-span-1 border-b-2 md:border-b-0 md:border-r-2 pb-4 md:pb-0 md:pr-6 gap-3 overflow-x-auto md:overflow-y-auto no-scrollbar" style={{ borderColor: 'var(--border)' }}>
           {data.projects.map(p => (
             <button 
               key={p.id}
               onClick={() => setSelectedProjectId(p.id)}
-              className={`p-4 text-left text-sm border-2 transition-all truncate leading-tight flex flex-col gap-1 ${selectedProjectId === p.id ? 'opacity-100 scale-105 shadow-md bg-surface border-accent' : 'opacity-60 border-transparent hover:opacity-100'}`}
+              className={`min-w-[140px] md:min-w-0 p-3 md:p-4 text-left border-2 transition-all flex flex-col gap-1 shrink-0 ${selectedProjectId === p.id ? 'opacity-100 bg-surface border-accent' : 'opacity-40 border-transparent hover:opacity-100'}`}
               style={{ borderColor: selectedProjectId === p.id ? 'var(--accent)' : 'transparent' }}
             >
-              <span className="font-black truncate">{p.name.toUpperCase()}</span>
-              {/* Corrected p.state to p.functionalState and updated comparison logic */}
-              <span className={`text-[8px] font-black uppercase tracking-widest ${p.functionalState === 'Idea' ? 'opacity-40' : p.functionalState === 'Planning' ? 'text-blue-500' : 'text-yellow-500'}`}>{p.functionalState}</span>
+              <span className="text-[10px] md:text-xs font-black truncate uppercase">{p.name}</span>
+              <span className="text-[7px] md:text-[8px] font-black uppercase opacity-60 tracking-tighter">{p.functionalState}</span>
             </button>
           ))}
         </aside>
 
-        <div className="md:col-span-3 overflow-y-auto p-2">
+        <div className="flex-1 md:col-span-3 overflow-y-auto pr-2">
           {selectedProject ? (
-            <div className="flex flex-col gap-8 pb-10">
-              <div className="border-b-4 pb-6" style={{ borderColor: 'var(--border)' }}>
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-3xl font-black uppercase tracking-wider" style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>{selectedProject.name}</h2>
-                  <div className="flex gap-4 items-center">
-                    {/* Corrected urgency/state properties to match Project interface */}
-                    <span className="text-[10px] font-black uppercase px-2 py-1 bg-accent text-bg">{selectedProject.urgencyThreshold}</span>
-                    <span className="text-[10px] font-black uppercase px-2 py-1 border-2 border-accent" style={{ color: 'var(--accent)' }}>{selectedProject.functionalState}</span>
+            <div className="flex flex-col gap-6 md:gap-8 pb-10">
+              <div className="border-b-2 md:border-b-4 pb-4 md:pb-6" style={{ borderColor: 'var(--border)' }}>
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-wider" style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>{selectedProject.name}</h2>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[8px] md:text-[10px] font-black uppercase px-2 py-1 bg-accent text-bg">{selectedProject.urgencyThreshold}</span>
+                    <span className="text-[8px] md:text-[10px] font-black uppercase px-2 py-1 border-2 border-accent" style={{ color: 'var(--accent)' }}>{selectedProject.functionalState}</span>
                   </div>
                 </div>
-                {/* Corrected description property to strategicVision */}
-                <p className="text-lg font-medium opacity-90 italic">"{selectedProject.strategicVision}"</p>
+                <p className="text-sm md:text-lg font-medium opacity-90 italic">"{selectedProject.strategicVision}"</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                 <div className="p-4 border-2" style={{ borderColor: 'var(--border)' }}>
-                  <span className="text-xs font-black uppercase tracking-widest mb-3 block opacity-80">Emotional Resistance: {selectedProject.resistance}/10</span>
-                  <div className="h-4 w-full bg-black/10 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
-                    <div className="h-full bg-accent" style={{ width: `${selectedProject.resistance * 10}%`, backgroundColor: 'var(--accent)' }} />
+                  <span className="text-[9px] font-black uppercase tracking-widest mb-2 block opacity-80">Resistance: {selectedProject.resistance}/10</span>
+                  <div className="h-2 md:h-4 w-full bg-black/10 overflow-hidden">
+                    <div className="h-full bg-accent" style={{ width: `${selectedProject.resistance * 10}%` }} />
                   </div>
                 </div>
                 <div className="p-4 border-2" style={{ borderColor: 'var(--border)' }}>
-                  <span className="text-xs font-black uppercase tracking-widest mb-3 block opacity-80">Complexity Depth: {selectedProject.complexity}/10</span>
-                  <div className="h-4 w-full bg-black/10 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
-                    <div className="h-full bg-accent" style={{ width: `${selectedProject.complexity * 10}%`, backgroundColor: 'var(--accent)' }} />
+                  <span className="text-[9px] font-black uppercase tracking-widest mb-2 block opacity-80">Complexity: {selectedProject.complexity}/10</span>
+                  <div className="h-2 md:h-4 w-full bg-black/10 overflow-hidden">
+                    <div className="h-full bg-accent" style={{ width: `${selectedProject.complexity * 10}%` }} />
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
-                <h3 className="text-sm font-black tracking-[0.2em] opacity-80 uppercase">Stakeholders</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedProject.linkedContactIds.map(cid => (
-                    <div key={cid} className="px-3 py-1 bg-surface border-2 text-[10px] font-black uppercase" style={{ borderColor: 'var(--border)' }}>
-                      {data.contacts.find(c => c.id === cid)?.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <h3 className="text-sm font-black tracking-[0.2em] opacity-80 uppercase">Execution Sequence</h3>
-                <div className="grid grid-cols-1 gap-3">
+                <h3 className="text-xs font-black tracking-[0.2em] opacity-80 uppercase">Execution Sequence</h3>
+                <div className="flex flex-col gap-2">
                   {selectedProject.tasks.map(task => (
                     <div 
                       key={task.id}
                       onClick={() => toggleTask(selectedProject.id, task.id)}
-                      className="group flex items-center gap-5 p-5 border-2 cursor-pointer hover:bg-surface transition-all"
+                      className="flex items-center gap-4 p-4 border-2 cursor-pointer hover:bg-surface transition-all active:scale-[0.98]"
                       style={{ borderColor: task.completed ? 'var(--border)' : 'var(--accent)', opacity: task.completed ? 0.5 : 1 }}
                     >
-                      <div className={`w-8 h-8 border-2 flex items-center justify-center ${task.completed ? 'bg-accent' : ''}`} style={{ borderColor: 'var(--accent)' }}>
-                        {task.completed && <span className="text-xl text-white font-black">✓</span>}
+                      <div className={`w-6 h-6 border-2 flex items-center justify-center shrink-0 ${task.completed ? 'bg-accent' : ''}`} style={{ borderColor: 'var(--accent)' }}>
+                        {task.completed && <span className="text-sm text-white font-black">✓</span>}
                       </div>
-                      <span className={`text-lg font-bold ${task.completed ? 'line-through' : ''}`}>{task.title}</span>
+                      <span className={`text-sm md:text-lg font-bold uppercase ${task.completed ? 'line-through' : ''}`}>{task.title}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="h-96 flex flex-col items-center justify-center border-4 border-dashed opacity-40">
-              <span className="text-2xl font-black uppercase">Operation Pending Target Selection</span>
+            <div className="h-64 flex flex-col items-center justify-center border-4 border-dashed opacity-30 text-center p-6">
+              <span className="text-lg md:text-2xl font-black uppercase">Operation Pending</span>
             </div>
           )}
         </div>
